@@ -1,0 +1,30 @@
+#!/bin/sh
+
+CWD="`pwd`"
+
+if [ "$1" = "profile" ] ; then
+  PROFILE="-a yourkit"
+fi
+
+if [ "$1" = "manage" ] ; then
+  PROFILE="-a jmx"
+fi
+
+if [ "$1" = "test" ] ; then
+  echo
+  echo "  Not implemented testing yet."
+  echo
+else
+  WIRINGS=$CWD/modules.properties
+fi
+
+#export JAVA_HOME="/opt/jrockit"
+export JAVA_OPTIONS="-Xms16M -Xmx64M"
+
+export JETTY_PORT=8181
+
+BUTTERFLY_OPTS="-Dbutterfly.name=backstage -Dbutterfly.log4j=$CWD/log4j.properties"
+#BUTTERFLY_OPTS="-Djavax.activation.debug=true $BUTTERFLY_OPTS"
+export BUTTERFLY_OPTS
+
+eval ../butterfly/butterfly $PROFILE -u /backstage -b $CWD/butterfly.properties -c $WIRINGS -p $CWD/modules
