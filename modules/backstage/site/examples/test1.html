@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+	<title>test1</title>
+	
+	<script type="text/javascript" charset="utf-8" src="http://static.simile.mit.edu/exhibit/api-2.0/exhibit-api.js"></script>
+	<script type="text/javascript" charset="utf-8" src="http://127.0.0.1:8181/backstage/api/backstage-api.js"></script>
+	<script type="text/javascript" charset="utf-8">
+	   function onLoad() {
+	       window.backstage = Backstage.create();
+	       window.backstage.asyncCall("hello", { "abc" : 1 }, function(o) { console.log(o); });
+	   }
+	</script>
+	
+</head>
+
+<body onload="onLoad();">
+    <h1>Backstage Test 1</h1>
+
+</body>
+</html>
