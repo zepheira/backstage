@@ -22,6 +22,10 @@ Backstage.JsonpTransport = function(entryURL) {
     };
 };
 
+Backstage.JsonpTransport.prototype.clear = function() {
+    this._pendingCalls = [];
+};
+
 Backstage.JsonpTransport.prototype.asyncCall = function(method, params, onSuccess, onError) {
     var call = {
         method:         method,
@@ -49,9 +53,10 @@ Backstage.JsonpTransport.prototype._processCurrentCall = function() {
     var call = this._currentCall;
     
     var stringToSend;
-    if (call.paramsAsString.length > 256) {
-        stringToSend = call.paramsAsString.substr(0, 256);
-        call.paramsAsString = call.paramsAsString.substr(256);
+    var limit = 256;
+    if (call.paramsAsString.length > limit) {
+        stringToSend = call.paramsAsString.substr(0, limit);
+        call.paramsAsString = call.paramsAsString.substr(limit);
     } else {
         stringToSend = call.paramsAsString;
         call.complete = true;

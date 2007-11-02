@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>edu.mit.simile</groupId>
+  <artifactId>backstage-main</artifactId>
+  <name>SIMILE Backstage Main Module</name>
+  <version>1.0-SNAPSHOT</version>
+  <url>http://simile.mit.edu/backstage/</url>
+  <inceptionYear>2007</inceptionYear>
+
+  <parent>
+    <groupId>edu.mit.simile</groupId>
+    <artifactId>backstage-modules</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+  
+  <dependencies>
+    <dependency>
+      <groupId>edu.mit.simile</groupId>
+      <artifactId>butterfly</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.3</version>
+    </dependency>
+    <dependency>
+      <groupId>whirlycache</groupId>
+      <artifactId>whirlycache</artifactId>
+      <version>1.0.1</version>
+    </dependency>
+  </dependencies>
+    
+</project>

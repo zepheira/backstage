@@ -11,8 +11,12 @@
 	<script type="text/javascript" charset="utf-8" src="http://127.0.0.1:8181/backstage/api/backstage-api.js"></script>
 	<script type="text/javascript" charset="utf-8">
 	   function onLoad() {
-	       window.backstage = Backstage.create();
-	       window.backstage.asyncCall("hello", { "abc" : 1 }, function(o) { console.log(o); });
+	       try {
+    	       window.backstage = Backstage.create();
+    	       window.backstage.asyncCall("hello", { "abc" : "defghijklmnopq" }, function(o) { alert(Backstage.JSON.toJSONString(o)); });
+	       } catch (e) {
+	           alert(e);
+	       }
 	   }
 	</script>
 	

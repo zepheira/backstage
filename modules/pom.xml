@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+>
+  <modelVersion>4.0.0</modelVersion>
+  
+  <groupId>edu.mit.simile</groupId>
+  <artifactId>backstage-modules</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>SIMILE Backstage Modules</name>
+
+  <parent>
+      <groupId>edu.mit.simile</groupId>
+      <artifactId>backstage-container</artifactId>
+      <version>1.0-SNAPSHOT</version>
+  </parent>
+
+  <build>
+    <directory>MOD-INF/lib</directory>
+    <outputDirectory>MOD-INF/classes</outputDirectory>    <testOutputDirectory>MOD-INF/test-classes</testOutputDirectory>    <sourceDirectory>MOD-INF/src</sourceDirectory>    <testSourceDirectory>MOD-INF/tests</testSourceDirectory>
+    <resources>
+      <resource>
+        <directory>MOD-INF/resources</directory>
+      </resource>
+    </resources>    
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <excludeArtifactIds>butterfly,MessAdmin-Core,MessAdmin-JMX,json-lib,mail,activation,jms,jmxri,jmxtools,servlet-api,velocity,slf4j-api,slf4j-log4j12,log4j,js,oro,commons-lang,commons-collections,junit,xercesImpl,xml-apis,commons-io,nekohtml,xmlParserAPIs,cos</excludeArtifactIds>
+              <outputDirectory>MOD-INF/lib</outputDirectory>
+              <overWriteReleases>false</overWriteReleases>
+              <overWriteSnapshots>true</overWriteSnapshots>
+              <overWriteIfNewer>true</overWriteIfNewer>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+    
+  <modules>
+    <module>backstage</module>
+  </modules>
+</project>

@@ -27,7 +27,7 @@ function process(path, request, response) {
                 delete pendingCalls[id];
                 processJsonpCall(request, response, call);
             } else {
-                butterfly.sendJSONP(request, response, "OK", call.callback);
+                butterfly.sendJSONP(request, response, { status: "OK" }, call.callback);
             }
         }
     } else if (method == "POST") {
@@ -41,21 +41,15 @@ function processJsonpCall(request, response, call) {
             var result = jsonpMethods[call.method](params);
             butterfly.sendJSONP(request, response, result, call.callback);
         } else {
-            butterfly.sendJSONP(request, response, 
-                {   code:    404, 
-                    message: "JSONP Method " + call.method + " Not Found"
-                }, 
-                call.error
-            );
+            sendError(request, response, 404, "JSONP Method " + call.method + " Not Found", call.error);
         }
     } catch (e) {
-        butterfly.sendJSONP(request, response, 
-            {   code:    500, 
-                message: "Internal Server Error: " + e
-            }, 
-            call.error
-        );
+        sendError(request, response, 500, "Internal Server Error: " + e, call.error);
     }
+}
+
+function sendError(request, response, code, message, callback) {
+    butterfly.sendJSONP(request, response, { code: code, message: message }, callback);
 }
 
 var jsonpMethods = {};
