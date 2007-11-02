@@ -18,6 +18,69 @@
   </parent>
   
   <dependencies>
+  
+    <dependency>
+        <groupId>org.openrdf</groupId>
+        <artifactId>openrdf-model</artifactId>
+        <version>2.0-beta6</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openrdf</groupId>
+        <artifactId>openrdf-repository-api</artifactId>
+        <version>2.0-beta6</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openrdf</groupId>
+        <artifactId>openrdf-sail-api</artifactId>
+        <version>2.0-beta6</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openrdf</groupId>
+        <artifactId>openrdf-repository-sail</artifactId>
+        <version>2.0-beta6</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openrdf</groupId>
+        <artifactId>openrdf-sail-memory</artifactId>
+        <version>2.0-beta6</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openrdf</groupId>
+        <artifactId>openrdf-sail-nativerdf</artifactId>
+        <version>2.0-beta6</version>
+    </dependency>
+    
+    <dependency>
+        <groupId>org.openrdf</groupId>
+        <artifactId>openrdf-rio-api</artifactId>
+        <version>2.0-beta6</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openrdf</groupId>
+        <artifactId>openrdf-rio-n3</artifactId>
+        <version>2.0-beta6</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openrdf</groupId>
+        <artifactId>openrdf-rio-turtle</artifactId>
+        <version>2.0-beta6</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openrdf</groupId>
+        <artifactId>openrdf-rio-ntriples</artifactId>
+        <version>2.0-beta6</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openrdf</groupId>
+        <artifactId>openrdf-rio-rdfxml</artifactId>
+        <version>2.0-beta6</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openrdf</groupId>
+        <artifactId>openrdf-rio-trix</artifactId>
+        <version>2.0-beta6</version>
+    </dependency>
+  
     <dependency>
       <groupId>edu.mit.simile</groupId>
       <artifactId>butterfly</artifactId>
@@ -33,16 +96,7 @@
       <artifactId>whirlycache</artifactId>
       <version>1.0.1</version>
     </dependency>
-    <dependency>
-      <groupId>org.openrdf</groupId>
-      <artifactId>openrdf-repository-http</artifactId>
-      <version>2.0-beta5</version>
-    </dependency>    
-    <dependency>
-      <groupId>org.openrdf</groupId>
-      <artifactId>openrdf-rio-trig</artifactId>
-      <version>2.0-beta5</version>
-     </dependency>
+
   </dependencies>
     
 </project>
