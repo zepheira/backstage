@@ -22,6 +22,9 @@ Backstage.JsonpTransport = function(entryURL) {
     };
 };
 
+Backstage.JsonpTransport.payloadLimit = 256;
+Backstage.JsonpTransport.removeScripts = true;
+
 Backstage.JsonpTransport.prototype.clear = function() {
     this._pendingCalls = [];
 };
@@ -53,7 +56,7 @@ Backstage.JsonpTransport.prototype._processCurrentCall = function() {
     var call = this._currentCall;
     
     var stringToSend;
-    var limit = 256;
+    var limit = Backstage.JsonpTransport.payloadLimit;
     if (call.paramsAsString.length > limit) {
         stringToSend = call.paramsAsString.substr(0, limit);
         call.paramsAsString = call.paramsAsString.substr(limit);
@@ -113,8 +116,10 @@ Backstage.JsonpTransport.prototype._onErrorCallback = function(e) {
 };
 
 Backstage.JsonpTransport.prototype._removeCurrentCallScript = function() {
-    var script = document.getElementById(this._currentCall.id);
-    if (script) {
-        script.parentNode.removeChild(script);
+    if (Backstage.JsonpTransport.removeScripts) {
+        var script = document.getElementById(this._currentCall.id);
+        if (script) {
+            script.parentNode.removeChild(script);
+        }
     }
 };

@@ -13,7 +13,10 @@
 	   function onLoad() {
 	       try {
     	       window.backstage = Backstage.create();
-    	       window.backstage.asyncCall("hello", { "abc" : "defghijklmnopq" }, function(o) { alert(Backstage.JSON.toJSONString(o)); });
+    	       
+    	       Backstage.JsonpTransport.payloadLimit = 10;
+    	       Backstage.JsonpTransport.removeScripts = false;
+    	       window.backstage.asyncCall("test", { "ping" : "abcdefghijklmnopqrstuvwxyz0123456789" }, function(o) { alert(o.pong); });
 	       } catch (e) {
 	           alert(e);
 	       }

@@ -1,7 +1,11 @@
-var pendingCalls = {};
-
 function process(path, request, response) {
     var method = request.getMethod();
+    var session = request.getSession(true);
+    var pendingCalls = session.getAttribute("pendingCalls");
+    if (pendingCalls == null) {
+        pendingCalls = {};
+        session.setAttribute("pendingCalls", pendingCalls);
+    }
     
     if (method == "GET") {
         if (path == "api/jsonpc") {
@@ -35,6 +39,7 @@ function process(path, request, response) {
 }
 
 function processJsonpCall(request, response, call) {
+    butterfly.log(call.id + " payload: \"" + call.params + "\"");
     try {
         var params = butterfly.parseJSON(call.params);
         if (call.method in jsonpMethods) {
@@ -54,6 +59,6 @@ function sendError(request, response, code, message, callback) {
 
 var jsonpMethods = {};
 
-jsonpMethods["hello"] = function(params) {
-    return { result: "world" };
+jsonpMethods["test"] = function(params) {
+    return { pong: params.ping };
 };
