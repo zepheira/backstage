@@ -1,4 +1,4 @@
-package edu.mit.simile.backstage;
+package edu.mit.simile.backstage.util;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

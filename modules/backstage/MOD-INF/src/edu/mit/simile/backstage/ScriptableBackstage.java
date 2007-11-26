@@ -1,7 +1,8 @@
 package edu.mit.simile.backstage;
 
 import java.net.MalformedURLException;
-import java.net.URL;
+
+import javax.servlet.http.HttpServletRequest;
 
 public class ScriptableBackstage extends BackstageScriptableObject {
     private static final long serialVersionUID = -6840851588510351185L;
@@ -15,9 +16,11 @@ public class ScriptableBackstage extends BackstageScriptableObject {
     }
     
     // ---------------------------------------------------------------------
-
-    public Object jsFunction_getExhibit(String urlString, String lastModified) throws MalformedURLException {
-        return getModule().getExhibit(new URL(urlString), lastModified);
+    
+    public Object jsFunction_getInteractiveSession(Object requestO, String id) throws MalformedURLException {
+        HttpServletRequest request = (HttpServletRequest) unwrap(requestO);
+        
+        return getModule().getInteractiveSession(request, id);
     }
     
 }
