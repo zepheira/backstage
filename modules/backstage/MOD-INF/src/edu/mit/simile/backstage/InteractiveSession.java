@@ -30,20 +30,25 @@ public class InteractiveSession extends BackstageScriptableObject {
         return "InteractiveSession";
     }
     
+    public Object jsFunction_getExhibit() throws MalformedURLException {
+        if (m_exhibit == null) {
+            m_exhibit = getModule().getExhibit(m_exhibitIdentity, m_dataLinks);
+        }
+        return wrap(m_exhibit, this);
+    }
+
     public void jsFunction_addDataLink(String url, String mimeType, String charset) throws MalformedURLException {
         if (m_exhibit != null) {
             throw new InternalError("Cannot add more data link after exhibit already initialized");
         }
         
-        DataLink dataLink = new DataLink(new URL(url), mimeType != null ? mimeType : "", charset != null ? charset : "");
+        DataLink dataLink = new DataLink(new URL(url), mimeType, charset);
         
         m_dataLinks.add(dataLink);
     }
-
-    public Object jsFunction_getExhibit() throws MalformedURLException {
-        if (m_exhibit == null) {
-            m_exhibit = getModule().getExhibit(m_exhibitIdentity, m_dataLinks);
-        }
-        return m_exhibit;
+    
+    public String jsFunction_doIt(String id) {
+        return id + "blah";
     }
+
 }

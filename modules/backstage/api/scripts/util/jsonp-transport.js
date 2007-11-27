@@ -34,7 +34,7 @@ Backstage.JsonpTransport.prototype.asyncCall = function(method, params, onSucces
         method:         method,
         paramsAsString: Backstage.JSON.toJSONString(params),
         onSuccess:      (onSuccess == undefined) ? function() {} : onSuccess,
-        onError:        (onError == undefined) ? function() {} : onError,
+        onError:        (onError == undefined) ? function(e) { SimileAjax.Debug.log(e); } : onError,
         id:             "call-" + new Date().getTime() + "-" + Math.floor(1000 * Math.random()),
         complete:       false
     };

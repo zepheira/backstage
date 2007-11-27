@@ -13,6 +13,9 @@ Backstage.create = function() {
  *==================================================
  */
 Backstage._Impl = function() {
+    // interactive session id
+    this._isid = "is" + Math.floor(1000000 * Math.random());
+    
     this._jsonpTransport = new Backstage.JsonpTransport(Backstage.urlPrefix + "jsonpc");
     this._jobQueue = new Backstage.JobQueue();
 };
@@ -21,13 +24,17 @@ Backstage._Impl.prototype.dispose = function() {
 };
 
 Backstage._Impl.prototype.asyncCall = function(method, params, onSuccess, onError) {
+    params.isid = this._isid; // add the interactive session id
+    
     var self = this;
     var f = function() {
         self._jsonpTransport.asyncCall(method, params, onSuccess, function(e) {
             if (e.code == 410) { // 410:Gone
                 self._reconstructServerState(f);
-            } else {
+            } else if (onError != undefined) {
                 onError(e);
+            } else {
+                SimileAjax.Debug.log(e);
             }
         });
     };

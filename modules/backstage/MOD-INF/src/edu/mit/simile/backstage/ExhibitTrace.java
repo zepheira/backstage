@@ -22,7 +22,7 @@ import java.util.Set;
  * @author dfhuynh
  */
 public class ExhibitTrace {
-    private ExhibitIdentity          _identity;
+    private ExhibitIdentity        _identity;
     private List<AccessedDataLink> _dataLinks;
     
     private Set<Exhibit>        _oldExhibits = new HashSet<Exhibit>();
@@ -53,6 +53,14 @@ public class ExhibitTrace {
                     
                     same = false;
                     break;
+                }
+                
+                if (myDataLink.broken) {
+                    /*
+                     * We don't want a broken data link to keep forcing new instantiations,
+                     * which is taxing on our server if many users are viewing that exhibit.
+                     */
+                    continue;
                 }
                 
                 if (myDataLink.expiresDate != null) {

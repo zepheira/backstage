@@ -43,7 +43,7 @@ function processJsonpCall(request, response, call) {
     try {
         var params = butterfly.parseJSON(call.params);
         if (call.method in jsonpMethods) {
-            var result = jsonpMethods[call.method](params);
+            var result = jsonpMethods[call.method](request, params);
             butterfly.sendJSONP(request, response, result, call.callback);
         } else {
             sendError(request, response, 404, "JSONP Method " + call.method + " Not Found", call.error);
@@ -59,6 +59,24 @@ function sendError(request, response, code, message, callback) {
 
 var jsonpMethods = {};
 
-jsonpMethods["test"] = function(params) {
+jsonpMethods["test"] = function(request, params) {
     return { pong: params.ping };
 };
+
+jsonpMethods["initialize-session"] = function(request, params) {
+    backstage.createInteractiveSession(request, params.isid);
+    return { status: "OK" };
+};
+
+jsonpMethods["add-data-link"] = function(request, params) {
+    var is = backstage.getInteractiveSession(request, params.isid);
+    butterfly.log(is.toString());
+    butterfly.log(is.doIt("a"));
+    is.addDataLink(
+        params.url, 
+        ("mimeType" in params) ? params.mimeType : "application/json", 
+        ("charset" in params) ? params.charset : "utf-8"
+    );
+    return { status: "OK" };
+};
+

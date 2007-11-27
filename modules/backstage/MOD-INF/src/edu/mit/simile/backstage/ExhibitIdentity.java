@@ -3,7 +3,7 @@ package edu.mit.simile.backstage;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * The identity of an exhibit is its URL if it is public, e.g., http://foo.com/file.html.
@@ -15,8 +15,8 @@ import javax.servlet.ServletRequest;
  * private, then Backstage cannot host it. 
  */
 abstract public class ExhibitIdentity {
-    static public ExhibitIdentity create(ServletRequest request) throws MalformedURLException {
-        URL     refererURL = new URL((String) request.getAttribute("Referer"));
+    static public ExhibitIdentity create(HttpServletRequest request) throws MalformedURLException {
+        URL     refererURL = new URL(request.getHeader("Referer"));
         String  protocol = refererURL.getProtocol();
         String  host = refererURL.getHost(); 
         
