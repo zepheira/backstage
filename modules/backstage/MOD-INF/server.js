@@ -70,8 +70,6 @@ jsonpMethods["initialize-session"] = function(request, params) {
 
 jsonpMethods["add-data-link"] = function(request, params) {
     var is = backstage.getInteractiveSession(request, params.isid);
-    butterfly.log(is.toString());
-    butterfly.log(is.doIt("a"));
     is.addDataLink(
         params.url, 
         ("mimeType" in params) ? params.mimeType : "application/json", 

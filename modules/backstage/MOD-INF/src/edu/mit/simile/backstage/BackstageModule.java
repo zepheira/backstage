@@ -84,7 +84,7 @@ public class BackstageModule extends ButterflyModuleImpl {
             return null;
         }
         
-        return new InteractiveSession(exhibitIdentity);
+        return new InteractiveSession(this, exhibitIdentity);
     }
     
     static private Map<ExhibitIdentity, ExhibitTrace> getExhibitTraceMap(ExhibitIdentity identity) {
