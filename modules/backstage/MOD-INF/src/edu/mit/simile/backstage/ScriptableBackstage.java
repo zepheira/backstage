@@ -22,45 +22,45 @@ public class ScriptableBackstage extends BackstageScriptableObject {
     
     // ---------------------------------------------------------------------
     
-    public Object jsFunction_createInteractiveSession(Object requestO, String id) throws MalformedURLException {
+    public Object jsFunction_createExhibit(Object requestO, String id) throws MalformedURLException {
         HttpServletRequest request = (HttpServletRequest) unwrap(requestO);
-        InteractiveSessionCollection isc = getInteractiveSessionCollection(request);
-        InteractiveSession is = getModule().createInteractiveSession(request, id);
+        ExhibitCollection ec = getExhibitCollection(request);
+        Exhibit exhibit = getModule().createExhibit(request, id);
         
-        isc.setInteractiveSession(id, is);
+        ec.setExhibit(id, exhibit);
         
-        return is;
+        return exhibit;
     }
     
-    public Object jsFunction_getInteractiveSession(Object requestO, String id) throws MalformedURLException {
+    public Object jsFunction_getExhibit(Object requestO, String id) throws MalformedURLException {
         HttpServletRequest request = (HttpServletRequest) unwrap(requestO);
-        InteractiveSessionCollection isc = getInteractiveSessionCollection(request);
-        InteractiveSession is = isc.getInteractiveSession(id);
+        ExhibitCollection ec = getExhibitCollection(request);
+        Exhibit exhibit = ec.getExhibit(id);
         
-        return is;
+        return exhibit;
     }
     
-    private InteractiveSessionCollection getInteractiveSessionCollection(HttpServletRequest request) {
+    private ExhibitCollection getExhibitCollection(HttpServletRequest request) {
         HttpSession session = request.getSession(true);
-        InteractiveSessionCollection isc = (InteractiveSessionCollection) 
-            session.getAttribute("interactive-sessions");
+        ExhibitCollection isc = (ExhibitCollection) 
+            session.getAttribute("exhibits");
         
         if (isc == null) {
-            isc = new InteractiveSessionCollection();
-            session.setAttribute("interactive-sessions", isc);
+            isc = new ExhibitCollection();
+            session.setAttribute("exhibits", isc);
         }
         return isc;
     }
     
-    static private class InteractiveSessionCollection implements HttpSessionBindingListener {
-        private Map<String, InteractiveSession> _sessions = new HashMap<String, InteractiveSession>();
+    static private class ExhibitCollection implements HttpSessionBindingListener {
+        private Map<String, Exhibit> _sessions = new HashMap<String, Exhibit>();
         
-        public InteractiveSession getInteractiveSession(String id) {
+        public Exhibit getExhibit(String id) {
             return _sessions.get(id);
         }
         
-        public void setInteractiveSession(String id, InteractiveSession is) {
-            _sessions.put(id, is);
+        public void setExhibit(String id, Exhibit exhibit) {
+            _sessions.put(id, exhibit);
         }
         
         public void valueBound(HttpSessionBindingEvent event) {
@@ -68,8 +68,8 @@ public class ScriptableBackstage extends BackstageScriptableObject {
         }
 
         public void valueUnbound(HttpSessionBindingEvent event) {
-            for (InteractiveSession is : _sessions.values()) {
-                is.dispose();
+            for (Exhibit exhibit : _sessions.values()) {
+                exhibit.dispose();
             }
         }
         

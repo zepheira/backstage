@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
 
 import edu.mit.simile.backstage.data.DataLink;
 
-public class InteractiveSession {
+public class Exhibit {
     private static Logger _logger = Logger.getLogger(Database.class);
 
     private static final long serialVersionUID = -1105545561204629924L;
@@ -20,7 +20,7 @@ public class InteractiveSession {
     
     private Database _database;
     
-    public InteractiveSession(BackstageModule module, ExhibitIdentity exhibitIdentity) {
+    public Exhibit(BackstageModule module, ExhibitIdentity exhibitIdentity) {
         _module = module;
         _exhibitIdentity = exhibitIdentity;
     }
@@ -29,14 +29,14 @@ public class InteractiveSession {
         if (_database != null) {
             _logger.info("Disposing interaction session for " + _exhibitIdentity.toString());
             
-            _module.releaseExhibit(_database);
+            _module.releaseDatabase(_database);
             _database = null;
         }
     }
 
     public Database getDatabase() throws MalformedURLException {
         if (_database == null) {
-            _database = _module.getExhibit(_exhibitIdentity, _dataLinks);
+            _database = _module.getDatabase(_exhibitIdentity, _dataLinks);
         }
         return _database;
     }

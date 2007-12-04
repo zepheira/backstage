@@ -62,7 +62,7 @@ var jsonpMethods = {};
 function getDatabase(is, params, result) {
     var database = is.getDatabase();
     if (!params._system.initialized) {
-        butterfly.log("Interactive session needs initialization");
+        butterfly.log("Exhibit session needs initialization");
         result._system = {
             properties: {},
             types: {}
@@ -97,17 +97,17 @@ jsonpMethods["test"] = function(request, params) {
 };
 
 jsonpMethods["initialize-session"] = function(request, params) {
-    var is = backstage.createInteractiveSession(request, params.isid);
-    butterfly.log(is);
+    var exhibit = backstage.createExhibit(request, params.isid);
+    butterfly.log(exhibit);
     return { status: "OK" };
 };
 
 jsonpMethods["add-data-links"] = function(request, params) {
-    var is = backstage.getInteractiveSession(request, params.isid);
+    var exhibit = backstage.getExhibit(request, params.isid);
     var links = params.links;
     for (var i = 0; i < links.length; i++) {
         var link = links[i];
-        is.addDataLink(
+        exhibit.addDataLink(
             link.url, 
             (link.mimeType != null && link.mimeType != "") ? link.mimeType : "application/json", 
             (link.charset != null && link.charset != "") ? link.charset : "utf-8"
@@ -118,7 +118,7 @@ jsonpMethods["add-data-links"] = function(request, params) {
 
 jsonpMethods["do-it"] = function(request, params) {
     var result = {};
-    var is = backstage.getInteractiveSession(request, params.isid);
-    var database = getDatabase(is, params, result);
+    var exhibit = backstage.getExhibit(request, params.isid);
+    var database = getDatabase(exhibit, params, result);
     return result;
 };

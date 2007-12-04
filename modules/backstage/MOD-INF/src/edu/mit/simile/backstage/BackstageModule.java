@@ -21,50 +21,42 @@ public class BackstageModule extends ButterflyModuleImpl {
      * is deemed to have changed. Determining whether the data has changed might require some
      * HTTP HEAD requests, which take time.
      */
-    static Map<ExhibitIdentity, DatabaseTrace>[] s_exhibitTracesMaps;
+    static Map<ExhibitIdentity, DatabaseTrace>[] s_databaseTracesMaps;
     
     @SuppressWarnings("unchecked")
     @Override
     public void init(ServletConfig config) throws Exception {
         super.init(config);
-        if (s_exhibitTracesMaps == null) {
-            s_exhibitTracesMaps = new Map[TRACE_MAP_COUNT];
+        if (s_databaseTracesMaps == null) {
+            s_databaseTracesMaps = new Map[TRACE_MAP_COUNT];
             for (int i = 0; i < TRACE_MAP_COUNT; i++) {
-                s_exhibitTracesMaps[i] = new HashMap<ExhibitIdentity, DatabaseTrace>();
+                s_databaseTracesMaps[i] = new HashMap<ExhibitIdentity, DatabaseTrace>();
             }
         }
     }
     
-    /**
-     * This method is called once whenever an exhibit page is loaded. It is called from the
-     * interactive session objects once all the data links have been specified.
-     * 
-     * @param identity
-     * @param dataLinks
-     * @return
-     */
-    public Database getExhibit(ExhibitIdentity identity, List<DataLink> dataLinks) {
-        Map<ExhibitIdentity, DatabaseTrace> exhibitTraces = getExhibitTraceMap(identity);
-        synchronized (exhibitTraces) {
-            DatabaseTrace exhibitTrace = exhibitTraces.get(identity);
-            if (exhibitTrace == null) {
-                exhibitTrace = new DatabaseTrace(identity);
-                exhibitTraces.put(identity, exhibitTrace);
+    public Database getDatabase(ExhibitIdentity identity, List<DataLink> dataLinks) {
+        Map<ExhibitIdentity, DatabaseTrace> databaseTraces = getDatabaseTraceMap(identity);
+        synchronized (databaseTraces) {
+            DatabaseTrace databaseTrace = databaseTraces.get(identity);
+            if (databaseTrace == null) {
+                databaseTrace = new DatabaseTrace(identity);
+                databaseTraces.put(identity, databaseTrace);
             }
-            return exhibitTrace.getDatabase(dataLinks);
+            return databaseTrace.getDatabase(dataLinks);
         }
     }
     
-    public void releaseExhibit(Database exhibit) {
-        ExhibitIdentity identity = exhibit.getIdentity();
-        Map<ExhibitIdentity, DatabaseTrace> exhibitTraces = getExhibitTraceMap(identity);
-        synchronized (exhibitTraces) {
-            DatabaseTrace exhibitFamily = exhibitTraces.get(identity);
-            if (exhibitFamily != null) {
-                exhibitFamily.releaseDatabase(exhibit);
+    public void releaseDatabase(Database database) {
+        ExhibitIdentity identity = database.getIdentity();
+        Map<ExhibitIdentity, DatabaseTrace> databaseTraces = getDatabaseTraceMap(identity);
+        synchronized (databaseTraces) {
+            DatabaseTrace databaseTrace = databaseTraces.get(identity);
+            if (databaseTrace != null) {
+                databaseTrace.releaseDatabase(database);
                 
-                if (exhibitFamily.isEmpty()) {
-                    exhibitTraces.remove(identity);
+                if (databaseTrace.isEmpty()) {
+                    databaseTraces.remove(identity);
                 }
             }
         }
@@ -75,7 +67,7 @@ public class BackstageModule extends ButterflyModuleImpl {
      * @param id
      * @return
      */
-    public InteractiveSession createInteractiveSession(HttpServletRequest request, String id) {
+    public Exhibit createExhibit(HttpServletRequest request, String id) {
         ExhibitIdentity exhibitIdentity;
         
         try {
@@ -85,10 +77,10 @@ public class BackstageModule extends ButterflyModuleImpl {
             return null;
         }
         
-        return new InteractiveSession(this, exhibitIdentity);
+        return new Exhibit(this, exhibitIdentity);
     }
     
-    static private Map<ExhibitIdentity, DatabaseTrace> getExhibitTraceMap(ExhibitIdentity identity) {
-        return s_exhibitTracesMaps[identity.hashCode() % TRACE_MAP_COUNT];
+    static private Map<ExhibitIdentity, DatabaseTrace> getDatabaseTraceMap(ExhibitIdentity identity) {
+        return s_databaseTracesMaps[identity.hashCode() % TRACE_MAP_COUNT];
     }
 }
