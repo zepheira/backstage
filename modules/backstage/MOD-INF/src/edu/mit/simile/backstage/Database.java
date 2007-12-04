@@ -29,9 +29,9 @@ import edu.mit.simile.backstage.data.AccessedDataLink;
 import edu.mit.simile.backstage.util.SailUtilities;
 
 
-public class Exhibit {
+public class Database {
     private static final long serialVersionUID = -8804204966521106254L;
-    private static Logger _logger = Logger.getLogger(Exhibit.class);
+    private static Logger _logger = Logger.getLogger(Database.class);
     
     final private ExhibitIdentity           _identity;
     final private List<AccessedDataLink>    _dataLinks;
@@ -55,7 +55,7 @@ public class Exhibit {
     private Map<URI, String>     _itemUriToId = new HashMap<URI, String>();
     private Map<String, URI>     _itemIdToUri = new HashMap<String, URI>();
     
-    public Exhibit(ExhibitIdentity identity, List<AccessedDataLink> dataLinks) {
+    public Database(ExhibitIdentity identity, List<AccessedDataLink> dataLinks) {
         _identity = identity;
         _dataLinks = new LinkedList<AccessedDataLink>(dataLinks);
     }

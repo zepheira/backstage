@@ -16,24 +16,25 @@ import edu.mit.simile.backstage.data.NullAccessedDataLink;
 import edu.mit.simile.backstage.data.PublicAccessedDataLink;
 
 /**
- * An exhibit trace consists of all exhibits (instantiations) that have the same identity.
- * Often there is only one exhibit per trace. However, if an exhibit is edited by its author while 
- * it is still being viewed by some users, then a new exhibit instantiation is spawned to serve
- * new users (while old users keep getting served with the old exhibit instantiation).
+ * A database trace consists of all databases (instantiations) that have the same identity.
+ * Often there is only one database per trace. However, if the exhibit corresponding to a database
+ * is edited by its author (in such a way that influences the data loaded into the database) while 
+ * it is still being viewed by some users, then a new database instantiation is spawned to serve
+ * new users (while old users keep getting served with the old database instantiation).
  * 
- * An exhibit is deemed to have been changed when its data is deemed to have been changed. Changes
+ * A database is deemed to have been changed when its data is deemed to have been changed. Changes
  * to its data are detected by examining expires/last-modified dates of the data links. 
  * 
  * @author dfhuynh
  */
-public class ExhibitTrace {
+public class DatabaseTrace {
     private ExhibitIdentity        _identity;
     private List<AccessedDataLink> _dataLinks;
     
-    private Set<Exhibit>        _oldExhibits = new HashSet<Exhibit>();
-    private Exhibit             _latestExhibit;
+    private Set<Database>        _oldDatabases = new HashSet<Database>();
+    private Database             _latestDatabase;
     
-    public ExhibitTrace(ExhibitIdentity identity) {
+    public DatabaseTrace(ExhibitIdentity identity) {
         _identity = identity;
         _dataLinks = new LinkedList<AccessedDataLink>();
     }
@@ -42,8 +43,8 @@ public class ExhibitTrace {
         return _identity;
     }
     
-    public Exhibit getExhibit(List<DataLink> dataLinks) {
-        boolean same = _latestExhibit != null && _dataLinks.size() == dataLinks.size();
+    public Database getDatabase(List<DataLink> dataLinks) {
+        boolean same = _latestDatabase != null && _dataLinks.size() == dataLinks.size();
         
         if (same) {
             Date now = new Date();
@@ -92,28 +93,28 @@ public class ExhibitTrace {
                 _dataLinks.add(createAccessedDataLink(dataLinks.get(i)));
             }
             
-            _latestExhibit = new Exhibit(_identity, _dataLinks);
+            _latestDatabase = new Database(_identity, _dataLinks);
             
-            _oldExhibits.add(_latestExhibit);
+            _oldDatabases.add(_latestDatabase);
         }
         
-        _latestExhibit.addReference();
+        _latestDatabase.addReference();
         
-        return _latestExhibit;
+        return _latestDatabase;
     }
     
-    public void releaseExhibit(Exhibit exhibit) {
-        exhibit.removeReference();
-        if (exhibit.getReferenceCount() == 0) {
-            _oldExhibits.remove(exhibit);
-            if (exhibit == _latestExhibit) {
-                _latestExhibit = null;
+    public void releaseDatabase(Database database) {
+        database.removeReference();
+        if (database.getReferenceCount() == 0) {
+            _oldDatabases.remove(database);
+            if (database == _latestDatabase) {
+                _latestDatabase = null;
             }
         }
     }
     
     public boolean isEmpty() {
-        return _oldExhibits.size() == 0;
+        return _oldDatabases.size() == 0;
     }
     
     static private Date getLastModified(URL url) {

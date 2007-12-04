@@ -21,7 +21,7 @@ public class BackstageModule extends ButterflyModuleImpl {
      * is deemed to have changed. Determining whether the data has changed might require some
      * HTTP HEAD requests, which take time.
      */
-    static Map<ExhibitIdentity, ExhibitTrace>[] s_exhibitTracesMaps;
+    static Map<ExhibitIdentity, DatabaseTrace>[] s_exhibitTracesMaps;
     
     @SuppressWarnings("unchecked")
     @Override
@@ -30,7 +30,7 @@ public class BackstageModule extends ButterflyModuleImpl {
         if (s_exhibitTracesMaps == null) {
             s_exhibitTracesMaps = new Map[TRACE_MAP_COUNT];
             for (int i = 0; i < TRACE_MAP_COUNT; i++) {
-                s_exhibitTracesMaps[i] = new HashMap<ExhibitIdentity, ExhibitTrace>();
+                s_exhibitTracesMaps[i] = new HashMap<ExhibitIdentity, DatabaseTrace>();
             }
         }
     }
@@ -43,25 +43,25 @@ public class BackstageModule extends ButterflyModuleImpl {
      * @param dataLinks
      * @return
      */
-    public Exhibit getExhibit(ExhibitIdentity identity, List<DataLink> dataLinks) {
-        Map<ExhibitIdentity, ExhibitTrace> exhibitTraces = getExhibitTraceMap(identity);
+    public Database getExhibit(ExhibitIdentity identity, List<DataLink> dataLinks) {
+        Map<ExhibitIdentity, DatabaseTrace> exhibitTraces = getExhibitTraceMap(identity);
         synchronized (exhibitTraces) {
-            ExhibitTrace exhibitTrace = exhibitTraces.get(identity);
+            DatabaseTrace exhibitTrace = exhibitTraces.get(identity);
             if (exhibitTrace == null) {
-                exhibitTrace = new ExhibitTrace(identity);
+                exhibitTrace = new DatabaseTrace(identity);
                 exhibitTraces.put(identity, exhibitTrace);
             }
-            return exhibitTrace.getExhibit(dataLinks);
+            return exhibitTrace.getDatabase(dataLinks);
         }
     }
     
-    public void releaseExhibit(Exhibit exhibit) {
+    public void releaseExhibit(Database exhibit) {
         ExhibitIdentity identity = exhibit.getIdentity();
-        Map<ExhibitIdentity, ExhibitTrace> exhibitTraces = getExhibitTraceMap(identity);
+        Map<ExhibitIdentity, DatabaseTrace> exhibitTraces = getExhibitTraceMap(identity);
         synchronized (exhibitTraces) {
-            ExhibitTrace exhibitFamily = exhibitTraces.get(identity);
+            DatabaseTrace exhibitFamily = exhibitTraces.get(identity);
             if (exhibitFamily != null) {
-                exhibitFamily.releaseExhibit(exhibit);
+                exhibitFamily.releaseDatabase(exhibit);
                 
                 if (exhibitFamily.isEmpty()) {
                     exhibitTraces.remove(identity);
@@ -88,7 +88,7 @@ public class BackstageModule extends ButterflyModuleImpl {
         return new InteractiveSession(this, exhibitIdentity);
     }
     
-    static private Map<ExhibitIdentity, ExhibitTrace> getExhibitTraceMap(ExhibitIdentity identity) {
+    static private Map<ExhibitIdentity, DatabaseTrace> getExhibitTraceMap(ExhibitIdentity identity) {
         return s_exhibitTracesMaps[identity.hashCode() % TRACE_MAP_COUNT];
     }
 }

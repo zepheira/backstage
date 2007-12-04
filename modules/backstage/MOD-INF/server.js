@@ -59,8 +59,8 @@ function sendError(request, response, code, message, callback) {
 
 var jsonpMethods = {};
 
-function getExhibit(is, params, result) {
-    var exhibit = is.getExhibit();
+function getDatabase(is, params, result) {
+    var database = is.getDatabase();
     if (!params._system.initialized) {
         butterfly.log("Interactive session needs initialization");
         result._system = {
@@ -68,7 +68,7 @@ function getExhibit(is, params, result) {
             types: {}
         };
         
-        var properties = exhibit.getPropertyRecords();
+        var properties = database.getPropertyRecords();
         for (var i = 0; i < properties.size(); i++) {
             var p = properties.get(i);
             result._system.properties[p.id] = {
@@ -79,7 +79,7 @@ function getExhibit(is, params, result) {
             };
         }
         
-        var types = exhibit.getTypeRecords();
+        var types = database.getTypeRecords();
         for (var i = 0; i < types.size(); i++) {
             var t = types.get(i);
             result._system.types[t.id] = {
@@ -89,7 +89,7 @@ function getExhibit(is, params, result) {
             };
         }
     }
-    return exhibit;
+    return database;
 }
 
 jsonpMethods["test"] = function(request, params) {
@@ -119,6 +119,6 @@ jsonpMethods["add-data-links"] = function(request, params) {
 jsonpMethods["do-it"] = function(request, params) {
     var result = {};
     var is = backstage.getInteractiveSession(request, params.isid);
-    var exhibit = getExhibit(is, params, result);
+    var database = getDatabase(is, params, result);
     return result;
 };
