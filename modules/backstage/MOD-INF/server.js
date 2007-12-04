@@ -59,22 +59,66 @@ function sendError(request, response, code, message, callback) {
 
 var jsonpMethods = {};
 
+function getExhibit(is, params, result) {
+    var exhibit = is.getExhibit();
+    if (!params._system.initialized) {
+        butterfly.log("Interactive session needs initialization");
+        result._system = {
+            properties: {},
+            types: {}
+        };
+        
+        var properties = exhibit.getPropertyRecords();
+        for (var i = 0; i < properties.size(); i++) {
+            var p = properties.get(i);
+            result._system.properties[p.id] = {
+                id:         p.id,
+                label:      p.label,
+                uri:        p.uri,
+                valueType:  p.valueType
+            };
+        }
+        
+        var types = exhibit.getTypeRecords();
+        for (var i = 0; i < types.size(); i++) {
+            var t = types.get(i);
+            result._system.types[t.id] = {
+                id:     t.id,
+                label:  t.label,
+                uri:    t.uri
+            };
+        }
+    }
+    return exhibit;
+}
+
 jsonpMethods["test"] = function(request, params) {
     return { pong: params.ping };
 };
 
 jsonpMethods["initialize-session"] = function(request, params) {
-    backstage.createInteractiveSession(request, params.isid);
+    var is = backstage.createInteractiveSession(request, params.isid);
+    butterfly.log(is);
     return { status: "OK" };
 };
 
-jsonpMethods["add-data-link"] = function(request, params) {
+jsonpMethods["add-data-links"] = function(request, params) {
     var is = backstage.getInteractiveSession(request, params.isid);
-    is.addDataLink(
-        params.url, 
-        ("mimeType" in params) ? params.mimeType : "application/json", 
-        ("charset" in params) ? params.charset : "utf-8"
-    );
+    var links = params.links;
+    for (var i = 0; i < links.length; i++) {
+        var link = links[i];
+        is.addDataLink(
+            link.url, 
+            (link.mimeType != null && link.mimeType != "") ? link.mimeType : "application/json", 
+            (link.charset != null && link.charset != "") ? link.charset : "utf-8"
+        );
+    }
     return { status: "OK" };
 };
 
+jsonpMethods["do-it"] = function(request, params) {
+    var result = {};
+    var is = backstage.getInteractiveSession(request, params.isid);
+    var exhibit = getExhibit(is, params, result);
+    return result;
+};

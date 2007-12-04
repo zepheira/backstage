@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 
+import edu.mit.simile.backstage.data.DataLink;
 import edu.mit.simile.butterfly.ButterflyModuleImpl;
 
 public class BackstageModule extends ButterflyModuleImpl {

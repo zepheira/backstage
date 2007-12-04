@@ -5,11 +5,11 @@
 <head>
     <title>MIT Nobel Prize Winners</title>
 
-    <link href="nobelists.js" type="application/json" rel="exhibit/data" />
+    <link href="http://simile.mit.edu/exhibit/examples/nobelists/nobelists.js" type="application/json" rel="exhibit/data" />
 
-	<script type="text/javascript" charset="utf-8" src="[#ajax#]/api/simile-ajax-api.js"></script>
-	<script type="text/javascript" charset="utf-8" src="[#exhibit#]/api/exhibit-api.js?autoCreate=false"></script>
-	<script type="text/javascript" charset="utf-8" src="[#backstage#]/api/backstage-api.js"></script>
+	<script type="text/javascript" charset="utf-8" src="http://127.0.0.1:8181/backstage/ajax/api/simile-ajax-api.js"></script>
+	<script type="text/javascript" charset="utf-8" src="http://127.0.0.1:8181/backstage/exhibit/api/exhibit-api.js?autoCreate=false"></script>
+	<script type="text/javascript" charset="utf-8" src="http://127.0.0.1:8181/backstage/api/backstage-api.js"></script>
     <style>
         body {
             font-family:    Tahoma, Arial, sans serif;
@@ -61,19 +61,13 @@
         }
     </style>
     <script type="text/javascript">
-        function deceaseRowStyler(itemID, database, tr, rowIndex) {
-            var deceased = database.getObject(itemID, "deceased");
-            if (deceased == "yes") {
-                tr.style.backgroundColor = "#f88";
-            }
-        }
         function onLoad() {
             window.backstage = Backstage.create();
             backstage.asyncCall("initialize-session", {}, function(o) { 
                 //console.log(o); 
                 backstage.asyncCall(
                     "add-data-link", 
-                    { url: "http://simile.mit.edu/exhibit/examples/presidents/presidents.js" }, 
+                    { url: "http://simile.mit.edu/exhibit/examples/nobelists/nobelists.js" }, 
                     function(o) { console.log(o); }
                 );
             });
@@ -132,7 +126,7 @@
         }
     </script>
 </head> 
-<body onload="onLoad();">
+<body>
 <div id="content">
     <div id="title-panel">
         <h1>63 MIT-related Nobel Prize Winners</h1>

@@ -15,8 +15,26 @@ import javax.servlet.http.HttpServletRequest;
  * private, then Backstage cannot host it. 
  */
 abstract public class ExhibitIdentity {
+    final protected URL _refererURL;
+    
+    protected ExhibitIdentity(URL refererURL) {
+        _refererURL = refererURL;
+    }
+    
+    public URL getURL() {
+        return _refererURL;
+    }
+    
     static public ExhibitIdentity create(HttpServletRequest request) throws MalformedURLException {
-        URL     refererURL = new URL(request.getHeader("Referer"));
+        URL refererURL;
+        try {
+            refererURL = new URL(request.getHeader("Referer"));
+        } catch (Exception e) {
+            // TODO: there is still a problem because the user can have several local
+            // exhibits in different files, which are right now indistinguishable.
+            refererURL = new URL("http://127.0.0.1/");
+        }
+        
         String  protocol = refererURL.getProtocol();
         String  host = refererURL.getHost(); 
         
@@ -32,11 +50,10 @@ abstract public class ExhibitIdentity {
     }
     
     static private class PrivateExhibitIdentity extends ExhibitIdentity { 
-        final private URL     _refererURL;
         final private String  _remoteHost;
         
         private PrivateExhibitIdentity(URL refererURL, String remoteHost) {
-            _refererURL = refererURL;
+            super(refererURL);
             _remoteHost = remoteHost;
         }
         
@@ -62,10 +79,8 @@ abstract public class ExhibitIdentity {
     }
     
     static private class PublicExhibitIdentity extends ExhibitIdentity { 
-        final private URL _refererURL;
-        
         private PublicExhibitIdentity(URL refererURL) {
-            _refererURL = refererURL;
+            super(refererURL);
         }
         
         @Override

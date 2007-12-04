@@ -11,7 +11,7 @@
         
         window.Backstage = {
             loaded:     false,
-            params:     { bundle: false },
+            params:     { bundle: false, autoCreate: true },
             namespace:  "http://simile.mit.edu/2006/11/backstage#",
             locales:    [ "en" ]
         };
@@ -38,7 +38,7 @@
             }
         }
 
-        var paramTypes = { bundle:Boolean };
+        var paramTypes = { bundle:Boolean, autoCreate:Boolean };
         if (typeof Backstage_urlPrefix == "string") {
             Backstage.urlPrefix = Backstage_urlPrefix;
             if ("Backstage_parameters" in window) {
@@ -88,6 +88,13 @@
         for (var i = 0; i < Backstage.locales.length; i++) {
             scriptURLs.push(Backstage.urlPrefix + "locales/" + Backstage.locales[i] + "/locale.js");
         };
+        
+        /*
+         *  Autocreate
+         */
+        if (Backstage.params.autoCreate) {
+            scriptURLs.push(Backstage.urlPrefix + "scripts/create.js");
+        }
         
         SimileAjax.includeJavascriptFiles(document, "", scriptURLs);
         SimileAjax.includeCssFiles(document, "", cssURLs);

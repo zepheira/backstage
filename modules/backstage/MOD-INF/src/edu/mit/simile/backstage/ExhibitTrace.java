@@ -10,6 +10,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import edu.mit.simile.backstage.data.AccessedDataLink;
+import edu.mit.simile.backstage.data.DataLink;
+import edu.mit.simile.backstage.data.NullAccessedDataLink;
+import edu.mit.simile.backstage.data.PublicAccessedDataLink;
+
 /**
  * An exhibit trace consists of all exhibits (instantiations) that have the same identity.
  * Often there is only one exhibit per trace. However, if an exhibit is edited by its author while 
@@ -84,7 +89,7 @@ public class ExhibitTrace {
         if (!same) {
             _dataLinks.clear();
             for (int i = 0; i < dataLinks.size(); i++) {
-                _dataLinks.add(createDatedDataLink(dataLinks.get(i)));
+                _dataLinks.add(createAccessedDataLink(dataLinks.get(i)));
             }
             
             _latestExhibit = new Exhibit(_identity, _dataLinks);
@@ -133,7 +138,21 @@ public class ExhibitTrace {
         }
     }
     
-    static private AccessedDataLink createDatedDataLink(DataLink dataLink) {
+    protected AccessedDataLink createAccessedDataLink(DataLink dataLink) {
+        String protocol = dataLink.url.getProtocol();
+        if (protocol.equals("http") || protocol.equals("https") || protocol.equals("ftp")) {
+            return createPublicAccessedDataLink(dataLink);
+        } else {
+            return new NullAccessedDataLink(
+                dataLink, 
+                null,
+                new Date(),
+                false
+            );
+        }
+    }
+    
+    protected PublicAccessedDataLink createPublicAccessedDataLink(DataLink dataLink) {
         try {
             URLConnection connection = dataLink.url.openConnection();
             
@@ -143,21 +162,18 @@ public class ExhibitTrace {
             
             long expires = connection.getExpiration();
             
-            AccessedDataLink datedDataLink = new AccessedDataLink(
+            return new PublicAccessedDataLink(
                 dataLink, 
                 (expires != 0) ? new Date(expires) : null,
                 new Date(),
                 false
             );
-            
-            return datedDataLink;
         } catch (IOException e) {
-            return new AccessedDataLink(
+            return new PublicAccessedDataLink(
                 dataLink, 
                 null,
                 new Date(),
                 true
             );
         }
-    }
-}
+    }}
