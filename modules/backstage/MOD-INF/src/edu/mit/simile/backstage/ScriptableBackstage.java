@@ -9,9 +9,12 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionBindingEvent;
 import javax.servlet.http.HttpSessionBindingListener;
 
+import org.apache.log4j.Logger;
+
 public class ScriptableBackstage extends BackstageScriptableObject {
     private static final long serialVersionUID = -6840851588510351185L;
-
+    private static Logger _logger = Logger.getLogger(ScriptableBackstage.class);
+    
     public static String getName() {
         return "Backstage";
     }
@@ -27,6 +30,8 @@ public class ScriptableBackstage extends BackstageScriptableObject {
         ExhibitCollection ec = getExhibitCollection(request);
         Exhibit exhibit = getModule().createExhibit(request, id);
         
+        _logger.info("----" + request.getSession().getId());
+        
         ec.setExhibit(id, exhibit);
         
         return exhibit;
@@ -36,6 +41,8 @@ public class ScriptableBackstage extends BackstageScriptableObject {
         HttpServletRequest request = (HttpServletRequest) unwrap(requestO);
         ExhibitCollection ec = getExhibitCollection(request);
         Exhibit exhibit = ec.getExhibit(id);
+        
+        _logger.info("----" + request.getSession().getId());
         
         return exhibit;
     }

@@ -10,8 +10,9 @@ $(document).ready(function() {
         //window.exhibit = Exhibit.create();
         //window.exhibit.configureFromDOM();
     };
-    
-    window.backstage = Backstage.create(function() {
+    var fDone2 = function() {
         window.backstage.loadDataLinks(fDone);
-    });
+    };
+    
+    window.backstage = Backstage.create(fDone2);
 });

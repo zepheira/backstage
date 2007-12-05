@@ -18,4 +18,4 @@ set BUTTERFLY_HOME=%~p0..\butterfly\
 echo set butterfly home
 :gotButterflyHome
 
-%BUTTERFLY_HOME%butterfly.bat %PROFILE% /u "/backstage" /b %CWD%butterfly.properties /c %CWD%modules.properties /p %CWD%modules
+%BUTTERFLY_HOME%butterfly.bat %PROFILE% /u /backstage /b %CWD%butterfly.properties /c %CWD%modules.properties /p %CWD%modules

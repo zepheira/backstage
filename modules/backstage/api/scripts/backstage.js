@@ -21,7 +21,14 @@ Backstage._Impl = function(cont) {
     this._jobQueue = new Backstage.JobQueue();
     
     this._dataLinks = [];
-    this._initialize(cont);
+    
+    /*
+     *  We use window.setTimeout because otherwise, on Opera 9, cont gets
+     *  called before this constructor returns. This means that the
+     *  Backstage object hasn't been assigned to some variable in the caller
+     *  and cont won't be able to retrieve it.
+     */
+    this._initialize(function() { window.setTimeout(cont, 0); });
 };
 
 Backstage._Impl.prototype.dispose = function() {
@@ -105,7 +112,7 @@ Backstage._Impl.prototype._initialize = function(onSuccess, onError) {
         "initialize-session", 
         { isid: this._isid }, 
         function(o) { 
-            console.log(o);
+            SimileAjax.Debug.log(o);
             if (typeof onSuccess == "function") {
                 onSuccess();
             }

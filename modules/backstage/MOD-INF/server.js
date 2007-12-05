@@ -39,7 +39,7 @@ function process(path, request, response) {
 }
 
 function processJsonpCall(request, response, call) {
-    butterfly.log(call.id + " payload: \"" + call.params + "\"");
+    butterfly.log("JSONPC " + call.id + " method: \"" + call.method + "\" payload: \"" + call.params + "\"");
     try {
         var params = butterfly.parseJSON(call.params);
         if (call.method in jsonpMethods) {
