@@ -61,69 +61,59 @@
         }
     </style>
     <script type="text/javascript">
-        function onLoad() {
-            window.backstage = Backstage.create();
-            backstage.asyncCall("initialize-session", {}, function(o) { 
-                //console.log(o); 
-                backstage.asyncCall(
-                    "add-data-link", 
-                    { url: "http://simile.mit.edu/exhibit/examples/nobelists/nobelists.js" }, 
-                    function(o) { console.log(o); }
-                );
-            });
+        Backstage.JsonpTransport.removeScripts = false;
+        
+        /*
+        - initialize an interactive session for this particular window, 
+          bound to the doc's URL as the exhibit
+        - send over the data URLs + mime types, if any
+        - the server tries to reuse any existing instantiation of the exhibit for which
+          the data is the same (same URLs + mime types, same dates)
+        - the server side exhibit object holds the database as well as precalculated root facets (?)
+        - the interactive session holds the current facets, etc.
+        
+        - each Exhibit object on the client can have a Backstage object (on the client).
+        - the Backstage object is responsible for 
+            - computing the facets
+            - computing the expressions for the views, e.g., marker color for the map view
+            - 
             
-            /*
-            - initialize an interactive session for this particular window, 
-              bound to the doc's URL as the exhibit
-            - send over the data URLs + mime types, if any
-            - the server tries to reuse any existing instantiation of the exhibit for which
-              the data is the same (same URLs + mime types, same dates)
-            - the server side exhibit object holds the database as well as precalculated root facets (?)
-            - the interactive session holds the current facets, etc.
-            
-            - each Exhibit object on the client can have a Backstage object (on the client).
-            - the Backstage object is responsible for 
-                - computing the facets
-                - computing the expressions for the views, e.g., marker color for the map view
-                - 
-                
-            - questions:
-                - would the map view be capable of computing just the right markers in 
-                  the current visible window? does this require a special server-side component?
-                  is this important? my guess is yes.
-                - how do lenses work?
-                    - lens templates get transferred over to the server side
-                    - JSON blobs get transferred back
-                        {
-                            templateID: "[id]",
-                            bindings: [
-                                {   content: "abc",
-                                    attributes: {
-                                        "foo": "def",
-                                        "bar": "ghi"
-                                    },
-                                    styles: {
-                                        "background"
-                                    }
+        - questions:
+            - would the map view be capable of computing just the right markers in 
+              the current visible window? does this require a special server-side component?
+              is this important? my guess is yes.
+            - how do lenses work?
+                - lens templates get transferred over to the server side
+                - JSON blobs get transferred back
+                    {
+                        templateID: "[id]",
+                        bindings: [
+                            {   content: "abc",
+                                attributes: {
+                                    "foo": "def",
+                                    "bar": "ghi"
                                 },
-                                {   if:      false },
-                                {   select:  "blue" },
-                                {   content: [
-                                        {   bindings: [
-                                                ...
-                                            ]
-                                        },
-                                        ...
-                                    ]
+                                styles: {
+                                    "background"
                                 }
-                            ]
-                        }
-                    - the client side puts the DOM together
-                    - the rendering of many items can be batched into a single call
-                - maybe we should have Component.canHaveBackstage(). but then what?
-                - how does the facet/collection interaction work? updateCollection, updateFacets.
-            */
-        }
+                            },
+                            {   if:      false },
+                            {   select:  "blue" },
+                            {   content: [
+                                    {   bindings: [
+                                            ...
+                                        ]
+                                    },
+                                    ...
+                                ]
+                            }
+                        ]
+                    }
+                - the client side puts the DOM together
+                - the rendering of many items can be batched into a single call
+            - maybe we should have Component.canHaveBackstage(). but then what?
+            - how does the facet/collection interaction work? updateCollection, updateFacets.
+        */
     </script>
 </head> 
 <body>

@@ -67,11 +67,11 @@ public class BackstageModule extends ButterflyModuleImpl {
      * @param id
      * @return
      */
-    public Exhibit createExhibit(HttpServletRequest request, String id) {
+    public Exhibit createExhibit(HttpServletRequest request, String refererUrlSHA1) {
         ExhibitIdentity exhibitIdentity;
         
         try {
-            exhibitIdentity = ExhibitIdentity.create(request);
+            exhibitIdentity = ExhibitIdentity.create(request, refererUrlSHA1);
         } catch (MalformedURLException e) {
             _logger.error("Failed to construct exhibit identity from request " + request.toString(), e);
             return null;
@@ -81,6 +81,6 @@ public class BackstageModule extends ButterflyModuleImpl {
     }
     
     static private Map<ExhibitIdentity, DatabaseTrace> getDatabaseTraceMap(ExhibitIdentity identity) {
-        return s_databaseTracesMaps[identity.hashCode() % TRACE_MAP_COUNT];
+        return s_databaseTracesMaps[Math.abs(identity.hashCode()) % TRACE_MAP_COUNT];
     }
 }

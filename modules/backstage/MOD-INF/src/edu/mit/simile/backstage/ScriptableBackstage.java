@@ -25,12 +25,10 @@ public class ScriptableBackstage extends BackstageScriptableObject {
     
     // ---------------------------------------------------------------------
     
-    public Object jsFunction_createExhibit(Object requestO, String id) throws MalformedURLException {
+    public Object jsFunction_createExhibit(Object requestO, String refererUrlSHA1, String id) throws MalformedURLException {
         HttpServletRequest request = (HttpServletRequest) unwrap(requestO);
         ExhibitCollection ec = getExhibitCollection(request);
-        Exhibit exhibit = getModule().createExhibit(request, id);
-        
-        _logger.info("----" + request.getSession().getId());
+        Exhibit exhibit = getModule().createExhibit(request, refererUrlSHA1);
         
         ec.setExhibit(id, exhibit);
         
@@ -41,8 +39,6 @@ public class ScriptableBackstage extends BackstageScriptableObject {
         HttpServletRequest request = (HttpServletRequest) unwrap(requestO);
         ExhibitCollection ec = getExhibitCollection(request);
         Exhibit exhibit = ec.getExhibit(id);
-        
-        _logger.info("----" + request.getSession().getId());
         
         return exhibit;
     }

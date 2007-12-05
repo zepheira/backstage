@@ -43,8 +43,19 @@ function processJsonpCall(request, response, call) {
     try {
         var params = butterfly.parseJSON(call.params);
         if (call.method in jsonpMethods) {
-            var result = jsonpMethods[call.method](request, params);
-            butterfly.sendJSONP(request, response, result, call.callback);
+            var f = jsonpMethods[call.method];
+            if (f.requiresExhibit) {
+                var exhibit = backstage.getExhibit(request, params.isid);
+                if (exhibit != null) {
+                    var result = f(request, params, exhibit);
+                    butterfly.sendJSONP(request, response, result, call.callback);
+                } else {
+                    sendError(request, response, 410, "Interactive session has expired.");
+                }
+            } else {
+                var result = f(request, params);
+                butterfly.sendJSONP(request, response, result, call.callback);
+            }
         } else {
             sendError(request, response, 404, "JSONP Method " + call.method + " Not Found", call.error);
         }
@@ -59,8 +70,8 @@ function sendError(request, response, code, message, callback) {
 
 var jsonpMethods = {};
 
-function getDatabase(is, params, result) {
-    var database = is.getDatabase();
+function getDatabase(exhibit, params, result) {
+    var database = exhibit.getDatabase();
     if (!params._system.initialized) {
         butterfly.log("Exhibit session needs initialization");
         result._system = {
@@ -97,13 +108,11 @@ jsonpMethods["test"] = function(request, params) {
 };
 
 jsonpMethods["initialize-session"] = function(request, params) {
-    var exhibit = backstage.createExhibit(request, params.isid);
-    butterfly.log(exhibit);
+    var exhibit = backstage.createExhibit(request, params.refererUrlSHA1, params.isid);
     return { status: "OK" };
 };
 
-jsonpMethods["add-data-links"] = function(request, params) {
-    var exhibit = backstage.getExhibit(request, params.isid);
+jsonpMethods["add-data-links"] = function(request, params, exhibit) {
     var links = params.links;
     for (var i = 0; i < links.length; i++) {
         var link = links[i];
@@ -115,10 +124,11 @@ jsonpMethods["add-data-links"] = function(request, params) {
     }
     return { status: "OK" };
 };
+jsonpMethods["add-data-links"].requiresExhibit = true;
 
-jsonpMethods["do-it"] = function(request, params) {
+jsonpMethods["do-it"] = function(request, params, exhibit) {
     var result = {};
-    var exhibit = backstage.getExhibit(request, params.isid);
     var database = getDatabase(exhibit, params, result);
     return result;
 };
+jsonpMethods["do-it"].requiresExhibit = true;

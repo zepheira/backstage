@@ -18,6 +18,7 @@
         
         var javascriptFiles = [
             "backstage.js",
+            "util/sha1.js",
             "util/json.js",
             "util/jsonp-transport.js",
             "util/job-queue.js"

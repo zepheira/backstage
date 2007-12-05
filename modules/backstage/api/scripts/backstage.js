@@ -110,7 +110,7 @@ Backstage._Impl.prototype.loadDataLinks = function(onSuccess, onError) {
 Backstage._Impl.prototype._initialize = function(onSuccess, onError) {
     this._jsonpTransport.asyncCall(
         "initialize-session", 
-        { isid: this._isid }, 
+        { isid: this._isid, refererUrlSHA1: Backstage.SHA1.hex_sha1(document.location.href) }, 
         function(o) { 
             SimileAjax.Debug.log(o);
             if (typeof onSuccess == "function") {

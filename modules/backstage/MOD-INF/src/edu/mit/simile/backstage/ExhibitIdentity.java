@@ -25,27 +25,55 @@ abstract public class ExhibitIdentity {
         return _refererURL;
     }
     
-    static public ExhibitIdentity create(HttpServletRequest request) throws MalformedURLException {
-        URL refererURL;
+    static public ExhibitIdentity create(HttpServletRequest request, String refererUrlSHA1) throws MalformedURLException {
         try {
-            refererURL = new URL(request.getHeader("Referer"));
+            URL refererURL = new URL(request.getHeader("Referer"));
+            
+            String  protocol = refererURL.getProtocol();
+            String  host = refererURL.getHost(); 
+            
+            if (protocol.equalsIgnoreCase("file") ||
+                ((protocol.equalsIgnoreCase("http") || protocol.equalsIgnoreCase("https")) &&
+                 (host.equalsIgnoreCase("127.0.0.1") || 
+                  host.equalsIgnoreCase("localhost") ||
+                  host.indexOf('.') < 0))) {
+                return new PrivateExhibitIdentity(refererURL, request.getRemoteHost());
+            } else {
+                return new PublicExhibitIdentity(refererURL);
+            }
         } catch (Exception e) {
-            // TODO: there is still a problem because the user can have several local
-            // exhibits in different files, which are right now indistinguishable.
-            refererURL = new URL("http://127.0.0.1/");
+            return new AnonymousExhibitIdentity(refererUrlSHA1, request.getRemoteHost());
+        }
+    }
+    
+    static private class AnonymousExhibitIdentity extends ExhibitIdentity { 
+        final private String  _refererUrlSHA1;
+        final private String  _remoteHost;
+        
+        private AnonymousExhibitIdentity(String refererUrlSHA1, String remoteHost) throws MalformedURLException {
+            super(new URL("http://127.0.0.1/"));
+            _refererUrlSHA1 = refererUrlSHA1;
+            _remoteHost = remoteHost;
         }
         
-        String  protocol = refererURL.getProtocol();
-        String  host = refererURL.getHost(); 
+        @Override
+        public int hashCode() {
+            return _refererUrlSHA1.hashCode() ^ _remoteHost.hashCode();
+        }
         
-        if (protocol.equalsIgnoreCase("file") ||
-            ((protocol.equalsIgnoreCase("http") || protocol.equalsIgnoreCase("https")) &&
-             (host.equalsIgnoreCase("127.0.0.1") || 
-              host.equalsIgnoreCase("localhost") ||
-              host.indexOf('.') < 0))) {
-            return new PrivateExhibitIdentity(refererURL, request.getRemoteHost());
-        } else {
-            return new PublicExhibitIdentity(refererURL);
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof AnonymousExhibitIdentity) {
+                AnonymousExhibitIdentity id = (AnonymousExhibitIdentity) obj;
+                
+                return id._refererUrlSHA1.equals(_refererUrlSHA1) && id._remoteHost.equals(_remoteHost);
+            }
+            return false;
+        }
+        
+        @Override
+        public String toString() {
+            return "Anonymous exhibit " + _refererUrlSHA1 + " private to " + _remoteHost;
         }
     }
     
@@ -74,7 +102,7 @@ abstract public class ExhibitIdentity {
         
         @Override
         public String toString() {
-            return "Exhibit " + _refererURL.toExternalForm() + " private to " + _remoteHost;
+            return "Private exhibit " + _refererURL.toExternalForm() + " private to " + _remoteHost;
         }
     }
     
@@ -100,7 +128,7 @@ abstract public class ExhibitIdentity {
         
         @Override
         public String toString() {
-            return "Exhibit " + _refererURL.toExternalForm();
+            return "Public exhibit " + _refererURL.toExternalForm();
         }
     }
 }
