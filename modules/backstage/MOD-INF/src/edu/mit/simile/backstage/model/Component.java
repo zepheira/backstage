@@ -1,7 +1,7 @@
 package edu.mit.simile.backstage.model;
 
-import edu.mit.simile.backstage.Database;
-import edu.mit.simile.backstage.Exhibit;
+import edu.mit.simile.backstage.model.data.Database;
+
 
 public class Component {
     final protected Context _context;

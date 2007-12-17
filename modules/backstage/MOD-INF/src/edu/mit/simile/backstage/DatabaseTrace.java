@@ -14,6 +14,7 @@ import edu.mit.simile.backstage.data.AccessedDataLink;
 import edu.mit.simile.backstage.data.DataLink;
 import edu.mit.simile.backstage.data.NullAccessedDataLink;
 import edu.mit.simile.backstage.data.PublicAccessedDataLink;
+import edu.mit.simile.backstage.model.data.Database;
 
 /**
  * A database trace consists of all databases (instantiations) that have the same identity.

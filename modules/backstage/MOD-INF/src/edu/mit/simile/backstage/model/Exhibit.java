@@ -1,4 +1,4 @@
-package edu.mit.simile.backstage;
+package edu.mit.simile.backstage.model;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -7,7 +7,10 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import edu.mit.simile.backstage.BackstageModule;
+import edu.mit.simile.backstage.ExhibitIdentity;
 import edu.mit.simile.backstage.data.DataLink;
+import edu.mit.simile.backstage.model.data.Database;
 
 public class Exhibit {
     private static Logger _logger = Logger.getLogger(Database.class);

@@ -1,6 +1,6 @@
 package edu.mit.simile.backstage.model.data;
 
-import edu.mit.simile.backstage.Exhibit;
+import edu.mit.simile.backstage.model.Exhibit;
 
 public class TypeBasedCollection extends Collection {
 

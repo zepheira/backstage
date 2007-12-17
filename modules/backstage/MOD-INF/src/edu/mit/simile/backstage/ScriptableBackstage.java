@@ -11,6 +11,8 @@ import javax.servlet.http.HttpSessionBindingListener;
 
 import org.apache.log4j.Logger;
 
+import edu.mit.simile.backstage.model.Exhibit;
+
 public class ScriptableBackstage extends BackstageScriptableObject {
     private static final long serialVersionUID = -6840851588510351185L;
     private static Logger _logger = Logger.getLogger(ScriptableBackstage.class);

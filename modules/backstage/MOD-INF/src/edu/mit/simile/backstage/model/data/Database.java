@@ -1,4 +1,4 @@
-package edu.mit.simile.backstage;
+package edu.mit.simile.backstage.model.data;
 
 import info.aduna.iteration.CloseableIteration;
 
@@ -25,6 +25,7 @@ import org.openrdf.sail.SailException;
 import org.openrdf.sail.memory.MemoryStore;
 
 import edu.mit.simile.babel.exhibit.ExhibitOntology;
+import edu.mit.simile.backstage.ExhibitIdentity;
 import edu.mit.simile.backstage.data.AccessedDataLink;
 import edu.mit.simile.backstage.util.SailUtilities;
 
