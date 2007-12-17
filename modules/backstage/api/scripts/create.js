@@ -5,14 +5,12 @@
  *======================================================================
  */
 $(document).ready(function() { 
-    var fDone = function() {
-        alert("loaded data");
-        //window.exhibit = Exhibit.create();
-        //window.exhibit.configureFromDOM();
+    var loadDataLinks = function() {
+        window.backstage.loadDataLinks(configureFromDOM);
     };
-    var fDone2 = function() {
-        window.backstage.loadDataLinks(fDone);
+    var configureFromDOM = function() {
+        window.backstage.configureFromDOM();
     };
     
-    window.backstage = Backstage.create(fDone2);
+    window.backstage = Backstage.create(loadDataLinks);
 });

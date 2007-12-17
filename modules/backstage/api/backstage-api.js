@@ -21,7 +21,9 @@
             "util/sha1.js",
             "util/json.js",
             "util/jsonp-transport.js",
-            "util/job-queue.js"
+            "util/job-queue.js",
+            "data/collection.js",
+            "ui/ui-context.js"
         ];
         var cssFiles = [
             "backstage.css",

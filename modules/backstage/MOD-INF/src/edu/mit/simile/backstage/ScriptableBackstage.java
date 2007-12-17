@@ -34,7 +34,7 @@ public class ScriptableBackstage extends BackstageScriptableObject {
         
         ec.setExhibit(id, exhibit);
         
-        return exhibit;
+        return wrap(exhibit, this);
     }
     
     public Object jsFunction_getExhibit(Object requestO, String id) throws MalformedURLException {
@@ -42,10 +42,10 @@ public class ScriptableBackstage extends BackstageScriptableObject {
         ExhibitCollection ec = getExhibitCollection(request);
         Exhibit exhibit = ec.getExhibit(id);
         
-        return exhibit;
+        return wrap(exhibit, this);
     }
     
-    private ExhibitCollection getExhibitCollection(HttpServletRequest request) {
+    static private ExhibitCollection getExhibitCollection(HttpServletRequest request) {
         HttpSession session = request.getSession(true);
         ExhibitCollection isc = (ExhibitCollection) 
             session.getAttribute("exhibits");

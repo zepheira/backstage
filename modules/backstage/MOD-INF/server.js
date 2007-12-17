@@ -103,12 +103,20 @@ function getDatabase(exhibit, params, result) {
     return database;
 }
 
+/*
 jsonpMethods["test"] = function(request, params) {
     return { pong: params.ping };
 };
+jsonpMethods["test2"] = function(request, params, exhibit) {
+    var result = {};
+    var database = getDatabase(exhibit, params, result);
+    return result;
+};
+jsonpMethods["test2"].requiresExhibit = true;
+*/
 
 jsonpMethods["initialize-session"] = function(request, params) {
-    var exhibit = backstage.createExhibit(request, params.refererUrlSHA1, params.isid);
+    /* var exhibit = */ backstage.createExhibit(request, params.refererUrlSHA1, params.isid);
     return { status: "OK" };
 };
 
@@ -126,9 +134,30 @@ jsonpMethods["add-data-links"] = function(request, params, exhibit) {
 };
 jsonpMethods["add-data-links"].requiresExhibit = true;
 
-jsonpMethods["do-it"] = function(request, params, exhibit) {
+jsonpMethods["configure-from-dom"] = function(request, params, exhibit) {
     var result = {};
-    var database = getDatabase(exhibit, params, result);
+    var configuration = params.configuration;
+    
+    importClass(Packages.edu.mit.simile.backstage.model.data.AllItemsCollection);
+    
+    var collections = configuration.collections;
+    for (var i = 0; i < collections.length; i++) {
+        var c = collections[i];
+        var collection;
+        
+        switch (c.type) {
+        case "type-based":
+            collection = new TypeBasedCollection(exhibit, c.id);
+            break;
+        case "based":
+            collection = new BasedCollection(exhibit, c.id);
+            break;
+        default:
+            collection = new AllItemsCollection(exhibit, c.id);
+            break;
+        }
+    }
     return result;
 };
-jsonpMethods["do-it"].requiresExhibit = true;
+jsonpMethods["configure-from-dom"].requiresExhibit = true;
+
