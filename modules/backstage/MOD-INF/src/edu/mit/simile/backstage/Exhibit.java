@@ -34,7 +34,7 @@ public class Exhibit {
         }
     }
 
-    public Database getDatabase() throws MalformedURLException {
+    public Database getDatabase() {
         if (_database == null) {
             _database = _module.getDatabase(_exhibitIdentity, _dataLinks);
         }
