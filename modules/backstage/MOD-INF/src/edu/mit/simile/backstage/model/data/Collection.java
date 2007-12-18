@@ -1,5 +1,7 @@
 package edu.mit.simile.backstage.model.data;
 
+import org.mozilla.javascript.Scriptable;
+
 import edu.mit.simile.backstage.model.Exhibit;
 
 abstract public class Collection {
@@ -11,4 +13,7 @@ abstract public class Collection {
         _id = id;
     }
 
+    public void configure(Scriptable config) {
+        // nothing to do
+    }
 }

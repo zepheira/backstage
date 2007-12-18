@@ -47,6 +47,21 @@ Backstage._Impl = function(cont) {
 Backstage._Impl.prototype.dispose = function() {
 };
 
+Backstage._Impl.prototype.getCollection = function(id) {
+    var collection = this._collectionMap[id];
+    if (collection == null && id == "default") {
+        collection = Backstage.Collection.createAllItemsCollection(id, this);
+        
+        this._collectionMap[id] = collection;
+        this._domConfiguration.collections.push(collection.getServerSideConfiguration());
+    }
+    return collection;
+};
+
+Backstage._Impl.prototype.getDefaultCollection = function() {
+    return this.getCollection("default");
+};
+
 /*
  *  All async calls should go through this method, which is responsible for
  *  reconstructing the server's state should the connection got closed, and
@@ -146,7 +161,7 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
             //case "lens":        lensElmts.push(elmt); break;
             //case "facet":       facetElmts.push(elmt); break;
             default: 
-                //otherElmts.push(elmt);
+                otherElmts.push(elmt);
             }
         } else {
             var node = elmt.firstChild;
@@ -169,8 +184,11 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
         }
         
         var collection = Backstage.Collection.createFromDOM2(id, elmt, uiContext);
+        var serverSideConfig = collection.getServerSideConfiguration();
+        serverSideConfig.id = id;
+        
         this._collectionMap[id] = collection;
-        this._domConfiguration.collections.push(collection.getServerSideConfiguration());
+        this._domConfiguration.collections.push(serverSideConfig);
     }
     
     var self = this;
@@ -184,7 +202,12 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
                     if (id == null || id.length == 0) {
                         id = "component" + Math.floor(Math.random() * 1000000);
                     }
-                    self.setComponent(id, component);
+                    
+                    var serverSideConfig = component.getServerSideConfiguration();
+                    serverSideConfig.id = id;
+                    
+                    self._componentMap[id] = component;
+                    self._domConfiguration.components.push(serverSideConfig);
                 }
             } catch (e) {
                 SimileAjax.Debug.exception(e);

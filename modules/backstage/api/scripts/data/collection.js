@@ -80,6 +80,7 @@ Backstage.Collection.createFromDOM2 = function(id, elmt, uiContext) {
 
 Backstage.Collection.createAllItemsCollection = function(id, backstage) {
     var collection = new Backstage.Collection(id, backstage);
+    collection._type = "all-items";
     
     return collection;
 };

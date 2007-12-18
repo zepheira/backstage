@@ -2,15 +2,19 @@ package edu.mit.simile.backstage.model;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 
 import edu.mit.simile.backstage.BackstageModule;
 import edu.mit.simile.backstage.ExhibitIdentity;
 import edu.mit.simile.backstage.data.DataLink;
+import edu.mit.simile.backstage.model.data.Collection;
 import edu.mit.simile.backstage.model.data.Database;
+import edu.mit.simile.backstage.model.ui.Component;
 
 public class Exhibit {
     private static Logger _logger = Logger.getLogger(Database.class);
@@ -23,9 +27,15 @@ public class Exhibit {
     
     private Database _database;
     
+    final private Map<String, Collection> _collectionMap = new HashMap<String, Collection>();
+    final private Map<String, Component> _componentMap = new HashMap<String, Component>();
+    
+    private Context _context;
+    
     public Exhibit(BackstageModule module, ExhibitIdentity exhibitIdentity) {
         _module = module;
         _exhibitIdentity = exhibitIdentity;
+        _context = new Context(this);
     }
     
     public void dispose() {
@@ -43,7 +53,27 @@ public class Exhibit {
         }
         return _database;
     }
+    
+    public Context getContext() {
+        return _context;
+    }
+    
+    public Collection getCollection(String id) {
+        return _collectionMap.get(id);
+    }
 
+    public void setCollection(String id, Collection collection) {
+        _collectionMap.put(id, collection);
+    }
+    
+    public Component getComponent(String id) {
+        return _componentMap.get(id);
+    }
+
+    public void setComponent(String id, Component component) {
+        _componentMap.put(id, component);
+    }
+    
     public void addDataLink(String url, String mimeType, String charset) throws MalformedURLException {
         if (_database != null) {
             throw new InternalError("Cannot add more data link after exhibit already initialized");

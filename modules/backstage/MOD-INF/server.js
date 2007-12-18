@@ -39,7 +39,7 @@ function process(path, request, response) {
 }
 
 function processJsonpCall(request, response, call) {
-    butterfly.log("JSONPC " + call.id + " method: \"" + call.method + "\" payload: \"" + call.params + "\"");
+    butterfly.log("JSONPC " + call.id + " method: " + call.method + ", payload: " + call.params);
     try {
         var params = butterfly.parseJSON(call.params);
         if (call.method in jsonpMethods) {
@@ -107,13 +107,13 @@ function getDatabase(exhibit, params, result) {
 jsonpMethods["test"] = function(request, params) {
     return { pong: params.ping };
 };
+*/
 jsonpMethods["test2"] = function(request, params, exhibit) {
     var result = {};
     var database = getDatabase(exhibit, params, result);
     return result;
 };
 jsonpMethods["test2"].requiresExhibit = true;
-*/
 
 jsonpMethods["initialize-session"] = function(request, params) {
     /* var exhibit = */ backstage.createExhibit(request, params.refererUrlSHA1, params.isid);
@@ -138,7 +138,8 @@ jsonpMethods["configure-from-dom"] = function(request, params, exhibit) {
     var result = {};
     var configuration = params.configuration;
     
-    importClass(Packages.edu.mit.simile.backstage.model.data.AllItemsCollection);
+    importPackage(Packages.edu.mit.simile.backstage.model.data);
+    importPackage(Packages.edu.mit.simile.backstage.model.ui.views);
     
     var collections = configuration.collections;
     for (var i = 0; i < collections.length; i++) {
@@ -156,7 +157,31 @@ jsonpMethods["configure-from-dom"] = function(request, params, exhibit) {
             collection = new AllItemsCollection(exhibit, c.id);
             break;
         }
+        
+        collection.configure(c);
+        exhibit.setCollection(c.id, collection);
     }
+    
+    var context = exhibit.getContext();
+    var components = configuration.components;
+    for (var i = 0; i < components.length; i++) {
+        var c = components[i];
+        var component;
+        
+        switch (c.role) {
+        case "view":
+            switch (c.viewClass) {
+            default:
+                component = new TileView(context, c.id);
+                break;
+            }
+            break;
+        }
+        
+        component.configure(c);
+        exhibit.setComponent(c.id, component);
+    }
+    
     return result;
 };
 jsonpMethods["configure-from-dom"].requiresExhibit = true;
