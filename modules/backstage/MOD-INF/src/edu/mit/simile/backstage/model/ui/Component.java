@@ -14,6 +14,20 @@ abstract public class Component {
         _id = id;
     }
     
+    public String getID() {
+        return _id;
+    }
+    
+    public Context getContext() {
+        return _context;
+    }
+    
+    public Collection getCollection() {
+        String collectionID = _context.getStringProperty("collectionID");
+        
+        return _context.getExhibit().getCollection(collectionID != null ? collectionID : "default");
+    }
+    
     public void configure(Scriptable config) {
         try {
             String collectionID = (String) config.get("collectionID", config);
@@ -25,9 +39,7 @@ abstract public class Component {
         }
     }
     
-    public Collection getCollection() {
-        String collectionID = _context.getStringProperty("collectionID");
-        
-        return _context.getExhibit().getCollection(collectionID != null ? collectionID : "default");
+    public Scriptable getComponentState() {
+        return null;
     }
 }

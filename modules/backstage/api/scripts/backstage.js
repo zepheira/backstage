@@ -84,6 +84,14 @@ Backstage._Impl.prototype.asyncCall = function(method, params, onSuccess, onErro
                     // process system data that piggybacks on normal calls
                     self._processSystemData(o._system);
                 }
+                if ("_componentStates" in o) {
+                    // process component states that piggyback on normal calls
+                    self._processComponentStates(o._componentStates);
+                }
+                if ("_componentUpdates" in o) {
+                    // process component states that piggyback on normal calls
+                    self._processComponentUpdates(o._componentUpdates);
+                }
                 if (typeof onSuccess == "function") {
                     onSuccess(o);
                 }
@@ -318,14 +326,40 @@ Backstage._Impl.prototype._internalAddDataLinks = function(links, onSuccess, onE
 };
 
 Backstage._Impl.prototype._internalConfigureFromDOM = function(onSuccess, onError) {
-    this._jsonpTransport.asyncCall(
+    this.asyncCall(
         "configure-from-dom", 
-        { isid: this._isid, configuration: this._domConfiguration }, 
+        { configuration: this._domConfiguration }, 
         function(o) { onSuccess(); },
         onError
     );
 };
+
 Backstage._Impl.prototype._processSystemData = function(o) {
     this._properties = o.properties;
     this._types = o.types;
+    this._initialized = false;
+};
+
+Backstage._Impl.prototype._processComponentStates = function(states) {
+    for (var i = 0; i < states.length; i++) {
+        try {
+            var state = states[i];
+            var component = this._componentMap[state.id];
+            component.onNewState(state);
+        } catch (e) {
+            SimileAjax.Debug.exception(e);
+        }
+    }
+};
+
+Backstage._Impl.prototype._processComponentUpdates = function(updates) {
+    for (var i = 0; i < updates.length; i++) {
+        try {
+            var update = updates[i];
+            var component = this._componentMap[update.id];
+            component.onUpdate(update);
+        } catch (e) {
+            SimileAjax.Debug.exception(e);
+        }
+    }
 };

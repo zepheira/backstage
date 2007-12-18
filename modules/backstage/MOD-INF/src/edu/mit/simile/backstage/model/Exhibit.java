@@ -2,6 +2,7 @@ package edu.mit.simile.backstage.model;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -72,6 +73,10 @@ public class Exhibit {
 
     public void setComponent(String id, Component component) {
         _componentMap.put(id, component);
+    }
+    
+    public List<Component> getAllComponents() {
+        return new ArrayList<Component>(_componentMap.values());
     }
     
     public void addDataLink(String url, String mimeType, String charset) throws MalformedURLException {

@@ -8,10 +8,10 @@ Backstage.TileView = function(containerElmt, uiContext) {
     this._uiContext = uiContext;
     this._settings = {};
     
-    var view = this;
-
-    this._listener = { onItemsChanged: function() { view._reconstruct(); } };
-    uiContext.getCollection().addListener(this._listener);
+    this._state = { 
+        count: 0,
+        items: []
+    };
 };
 
 Backstage.TileView._settingSpecs = {
@@ -35,8 +35,6 @@ Backstage.TileView.createFromDOM = function(configElmt, containerElmt, uiContext
 };
 
 Backstage.TileView.prototype.dispose = function() {
-    this._uiContext.getCollection().removeListener(this._listener);
-
     this._div.innerHTML = "";
 
     this._dom = null;
@@ -77,14 +75,30 @@ Backstage.TileView.prototype.getServerSideConfiguration = function() {
     };
 };
 
+Backstage.TileView.prototype.onNewState = function(state) {
+    this._state = state;
+    this._reconstruct();
+};
+
+Backstage.TileView.prototype.onUpdate = function(update) {
+    this._reconstruct();
+};
+
 Backstage.TileView.prototype._reconstruct = function() {
     var view = this;
     
     this._div.style.display = "none";
-
-    this._dom.bodyDiv.innerHTML = "";
-    //this._orderedViewFrame.reconstruct();
-    //closeGroups(0);
+    this._dom.bodyDiv.innerHTML = "<p>" + this._state.count + " results in total</p>";
+    
+    var ul = document.createElement("ul");
+    for (var i = 0; i < this._state.items.length; i++) {
+        var itemID = this._state.items[i];
+        var li = document.createElement("li");
+        li.innerHTML = itemID;
+        
+        ul.appendChild(li);
+    }
+    this._dom.bodyDiv.appendChild(ul);
 
     this._div.style.display = "block";
 };

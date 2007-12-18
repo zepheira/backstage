@@ -11,6 +11,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
@@ -55,6 +56,7 @@ public class Database {
     
     private Map<URI, String>     _itemUriToId = new HashMap<URI, String>();
     private Map<String, URI>     _itemIdToUri = new HashMap<String, URI>();
+    private boolean              _abbreviatedItems = false;
     
     public Database(ExhibitIdentity identity, List<AccessedDataLink> dataLinks) {
         _identity = identity;
@@ -359,6 +361,69 @@ public class Database {
             }
         }
         return _repository;
+    }
+    
+    public String getItemId(URI uri) {
+        abbreviateItems();
+        return _itemUriToId.get(uri);
+    }
+    
+    public URI getItemURI(String id) {
+        abbreviateItems();
+        return _itemIdToUri.get(id);
+    }
+    
+    synchronized void abbreviateItems() {
+        if (_abbreviatedItems) {
+            return;
+        }
+        _abbreviatedItems = true;
+        
+        getRepository();
+        
+        SailConnection sc = null;
+        try {
+            sc = _sail.getConnection();
+        } catch (SailException e) {
+            _logger.error("Failed to open sail connection in order to compute cached information", e);
+        }
+        
+        if (sc != null) {
+            try {
+                CloseableIteration<? extends Statement, SailException> i;
+                
+                try {
+                    i = sc.getStatements(null, RDF.TYPE, null, true);
+                } catch (SailException e) {
+                    _logger.error("Failed to get all statements in order to abbreviate items", e);
+                    return;
+                }
+                
+                try {
+                    while (i.hasNext()) {
+                        Statement s = i.next();
+                        Resource r = s.getSubject();
+                        if (r instanceof URI) {
+                            getItemId((URI) r, sc);
+                        }
+                    }
+                } catch (SailException e) {
+                    _logger.warn("Failed to iterate through statements", e);
+                } finally {
+                    try {
+                        i.close();
+                    } catch (SailException e) {
+                        _logger.warn("Failed to close statement iterator", e);
+                    }
+                }
+            } finally {
+                try {
+                    sc.close();
+                } catch (SailException e) {
+                    _logger.warn("Failed to close sail connection", e);
+                }
+            }
+        }
     }
     
     static public class PropertyRecord {

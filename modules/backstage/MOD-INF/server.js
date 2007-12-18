@@ -182,6 +182,20 @@ jsonpMethods["configure-from-dom"] = function(request, params, exhibit) {
         exhibit.setComponent(c.id, component);
     }
     
+    // this initializes the database's client side information if it's not already initialized.
+    var database = getDatabase(exhibit, params, result); 
+    
+    components = exhibit.getAllComponents();
+    result._componentStates = [];
+    for (var i = 0; i < components.size(); i++) {
+        var component = components.get(i);
+        var state = component.getComponentState();
+        if (state != null) {
+            state.id = component.getID();
+            result._componentStates.push(state);
+        }
+    }
+    
     return result;
 };
 jsonpMethods["configure-from-dom"].requiresExhibit = true;
