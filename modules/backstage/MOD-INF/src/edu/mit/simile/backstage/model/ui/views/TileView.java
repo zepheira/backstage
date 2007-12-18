@@ -69,7 +69,7 @@ public class TileView extends Component {
                         BindingSet bindingSet = queryResult.next();
                         Value v = bindingSet.getValue(itemVar.getName());
                         if (v instanceof URI) {
-                            if (count < 10) {
+                            if (count < 100) {
                                 itemIDs.add(database.getItemId((URI) v));
                             }
                             count++;

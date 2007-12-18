@@ -9,8 +9,12 @@ $(document).ready(function() {
         window.backstage.loadDataLinks(configureFromDOM);
     };
     var configureFromDOM = function() {
-        window.backstage.configureFromDOM();
+        window.backstage.configureFromDOM(
+            document.body, 
+            function() { Exhibit.UI.hideBusyIndicator(); }
+        );
     };
     
+    Exhibit.UI.showBusyIndicator();
     window.backstage = Backstage.create(loadDataLinks);
 });
