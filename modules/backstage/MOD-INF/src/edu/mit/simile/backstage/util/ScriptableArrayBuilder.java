@@ -12,7 +12,15 @@ public class ScriptableArrayBuilder {
         _list.add(o);
     }
     
+    public void remove(int i) {
+        _list.remove(i);
+    }
+    
     public NativeArray toArray() {
         return new NativeArray(_list.toArray());
+    }
+    
+    public int size() {
+        return _list.size();
     }
 }

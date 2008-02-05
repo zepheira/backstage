@@ -5,6 +5,8 @@ Backstage.UI.createFromDOM = function(elmt, uiContext) {
     switch (role) {
     case "view":
         return Backstage.UI.createViewFromDOM(elmt, null, uiContext);
+    case "facet":
+        return Backstage.UI.createFacetFromDOM(elmt, null, uiContext);
     }
     return null;  
 };
@@ -23,6 +25,22 @@ Backstage.UI.viewClassNameToViewClass = function(name) {
         }
     }
     return Backstage.TileView;
+};
+
+Backstage.UI.createFacetFromDOM = function(elmt, container, uiContext) {
+    var facetClass = Backstage.UI.facetClassNameToFacetClass(Exhibit.getAttribute(elmt, "facetClass"));
+    return facetClass.createFromDOM(elmt, container, uiContext);
+};
+
+Backstage.UI.facetClassNameToFacetClass = function(name) {
+    if (name != null && name.length > 0) {
+        try {
+            return Backstage.UI._stringToObject(name, "Facet");
+        } catch (e) {
+            SimileAjax.Debug.warn("Unknown facetClass " + name);
+        }
+    }
+    return Backstage.ListFacet;
 };
 
 Backstage.UI._stringToObject = function(name, suffix) {

@@ -23,9 +23,11 @@
             "util/jsonp-transport.js",
             "util/job-queue.js",
             "data/collection.js",
+            "data/expression.js",
             "ui/ui.js",
             "ui/ui-context.js",
-            "ui/views/tile-view.js"
+            "ui/views/tile-view.js",
+            "ui/facets/list-facet.js"
         ];
         var cssFiles = [
             "backstage.css",

@@ -17,25 +17,17 @@ import org.openrdf.repository.sail.SailRepositoryConnection;
 import edu.mit.simile.backstage.model.Context;
 import edu.mit.simile.backstage.model.TupleQueryBuilder;
 import edu.mit.simile.backstage.model.data.Database;
-import edu.mit.simile.backstage.model.ui.Component;
 import edu.mit.simile.backstage.util.DefaultScriptableObject;
 import edu.mit.simile.backstage.util.MyTupleQuery;
 import edu.mit.simile.backstage.util.ScriptableArrayBuilder;
 
-public class TileView extends Component {
+public class TileView extends View {
     private static Logger _logger = Logger.getLogger(TileView.class);
 
     public TileView(Context context, String id) {
         super(context, id);
     }
 
-    @Override
-    public void configure(Scriptable config) {
-        super.configure(config);
-        
-        
-    }
-    
     @Override
     public Scriptable getComponentState() {
         Database database = _context.getDatabase();

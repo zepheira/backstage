@@ -6,9 +6,9 @@ import edu.mit.simile.backstage.model.data.Database;
 
 
 public class Context {
-    final protected Context _parent;
-    final protected Exhibit _exhibit;
-    final protected Properties _properties = new Properties();
+    protected Context _parent;
+    protected Exhibit _exhibit;
+    protected Properties _properties = new Properties();
     
     public Context(Context parent) {
         _parent = parent;
@@ -18,6 +18,13 @@ public class Context {
     public Context(Exhibit exhibit) {
         _parent = null;
         _exhibit = exhibit;
+    }
+    
+    public void dispose() {
+        _parent = null;
+        _exhibit = null;
+        _properties.clear();
+        _properties = null;
     }
     
     public Exhibit getExhibit() {

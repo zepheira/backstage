@@ -63,6 +63,10 @@ public class Exhibit {
         return _collectionMap.get(id);
     }
 
+    public Collection getDefaultCollection() {
+        return _collectionMap.get("default");
+    }
+    
     public void setCollection(String id, Collection collection) {
         _collectionMap.put(id, collection);
     }

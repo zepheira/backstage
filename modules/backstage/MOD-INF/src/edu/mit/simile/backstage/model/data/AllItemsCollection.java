@@ -5,6 +5,7 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.query.algebra.StatementPattern;
 import org.openrdf.query.algebra.Var;
 
+import edu.mit.simile.backstage.model.BackChannel;
 import edu.mit.simile.backstage.model.Exhibit;
 import edu.mit.simile.backstage.model.TupleQueryBuilder;
 
@@ -15,8 +16,8 @@ public class AllItemsCollection extends Collection {
     }
 
     @Override
-    public void configure(Scriptable config) {
-        super.configure(config);
+    public void configure(Scriptable config, BackChannel backChannel) {
+        super.configure(config, backChannel);
         // nothing to do
     }
     

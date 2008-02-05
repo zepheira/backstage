@@ -138,8 +138,15 @@ jsonpMethods["configure-from-dom"] = function(request, params, exhibit) {
     var result = {};
     var configuration = params.configuration;
     
+    importPackage(Packages.edu.mit.simile.backstage.model);
     importPackage(Packages.edu.mit.simile.backstage.model.data);
     importPackage(Packages.edu.mit.simile.backstage.model.ui.views);
+    importPackage(Packages.edu.mit.simile.backstage.model.ui.facets);
+    
+    // this initializes the database's client side information if it's not already initialized.
+    var database = getDatabase(exhibit, params, result); 
+    
+    var backChannel = new BackChannel();
     
     var collections = configuration.collections;
     for (var i = 0; i < collections.length; i++) {
@@ -158,8 +165,8 @@ jsonpMethods["configure-from-dom"] = function(request, params, exhibit) {
             break;
         }
         
-        collection.configure(c);
         exhibit.setCollection(c.id, collection);
+        collection.configure(c, backChannel);
     }
     
     var context = exhibit.getContext();
@@ -176,24 +183,24 @@ jsonpMethods["configure-from-dom"] = function(request, params, exhibit) {
                 break;
             }
             break;
+        case "facet":
+            switch (c.facetClass) {
+            default:
+                component = new ListFacet(context, c.id);
+                break;
+            }
+            break;
         }
         
-        component.configure(c);
         exhibit.setComponent(c.id, component);
+        component.configure(c, backChannel);
     }
     
-    // this initializes the database's client side information if it's not already initialized.
-    var database = getDatabase(exhibit, params, result); 
-    
-    components = exhibit.getAllComponents();
-    result._componentStates = [];
-    for (var i = 0; i < components.size(); i++) {
-        var component = components.get(i);
-        var state = component.getComponentState();
-        if (state != null) {
-            state.id = component.getID();
-            result._componentStates.push(state);
-        }
+    if (backChannel.hasComponentsChangingState()) {
+        result._componentStates = backChannel.getComponentStateArray();
+    }
+    if (backChannel.hasComponentUpdates()) {
+        result._componentUpdates = backChannel.getComponentUpdateArray();
     }
     
     return result;

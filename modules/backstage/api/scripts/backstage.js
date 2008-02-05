@@ -167,7 +167,7 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
             //case "coder":       coderElmts.push(elmt); break;
             //case "coordinator": coordinatorElmts.push(elmt); break;
             //case "lens":        lensElmts.push(elmt); break;
-            //case "facet":       facetElmts.push(elmt); break;
+            case "facet":       facetElmts.push(elmt); break;
             default: 
                 otherElmts.push(elmt);
             }

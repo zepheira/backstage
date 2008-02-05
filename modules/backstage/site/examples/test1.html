@@ -8,7 +8,7 @@
     <link href="http://wingerz.com/lego/lego.js" type="application/json" rel="exhibit/data" />
 
     <script src="http://127.0.0.1:8181/backstage/ajax/api/simile-ajax-api.js"></script>
-    <script src="http://127.0.0.1:8181/backstage/exhibit/api/exhibit-api.js?autoCreate=false"></script>
+    <script src="http://127.0.0.1:8181/backstage/exhibit/api/exhibit-api.js?autoCreate=false&amp;bundle=false"></script>
     <script src="http://127.0.0.1:8181/backstage/api/backstage-api.js"></script>
     <style>
         body {
@@ -33,14 +33,17 @@
         </p>
     </div>
     
-    <div>
-        <div ex:role="view"
-            ex:label="Details"
-            ex:showAll="true"
-            ex:orders=".discipline, .nobel-year"
-            ex:possibleOrders=".label, .last-name, .discipline, .relationship, .shared, .deceased, .nobel-year">
-        </div>
-    </div>
+    <table width="100%" cellspacing="20"><tr valign="top">
+        <td>
+            <div ex:role="view">
+            </div>
+        </td>
+        <td width="20%">
+            <div ex:role="facet"
+                ex:expression=".discipline"
+                ></div>
+        </td>
+    </tr></table>
 </div>
 </body>
 </html>
