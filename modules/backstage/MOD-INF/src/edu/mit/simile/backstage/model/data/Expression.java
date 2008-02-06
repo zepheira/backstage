@@ -1,8 +1,15 @@
 package edu.mit.simile.backstage.model.data;
 
-import org.mozilla.javascript.Scriptable;
+import java.util.HashMap;
+import java.util.Map;
 
-public class Expression {
+import org.mozilla.javascript.Scriptable;
+import org.openrdf.query.algebra.ValueExpr;
+import org.openrdf.query.algebra.Var;
+
+import edu.mit.simile.backstage.model.TupleQueryBuilder;
+
+abstract public class Expression {
     static public Expression construct(Scriptable o) {
         Scriptable rootNode = (Scriptable) o.get("rootNode", o);
         return constructExpression(rootNode);
@@ -15,6 +22,31 @@ public class Expression {
         }
         return null;
     }
+    
+    public ExpressionResult computeOutputOnItem(
+        Database                database, 
+        TupleQueryBuilder       builder, 
+        Var                     itemVar) throws ExpressionException {
+        
+        Map<String, ValueExpr> variableValues = new HashMap<String, ValueExpr>();
+        variableValues.put("value", itemVar);
+        
+        Map<String, String> variableTypes = new HashMap<String, String>();
+        variableTypes.put("value", "item");
+        
+        return computeOutput(
+            database, 
+            builder, 
+            variableValues, 
+            variableTypes
+        );
+    }
+    
+    abstract public ExpressionResult computeOutput(
+            Database                database, 
+            TupleQueryBuilder       builder, 
+            Map<String, ValueExpr>  variableValues,
+            Map<String, String>     variableTypes) throws ExpressionException;
     
     static protected Path constructPath(Scriptable o) {
         String rootVariable = (String) o.get("rootName", o);

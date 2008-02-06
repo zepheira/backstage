@@ -34,8 +34,4 @@ public class AllItemsCollection extends Collection {
         
         return var;
     }
-    
-    public Var getRestrictedItems(TupleQueryBuilder builder, Var defaultVar) {
-        return getAllItems(builder, defaultVar);
-    }
 }

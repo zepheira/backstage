@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.log4j.Logger;
 import org.mozilla.javascript.Scriptable;
 import org.openrdf.query.algebra.Var;
 
@@ -13,6 +14,8 @@ import edu.mit.simile.backstage.model.TupleQueryBuilder;
 import edu.mit.simile.backstage.model.ui.facets.Facet;
 
 abstract public class Collection {
+    private static Logger _logger = Logger.getLogger(Collection.class);
+
     final protected Exhibit _exhibit;
     final protected String _id;
     final protected Set<CollectionListener> _listeners = new HashSet<CollectionListener>();
@@ -74,13 +77,21 @@ abstract public class Collection {
         
         computeRestrictedItems(builder, itemVar, facet);
         
-        facet.update(builder, itemVar, backChannel);
+        try {
+            facet.update(builder, itemVar, backChannel);
+        } catch (ExpressionException e) {
+            _logger.error("Failed to update facet", e);
+        }
     }
     
     protected void computeRestrictedItems(TupleQueryBuilder builder, Var itemVar, Facet exceptFacet) {
         for (Facet facet : _facets) {
             if (facet != exceptFacet) {
-                facet.restrict(builder, itemVar);
+                try {
+                    facet.restrict(builder, itemVar);
+                } catch (ExpressionException e) {
+                    _logger.error("Failed to restrict facet", e);
+                }
             }
         }
     }

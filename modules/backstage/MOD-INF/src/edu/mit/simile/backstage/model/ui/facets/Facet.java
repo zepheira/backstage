@@ -4,6 +4,7 @@ import org.mozilla.javascript.Scriptable;
 import org.openrdf.query.algebra.Var;
 
 import edu.mit.simile.backstage.model.data.Collection;
+import edu.mit.simile.backstage.model.data.ExpressionException;
 import edu.mit.simile.backstage.model.ui.Component;
 import edu.mit.simile.backstage.model.BackChannel;
 import edu.mit.simile.backstage.model.Context;
@@ -32,7 +33,7 @@ abstract public class Facet extends Component {
     
     abstract public boolean hasRestrictions();
     
-    abstract public void restrict(TupleQueryBuilder queryBuilder, Var itemVar);
+    abstract public void restrict(TupleQueryBuilder queryBuilder, Var itemVar) throws ExpressionException;
     
-    abstract public void update(TupleQueryBuilder queryBuilder, Var itemVar, BackChannel backChannel);
+    abstract public void update(TupleQueryBuilder queryBuilder, Var itemVar, BackChannel backChannel) throws ExpressionException;
 }

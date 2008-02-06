@@ -7,18 +7,14 @@ import org.openrdf.model.Value;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
-import org.openrdf.query.algebra.Projection;
-import org.openrdf.query.algebra.ProjectionElem;
-import org.openrdf.query.algebra.ProjectionElemList;
 import org.openrdf.query.algebra.Var;
-import org.openrdf.query.parser.ParsedTupleQuery;
+import org.openrdf.query.algebra.helpers.QueryModelTreePrinter;
 import org.openrdf.repository.sail.SailRepositoryConnection;
 
 import edu.mit.simile.backstage.model.Context;
 import edu.mit.simile.backstage.model.TupleQueryBuilder;
 import edu.mit.simile.backstage.model.data.Database;
 import edu.mit.simile.backstage.util.DefaultScriptableObject;
-import edu.mit.simile.backstage.util.MyTupleQuery;
 import edu.mit.simile.backstage.util.ScriptableArrayBuilder;
 
 public class TileView extends View {
@@ -45,15 +41,9 @@ public class TileView extends View {
                 database.getRepository().getConnection();
             
             try {
-                TupleQuery query = new MyTupleQuery( 
-                    new ParsedTupleQuery(
-                        new Projection(
-                            builder.join(),
-                            new ProjectionElemList(new ProjectionElem(itemVar.getName()))
-                        )
-                    ),
-                    connection
-                );
+                TupleQuery query = builder.makeTupleQuery(itemVar, connection);
+                
+                _logger.info("query = " + QueryModelTreePrinter.printTree(builder.makeProjection(itemVar)));
                 
                 TupleQueryResult queryResult = query.evaluate();
                 try {

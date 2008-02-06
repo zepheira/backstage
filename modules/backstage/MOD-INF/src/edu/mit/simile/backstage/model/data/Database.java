@@ -46,6 +46,8 @@ public class Database {
      * Cached computed information
      */
     private List<PropertyRecord> _propertyRecords;
+    private Map<String, PropertyRecord> _propertyIDToRecord;
+    
     private List<TypeRecord>     _typeRecords;
     
     private Map<URI, String>     _typeUriToId = new HashMap<URI, String>();
@@ -84,6 +86,11 @@ public class Database {
         return _propertyRecords;
     }
     
+    public PropertyRecord getPropertyRecord(String id) {
+        computeCachedInformation();
+        return _propertyIDToRecord.get(id);
+    }
+    
     public List<TypeRecord> getTypeRecords() {
         computeCachedInformation();
         return _typeRecords;
@@ -102,8 +109,8 @@ public class Database {
             
             if (sc != null) {
                 try {
-                    _propertyRecords = internalGetPropertyRecords(sc);
-                    _typeRecords = internalGetTypeRecords(sc);
+                    internalBuildPropertyRecords(sc);
+                    internalBuildTypeRecords(sc);
                 } finally {
                     try {
                         sc.close();
@@ -115,8 +122,9 @@ public class Database {
         }
     }
     
-    private List<PropertyRecord> internalGetPropertyRecords(SailConnection sc) {
-        List<PropertyRecord> records = new LinkedList<PropertyRecord>();
+    private void internalBuildPropertyRecords(SailConnection sc) {
+        _propertyRecords = new LinkedList<PropertyRecord>();
+        _propertyIDToRecord = new HashMap<String, PropertyRecord>();
         
         CloseableIteration<? extends Statement, SailException> i;
         
@@ -124,7 +132,7 @@ public class Database {
             i = sc.getStatements(null, null, null, true);
         } catch (SailException e) {
             _logger.error("Failed to get all statements in order to get property records", e);
-            return records;
+            return;
         }
         
         Set<URI> predicates = new HashSet<URI>();
@@ -146,15 +154,14 @@ public class Database {
         for (URI predicate : predicates) {
             PropertyRecord r = createPropertyRecord(predicate, sc);
             if (r != null) {
-                records.add(r);
+                _propertyRecords.add(r);
+                _propertyIDToRecord.put(r.id, r);
             }
         }
-        
-        return records;
     }
     
-    private List<TypeRecord> internalGetTypeRecords(SailConnection sc) {
-        List<TypeRecord> records = new LinkedList<TypeRecord>();
+    private void internalBuildTypeRecords(SailConnection sc) {
+        _typeRecords = new LinkedList<TypeRecord>();
         
         getRepository();
         
@@ -164,7 +171,7 @@ public class Database {
             i = sc.getStatements(null, RDF.TYPE, null, true);
         } catch (SailException e) {
             _logger.error("Failed to get all statements in order to get type records", e);
-            return records;
+            return;
         }
         
         Set<URI> types = new HashSet<URI>();
@@ -186,11 +193,9 @@ public class Database {
         for (URI type : types) {
             TypeRecord r = createTypeRecord(type, sc);
             if (r != null) {
-                records.add(r);
+                _typeRecords.add(r);
             }
         }
-        
-        return records;
     }
     
     private PropertyRecord createPropertyRecord(URI predicate, SailConnection sc) {
