@@ -1,16 +1,16 @@
 package edu.mit.simile.backstage.model.ui.facets;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.Scriptable;
-import org.openrdf.model.URI;
+import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.query.BindingSet;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
 import org.openrdf.query.algebra.Compare;
@@ -26,6 +26,8 @@ import org.openrdf.query.algebra.Var;
 import org.openrdf.query.algebra.Compare.CompareOp;
 import org.openrdf.query.algebra.helpers.QueryModelTreePrinter;
 import org.openrdf.query.parser.ParsedTupleQuery;
+import org.openrdf.repository.Repository;
+import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.sail.SailRepositoryConnection;
 
 import edu.mit.simile.backstage.model.BackChannel;
@@ -36,6 +38,7 @@ import edu.mit.simile.backstage.model.data.Expression;
 import edu.mit.simile.backstage.model.data.ExpressionException;
 import edu.mit.simile.backstage.model.data.ExpressionResult;
 import edu.mit.simile.backstage.util.DefaultScriptableObject;
+import edu.mit.simile.backstage.util.Group2;
 import edu.mit.simile.backstage.util.MyTupleQuery;
 import edu.mit.simile.backstage.util.ScriptableArrayBuilder;
 import edu.mit.simile.backstage.util.Utilities;
@@ -64,7 +67,6 @@ public class ListFacet extends Facet {
         
         Utilities.getScriptableArrayElements(
             (Scriptable) config.get("selection", config), _selection); 
-        _logger.info("selection " + _selection.size());
         
         _collection.addFacet(this, backChannel);
     }
@@ -127,18 +129,15 @@ public class ListFacet extends Facet {
     @Override
     public Scriptable getComponentState() {
         DefaultScriptableObject result = new DefaultScriptableObject();
-        ScriptableArrayBuilder facetChoices = new ScriptableArrayBuilder();
-        
         Database database = _context.getDatabase();
         try {
             SailRepositoryConnection connection = (SailRepositoryConnection)
                 database.getRepository().getConnection();
             
             try {
-                Group group = new Group(_builder.makeFilterTupleExpr());
-                group.addGroupBindingName(_valueVar.getName());
-                group.addGroupBindingName(_itemVar.getName());
+                Group2 group = new Group2(_builder.makeFilterTupleExpr());
                 group.addGroupElement(new GroupElem(_countVar.getName(), new Count(_itemVar)));
+                group.addGroupBindingName(_valueVar.getName());
                 
                 ProjectionElemList projectionElements = new ProjectionElemList();
                 projectionElements.addElement(new ProjectionElem(_valueVar.getName()));
@@ -146,22 +145,10 @@ public class ListFacet extends Facet {
                 
                 Projection projection = new Projection(group, projectionElements);
                 
-                _logger.info(QueryModelTreePrinter.printTree(projection));
-                
                 TupleQuery query = new MyTupleQuery(new ParsedTupleQuery(projection), connection);
                 TupleQueryResult queryResult = query.evaluate();
                 try {
-                    while (queryResult.hasNext()) {
-                        BindingSet bindingSet = queryResult.next();
-                        
-                        for (String s : bindingSet.getBindingNames()) {
-                            _logger.info("   --" + s);
-                        }
-                        Value value = bindingSet.getValue(_valueVar.getName());
-                        Value count = bindingSet.getValue(_countVar.getName());
-                        
-                        _logger.info("--facet " + value + " " + count);
-                    }
+                	createComponentState(queryResult, result);
                 } finally {
                     queryResult.close();
                 }
@@ -189,5 +176,26 @@ public class ListFacet extends Facet {
         Compare compare = new Compare(input, builder.makeVar("v", value), CompareOp.EQ);
         
         return previousClauses == null ? compare : new Or(previousClauses, compare);
+    }
+    
+    protected void createComponentState(TupleQueryResult queryResult, Scriptable result) throws QueryEvaluationException {
+        ScriptableArrayBuilder facetChoices = new ScriptableArrayBuilder();
+        while (queryResult.hasNext()) {
+            BindingSet bindingSet = queryResult.next();
+            
+            Value value = bindingSet.getValue(_valueVar.getName());
+            Value count = bindingSet.getValue(_countVar.getName());
+            
+            String s = value.stringValue();
+            int c = Integer.parseInt(count.stringValue());
+            
+            DefaultScriptableObject valueO = new DefaultScriptableObject();
+            valueO.put("value", valueO, s);
+            valueO.put("count", valueO, c);
+            
+            facetChoices.add(valueO);
+        }
+    	
+        result.put("values", result, facetChoices.toArray());
     }
 }

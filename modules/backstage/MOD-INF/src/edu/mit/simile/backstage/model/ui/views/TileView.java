@@ -8,7 +8,6 @@ import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
 import org.openrdf.query.algebra.Var;
-import org.openrdf.query.algebra.helpers.QueryModelTreePrinter;
 import org.openrdf.repository.sail.SailRepositoryConnection;
 
 import edu.mit.simile.backstage.model.Context;
@@ -42,9 +41,6 @@ public class TileView extends View {
             
             try {
                 TupleQuery query = builder.makeTupleQuery(itemVar, connection);
-                
-                _logger.info("query = " + QueryModelTreePrinter.printTree(builder.makeProjection(itemVar)));
-                
                 TupleQueryResult queryResult = query.evaluate();
                 try {
                     while (queryResult.hasNext()) {

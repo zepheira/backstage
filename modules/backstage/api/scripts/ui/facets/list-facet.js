@@ -154,7 +154,7 @@ Backstage.ListFacet.prototype.getServerSideConfiguration = function() {
     };
 };
 
-Backstage.ListFacet.prototype.onNewState = function(state) {
+Backstage.ListFacet.prototype.onNewState = function(state) {console.log(state);
     this._state = state;
     this._reconstruct();
 };
