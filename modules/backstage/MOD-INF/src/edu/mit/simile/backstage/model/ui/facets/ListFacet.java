@@ -16,6 +16,8 @@ import org.openrdf.query.algebra.Compare;
 import org.openrdf.query.algebra.Count;
 import org.openrdf.query.algebra.GroupElem;
 import org.openrdf.query.algebra.Or;
+import org.openrdf.query.algebra.Order;
+import org.openrdf.query.algebra.OrderElem;
 import org.openrdf.query.algebra.Projection;
 import org.openrdf.query.algebra.ProjectionElem;
 import org.openrdf.query.algebra.ProjectionElemList;
@@ -42,6 +44,9 @@ public class ListFacet extends Facet {
     private static Logger _logger = Logger.getLogger(ListFacet.class);
     
     protected Expression    _expression;
+    protected String        _sortMode = "value";
+    protected String        _sortDirection = "forward";
+    
     protected Set<String>   _selection = new HashSet<String>();
     protected boolean       _selectMissing;
     
@@ -62,6 +67,9 @@ public class ListFacet extends Facet {
         
         Utilities.getScriptableArrayElements(
             (Scriptable) config.get("selection", config), _selection); 
+        
+        _sortMode = (String) config.get("sortMode", config);
+        _sortDirection = (String) config.get("sortDirection", config);
         
         _collection.addFacet(this, backChannel);
     }
@@ -160,8 +168,11 @@ public class ListFacet extends Facet {
                 projectionElements.addElement(new ProjectionElem(_countVar.getName()));
                 
                 Projection projection = new Projection(group, projectionElements);
+                Order order = "value".equals(_sortMode) ?
+                    new Order(projection, new OrderElem(_valueVar, "forward".equals(_sortDirection))) :
+                    new Order(projection, new OrderElem(_countVar, !"forward".equals(_sortDirection)));
                 
-                TupleQuery query = new MyTupleQuery(new ParsedTupleQuery(projection), connection);
+                TupleQuery query = new MyTupleQuery(new ParsedTupleQuery(order), connection);
                 TupleQueryResult queryResult = query.evaluate();
                 try {
                 	createComponentState(queryResult, result);

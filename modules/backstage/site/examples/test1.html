@@ -30,7 +30,9 @@
             <div id="title-panel">
                 <h1>Lego Sets - Backstage Demo</h1>
                 <p>Data borrowed from Wing Yung's <a href="http://wingerz.com/lego/" target="_blank">Lego Set exhibit</a>.
-                    This exhibit is demo'ing Backstage at a very, very early stage.
+                    This "backstaged exhibit" is demo'ing Backstage at a very, very early, um, stage.
+                    Backstage is a web service that takes over heavy computations from Exhibit to
+                    speed up exhibits with large data sets.
                 </p>
             </div>
 
@@ -42,6 +44,7 @@
                 ex:expression=".year"
                 ex:facetLabel="Years"
                 ex:height="35em"
+                ex:sortDirection="backward"
                 ></div>
         </td>
         <td width="20%">
@@ -49,6 +52,7 @@
                 ex:expression=".cat"
                 ex:facetLabel="Categories"
                 ex:height="35em"
+                ex:sortMode="count"
                 ></div>
         </td>
     </tr></table>

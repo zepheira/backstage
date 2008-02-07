@@ -146,7 +146,9 @@ Backstage.ListFacet.prototype.getServerSideConfiguration = function() {
         collectionID:   this._uiContext.getCollection().getID(),
         expression:     this._expression.getServerSideConfiguration(),
         selection:      this._valueSet.toArray(),
-        selectMissing:  this._selectMissing
+        selectMissing:  this._selectMissing,
+        sortMode:       this._settings.sortMode,
+        sortDirection:  this._settings.sortDirection
     };
 };
 
