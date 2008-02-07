@@ -47,7 +47,7 @@ public class TileView extends View {
                         BindingSet bindingSet = queryResult.next();
                         Value v = bindingSet.getValue(itemVar.getName());
                         if (v instanceof URI) {
-                            if (count < 100) {
+                            if (count < 20) {
                                 itemIDs.add(database.getItemId((URI) v));
                             }
                             count++;

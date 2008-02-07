@@ -36,4 +36,8 @@ abstract public class Facet extends Component {
     abstract public void restrict(TupleQueryBuilder queryBuilder, Var itemVar) throws ExpressionException;
     
     abstract public void update(TupleQueryBuilder queryBuilder, Var itemVar, BackChannel backChannel) throws ExpressionException;
+    
+    abstract public void applyRestrictions(Scriptable restrictions, BackChannel backChannel) throws ExpressionException;
+
+    abstract public void clearRestrictions(BackChannel backChannel) throws ExpressionException;
 }

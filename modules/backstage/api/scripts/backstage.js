@@ -204,13 +204,13 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
         for (var i = 0; i < elmts.length; i++) {
             var elmt = elmts[i];
             try {
-                var component = Backstage.UI.createFromDOM(elmt, uiContext);
+                var id = elmt.id;
+                if (id == null || id.length == 0) {
+                    id = "component" + Math.floor(Math.random() * 1000000);
+                }
+                
+                var component = Backstage.UI.createFromDOM(elmt, uiContext, id);
                 if (component != null) {
-                    var id = elmt.id;
-                    if (id == null || id.length == 0) {
-                        id = "component" + Math.floor(Math.random() * 1000000);
-                    }
-                    
                     var serverSideConfig = component.getServerSideConfiguration();
                     serverSideConfig.id = id;
                     

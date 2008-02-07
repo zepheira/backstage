@@ -64,6 +64,10 @@ abstract public class Collection {
         _facets.remove(facet);
     }
     
+    public void onFacetUpdated(Facet facet, BackChannel backChannel) {
+        updateEverything(backChannel);
+    }
+    
     protected void updateEverything(BackChannel backChannel) {
         for (Facet facet : _facets) {
             updateOneFacet(facet, backChannel);

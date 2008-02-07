@@ -50,7 +50,7 @@ function processJsonpCall(request, response, call) {
                     var result = f(request, params, exhibit);
                     butterfly.sendJSONP(request, response, result, call.callback);
                 } else {
-                    sendError(request, response, 410, "Interactive session has expired.");
+                    sendError(request, response, 410, "Interactive session has expired.", call.error);
                 }
             } else {
                 var result = f(request, params);
@@ -66,6 +66,16 @@ function processJsonpCall(request, response, call) {
 
 function sendError(request, response, code, message, callback) {
     butterfly.sendJSONP(request, response, { code: code, message: message }, callback);
+}
+
+function processBackChannel(result, backChannel) {
+    if (backChannel.hasComponentsChangingState()) {
+        result._componentStates = backChannel.getComponentStateArray();
+    }
+    if (backChannel.hasComponentUpdates()) {
+        result._componentUpdates = backChannel.getComponentUpdateArray();
+    }
+    return result;
 }
 
 var jsonpMethods = {};
@@ -196,14 +206,34 @@ jsonpMethods["configure-from-dom"] = function(request, params, exhibit) {
         component.configure(c, backChannel);
     }
     
-    if (backChannel.hasComponentsChangingState()) {
-        result._componentStates = backChannel.getComponentStateArray();
-    }
-    if (backChannel.hasComponentUpdates()) {
-        result._componentUpdates = backChannel.getComponentUpdateArray();
-    }
-    
-    return result;
+    return processBackChannel(result, backChannel);
 };
 jsonpMethods["configure-from-dom"].requiresExhibit = true;
 
+jsonpMethods["facet-apply-restrictions"] = function(request, params, exhibit) {
+    importPackage(Packages.edu.mit.simile.backstage.model);
+    
+    var result = {};
+    var backChannel = new BackChannel();
+    
+    var facetID = params.facetID;
+    var facet = exhibit.getComponent(facetID);
+    facet.applyRestrictions(params.restrictions, backChannel);
+    
+    return processBackChannel(result, backChannel);
+};
+jsonpMethods["facet-apply-restrictions"].requiresExhibit = true;
+
+jsonpMethods["facet-clear-restrictions"] = function(request, params, exhibit) {
+    importPackage(Packages.edu.mit.simile.backstage.model);
+    
+    var result = {};
+    var backChannel = new BackChannel();
+    
+    var facetID = params.facetID;
+    var facet = exhibit.getComponent(facetID);
+    facet.clearRestrictions(backChannel);
+    
+    return processBackChannel(result, backChannel);
+};
+jsonpMethods["facet-clear-restrictions"].requiresExhibit = true;

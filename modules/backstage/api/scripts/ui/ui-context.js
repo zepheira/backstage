@@ -144,6 +144,7 @@ Backstage.UIContext._createWithParent = function(parent) {
     
     context._parent = parent;
     context._exhibit = parent._exhibit;
+    context._backstage = parent._backstage;
     context._lensRegistry = new Exhibit.LensRegistry(parent.getLensRegistry());
     
     return context;

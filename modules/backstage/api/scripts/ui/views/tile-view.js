@@ -3,7 +3,8 @@
  *==================================================
  */
 
-Backstage.TileView = function(containerElmt, uiContext) {
+Backstage.TileView = function(containerElmt, uiContext, id) {
+    this._id = id;
     this._div = containerElmt;
     this._uiContext = uiContext;
     this._settings = {};
@@ -18,11 +19,12 @@ Backstage.TileView._settingSpecs = {
     "showToolbox":          { type: "boolean", defaultValue: true }
 };
 
-Backstage.TileView.createFromDOM = function(configElmt, containerElmt, uiContext) {
+Backstage.TileView.createFromDOM = function(configElmt, containerElmt, uiContext, id) {
     var configuration = Exhibit.getConfigurationFromDOM(configElmt);
     var view = new Backstage.TileView(
         containerElmt != null ? containerElmt : configElmt,
-        Backstage.UIContext.createFromDOM(configElmt, uiContext)
+        Backstage.UIContext.createFromDOM(configElmt, uiContext),
+        id
     );
     
     Exhibit.SettingsUtilities.collectSettingsFromDOM(
@@ -88,7 +90,11 @@ Backstage.TileView.prototype._reconstruct = function() {
     var view = this;
     
     this._div.style.display = "none";
-    this._dom.bodyDiv.innerHTML = "<p>" + this._state.count + " results in total</p>";
+    this._dom.bodyDiv.innerHTML = 
+        "<p>" + 
+            this._state.count + " results in total" +
+            ((this._state.count <= 20) ? "" : " (showing first 20 only)") +
+        "</p>";
     
     var ul = document.createElement("ul");
     for (var i = 0; i < this._state.items.length; i++) {

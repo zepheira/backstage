@@ -7,14 +7,13 @@
 
     <link href="http://wingerz.com/lego/lego.js" type="application/json" rel="exhibit/data" />
 
-    <script src="http://127.0.0.1:8181/backstage/ajax/api/simile-ajax-api.js"></script>
-    <script src="http://127.0.0.1:8181/backstage/exhibit/api/exhibit-api.js?autoCreate=false&amp;bundle=false"></script>
+    <script src="http://127.0.0.1:8181/backstage/exhibit/api/exhibit-api.js?autoCreate=false"></script>
     <script src="http://127.0.0.1:8181/backstage/api/backstage-api.js"></script>
     <style>
         body {
             font-family:    Tahoma, Arial, sans serif;
             font-size:      10pt;
-            margin:         1in;
+            margin:         3em;
             padding:        0;
         }
         table { font-size: 100%; }
@@ -26,22 +25,30 @@
 </head> 
 <body>
 <div id="content">
-    <div id="title-panel">
-        <h1>Lego Sets</h1>
-        <p>Data borrowed from Wing Yung's <a href="http://wingerz.com/lego/" target="_blank">Lego Set exhibit</a>.
-            This exhibit is demo'ing Backstage at a very, very early stage.
-        </p>
-    </div>
-    
     <table width="100%" cellspacing="20"><tr valign="top">
         <td>
+            <div id="title-panel">
+                <h1>Lego Sets - Backstage Demo</h1>
+                <p>Data borrowed from Wing Yung's <a href="http://wingerz.com/lego/" target="_blank">Lego Set exhibit</a>.
+                    This exhibit is demo'ing Backstage at a very, very early stage.
+                </p>
+            </div>
+
             <div ex:role="view">
             </div>
+        </td>
+        <td width="12%">
+            <div ex:role="facet"
+                ex:expression=".year"
+                ex:facetLabel="Years"
+                ex:height="35em"
+                ></div>
         </td>
         <td width="20%">
             <div ex:role="facet"
                 ex:expression=".cat"
-                ex:selection="Adventure"
+                ex:facetLabel="Categories"
+                ex:height="35em"
                 ></div>
         </td>
     </tr></table>

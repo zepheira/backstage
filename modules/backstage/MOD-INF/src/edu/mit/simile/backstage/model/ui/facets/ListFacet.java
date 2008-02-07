@@ -10,12 +10,10 @@ import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryEvaluationException;
-import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
 import org.openrdf.query.algebra.Compare;
 import org.openrdf.query.algebra.Count;
-import org.openrdf.query.algebra.Group;
 import org.openrdf.query.algebra.GroupElem;
 import org.openrdf.query.algebra.Or;
 import org.openrdf.query.algebra.Projection;
@@ -24,10 +22,7 @@ import org.openrdf.query.algebra.ProjectionElemList;
 import org.openrdf.query.algebra.ValueExpr;
 import org.openrdf.query.algebra.Var;
 import org.openrdf.query.algebra.Compare.CompareOp;
-import org.openrdf.query.algebra.helpers.QueryModelTreePrinter;
 import org.openrdf.query.parser.ParsedTupleQuery;
-import org.openrdf.repository.Repository;
-import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.sail.SailRepositoryConnection;
 
 import edu.mit.simile.backstage.model.BackChannel;
@@ -127,6 +122,27 @@ public class ListFacet extends Facet {
     }
     
     @Override
+    public void applyRestrictions(Scriptable restrictions, BackChannel backChannel) throws ExpressionException {
+        _selection.clear();
+        Utilities.getScriptableArrayElements(
+            (Scriptable) restrictions.get("selection", restrictions), 
+            _selection
+        );
+        
+        _selectMissing = ((Boolean) restrictions.get("selectMissing", restrictions)).booleanValue();
+        
+        _collection.onFacetUpdated(this, backChannel);
+    }
+    
+    @Override
+    public void clearRestrictions(BackChannel backChannel) throws ExpressionException {
+        _selection.clear();
+        _selectMissing = false;
+        
+        _collection.onFacetUpdated(this, backChannel);
+    }
+    
+    @Override
     public Scriptable getComponentState() {
         DefaultScriptableObject result = new DefaultScriptableObject();
         Database database = _context.getDatabase();
@@ -180,22 +196,31 @@ public class ListFacet extends Facet {
     
     protected void createComponentState(TupleQueryResult queryResult, Scriptable result) throws QueryEvaluationException {
         ScriptableArrayBuilder facetChoices = new ScriptableArrayBuilder();
+        int selectionCount = 0;
+        
         while (queryResult.hasNext()) {
             BindingSet bindingSet = queryResult.next();
             
             Value value = bindingSet.getValue(_valueVar.getName());
             Value count = bindingSet.getValue(_countVar.getName());
             
-            String s = value.stringValue();
+            String s = ((Literal) value).getLabel();
             int c = Integer.parseInt(count.stringValue());
+            boolean selected = _selection.contains(s);
             
             DefaultScriptableObject valueO = new DefaultScriptableObject();
             valueO.put("value", valueO, s);
             valueO.put("count", valueO, c);
+            valueO.put("selected", valueO, selected);
             
             facetChoices.add(valueO);
+            
+            if (selected) {
+                selectionCount++;
+            }
         }
     	
         result.put("values", result, facetChoices.toArray());
+        result.put("selectionCount", result, selectionCount);
     }
 }
