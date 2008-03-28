@@ -378,6 +378,14 @@ public class Database {
         return _itemIdToUri.get(id);
     }
     
+    public String getTypeId(URI uri) {
+    	return _typeUriToId.get(uri);
+    }
+    
+    public URI getTypeURI(String id) {
+    	return _typeIdToUri.get(id);
+    }
+    
     synchronized void abbreviateItems() {
         if (_abbreviatedItems) {
             return;

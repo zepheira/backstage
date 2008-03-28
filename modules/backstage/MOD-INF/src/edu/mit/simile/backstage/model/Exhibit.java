@@ -28,8 +28,9 @@ public class Exhibit {
     
     private Database _database;
     
-    final private Map<String, Collection> _collectionMap = new HashMap<String, Collection>();
-    final private Map<String, Component> _componentMap = new HashMap<String, Component>();
+    final private Map<String, Collection> 	_collectionMap = new HashMap<String, Collection>();
+    final private Map<String, Component> 	_componentMap = new HashMap<String, Component>();
+    final private Map<String, Context>		_contextMap = new HashMap<String, Context>();
     
     private Context _context;
     
@@ -81,6 +82,14 @@ public class Exhibit {
     
     public List<Component> getAllComponents() {
         return new ArrayList<Component>(_componentMap.values());
+    }
+    
+    public void setContext(String id, Context context) {
+        _contextMap.put(id, context);
+    }
+    
+    public Context getContext(String id) {
+        return _contextMap.get(id);
     }
     
     public void addDataLink(String url, String mimeType, String charset) throws MalformedURLException {

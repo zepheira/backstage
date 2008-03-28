@@ -143,7 +143,7 @@ Backstage._Impl.prototype.loadDataLinks = function(onSuccess, onError) {
     this._internalAddDataLinks(
         links, 
         function(o) { 
-            SimileAjax.Debug.log("Data links loaded.");
+            //SimileAjax.Debug.log("Data links loaded.");
             if (typeof onSuccess == "function") {
                 onSuccess();
             }
@@ -166,7 +166,7 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
             case "collection":  collectionElmts.push(elmt); break;
             //case "coder":       coderElmts.push(elmt); break;
             //case "coordinator": coordinatorElmts.push(elmt); break;
-            //case "lens":        lensElmts.push(elmt); break;
+            case "lens":        lensElmts.push(elmt); break;
             case "facet":       facetElmts.push(elmt); break;
             default: 
                 otherElmts.push(elmt);
@@ -199,6 +199,15 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
         this._domConfiguration.collections.push(serverSideConfig);
     }
     
+    for (var i = 0; i < lensElmts.length; i++) {
+        var elmt = lensElmts[i];
+        try {
+            this._uiContext.registerLensFromDOM(elmt);
+        } catch (e) {
+            SimileAjax.Debug.exception(e);
+        }
+    }
+    
     var self = this;
     var processElmts = function(elmts) {
         for (var i = 0; i < elmts.length; i++) {
@@ -224,7 +233,6 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
     };
     processElmts(coordinatorElmts);
     processElmts(coderElmts);
-    processElmts(lensElmts);
     processElmts(facetElmts);
     processElmts(otherElmts);
     
@@ -269,9 +277,11 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
         this._domConfiguration.collections.push(collection.getServerSideConfiguration());
     }
     
+    this._domConfiguration.uiContext = this._uiContext.getServerSideConfiguration();
+    
     this._internalConfigureFromDOM(
         function(o) { 
-            SimileAjax.Debug.log("Backstage configured from DOM.");
+            //SimileAjax.Debug.log("Backstage configured from DOM.");
             if (typeof onSuccess == "function") {
                 onSuccess();
             }
@@ -285,7 +295,7 @@ Backstage._Impl.prototype._initialize = function(onSuccess, onError) {
         "initialize-session", 
         { isid: this._isid, refererUrlSHA1: Backstage.SHA1.hex_sha1(document.location.href) }, 
         function(o) { 
-            SimileAjax.Debug.log("Backstage initialized.");
+            //SimileAjax.Debug.log("Backstage initialized.");
             if (typeof onSuccess == "function") {
                 onSuccess();
             }
@@ -337,7 +347,7 @@ Backstage._Impl.prototype._internalConfigureFromDOM = function(onSuccess, onErro
 Backstage._Impl.prototype._processSystemData = function(o) {
     this._properties = o.properties;
     this._types = o.types;
-    this._initialized = false;
+    this._initialized = true;
 };
 
 Backstage._Impl.prototype._processComponentStates = function(states) {

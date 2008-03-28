@@ -8,6 +8,8 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.repository.RepositoryResult;
+import org.openrdf.repository.sail.SailRepositoryConnection;
 import org.openrdf.sail.SailConnection;
 import org.openrdf.sail.SailException;
 
@@ -16,6 +18,22 @@ public class SailUtilities {
         return (o instanceof Literal) ? 
                 ((Literal) o).getLabel() : 
                 ((o instanceof URI) ? ((URI) o).toString() : ((BNode) o).getID());        
+    }
+    
+    static public Value getObject(SailRepositoryConnection sc, Resource subject, URI predicate) {
+        try {
+        	RepositoryResult<Statement> i = sc.getStatements(subject, predicate, null, true, (Resource[]) null);
+            try {
+                if (i.hasNext()) {
+                    return i.next().getObject();
+                }
+            } finally {
+                i.close();
+            }
+        } catch (Exception e) {
+            // do nothing
+        }
+        return null;
     }
     
     static public Value getObject(SailConnection sc, Resource subject, URI predicate) {

@@ -88,6 +88,8 @@ Backstage.TileView.prototype.onUpdate = function(update) {
 
 Backstage.TileView.prototype._reconstruct = function() {
     var view = this;
+    var uiContext = this._uiContext;
+    var lensRegistry = uiContext.getLensRegistry();
     
     this._div.style.display = "none";
     this._dom.bodyDiv.innerHTML = 
@@ -100,7 +102,8 @@ Backstage.TileView.prototype._reconstruct = function() {
     for (var i = 0; i < this._state.items.length; i++) {
         var itemID = this._state.items[i];
         var li = document.createElement("li");
-        li.innerHTML = itemID;
+        
+        lensRegistry.createLensFromBackstage(this._state.lenses[i], li, uiContext);
         
         ul.appendChild(li);
     }

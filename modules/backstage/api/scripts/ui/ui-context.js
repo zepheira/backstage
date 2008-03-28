@@ -4,6 +4,7 @@
  */
 Backstage.UIContext = function() {
     this._parent = null;
+    this._id = "context" + new Date().getTime() + Math.ceil(Math.random() * 1000);
     
     this._exhibit = null;
     this._collection = null;
@@ -72,11 +73,18 @@ Backstage.UIContext.createFromDOM = function(configElmt, parentUIContext, ignore
  *  Public interface
  *----------------------------------------------------------------------
  */
+Backstage.UIContext.prototype.getID = function() {
+    return this._id;
+};
+
 Backstage.UIContext.prototype.dispose = function() {
 };
 
 Backstage.UIContext.prototype.getServerSideConfiguration = function() {
-    return {};
+    return {
+        id: this.getID(),
+        lensRegistry: this._lensRegistry.getServerSideConfiguration(this)
+    };
 };
 
 Backstage.UIContext.prototype.getParentUIContext = function() {
@@ -133,6 +141,10 @@ Backstage.UIContext.prototype.formatList = function(iterator, count, valueType, 
         this._listFormatter = new Exhibit.Formatter._ListFormatter(this);
     }
     this._listFormatter.formatList(iterator, count, valueType, appender);
+};
+
+Backstage.UIContext.prototype.registerLensFromDOM = function(elmt) {
+    Backstage.UIContext.registerLensFromDOM(elmt, this._lensRegistry);
 };
 
 /*----------------------------------------------------------------------

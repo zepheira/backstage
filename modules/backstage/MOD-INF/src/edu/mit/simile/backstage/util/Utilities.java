@@ -7,6 +7,8 @@ import java.util.Date;
 
 import org.mozilla.javascript.Scriptable;
 
+import edu.mit.simile.backstage.model.data.Expression;
+
 abstract public class Utilities {
     static public Date parseLastModifiedDate(String s) {
         try {
@@ -23,4 +25,23 @@ abstract public class Utilities {
             c.add(o.get(i, o));
         }
     }
+
+	static public Boolean getBoolean(Scriptable scriptable, String name) {
+		Object o = scriptable.get(name, scriptable);
+		return (o instanceof Boolean) ? (Boolean) o : null;
+	}
+
+	static public Expression getExpression(Scriptable scriptable, String name) {
+		Object o = scriptable.get(name, scriptable);
+		if (o instanceof Scriptable) {
+			return Expression.construct((Scriptable) o);
+		} else {
+			return null;
+		}
+	}
+
+	static public String getString(Scriptable scriptable, String name) {
+		Object o = scriptable.get(name, scriptable);
+		return (o instanceof String) ? (String) o : null;
+	}
 }

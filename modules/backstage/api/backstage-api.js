@@ -26,6 +26,7 @@
             "data/expression.js",
             "ui/ui.js",
             "ui/ui-context.js",
+            "ui/lens.js",
             "ui/views/tile-view.js",
             "ui/facets/list-facet.js"
         ];

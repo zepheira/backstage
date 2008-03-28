@@ -180,6 +180,8 @@ jsonpMethods["configure-from-dom"] = function(request, params, exhibit) {
     }
     
     var context = exhibit.getContext();
+    context.configure(configuration.uiContext, backChannel);
+    
     var components = configuration.components;
     for (var i = 0; i < components.length; i++) {
         var c = components[i];
@@ -237,3 +239,19 @@ jsonpMethods["facet-clear-restrictions"] = function(request, params, exhibit) {
     return processBackChannel(result, backChannel);
 };
 jsonpMethods["facet-clear-restrictions"].requiresExhibit = true;
+
+jsonpMethods["generate-lens"] = function(request, params, exhibit) {
+    importPackage(Packages.edu.mit.simile.backstage.model);
+    
+    var result = { lenses: [] };
+    var backChannel = new BackChannel();
+    
+    var contextID = params.contextID;
+    var context = exhibit.getContext(contextID);
+    for (var i = 0; i < params.itemIDs.length; i++) {
+        result.lenses.push(context.generateLens(params.itemIDs[i]));
+    }
+    
+    return processBackChannel(result, backChannel);
+};
+jsonpMethods["generate-lens"].requiresExhibit = true;

@@ -29,6 +29,8 @@ public class TileView extends View {
         
         DefaultScriptableObject result = new DefaultScriptableObject();
         ScriptableArrayBuilder itemIDs = new ScriptableArrayBuilder();
+        ScriptableArrayBuilder lenses = new ScriptableArrayBuilder();
+        
         int count = 0;
         
         try {
@@ -48,7 +50,9 @@ public class TileView extends View {
                         Value v = bindingSet.getValue(itemVar.getName());
                         if (v instanceof URI) {
                             if (count < 20) {
-                                itemIDs.add(database.getItemId((URI) v));
+                            	String itemID = database.getItemId((URI) v);
+                                itemIDs.add(itemID);
+                                lenses.add(_context.generateLens(itemID));
                             }
                             count++;
                         }
@@ -63,8 +67,9 @@ public class TileView extends View {
             _logger.error("Error querying for restricted items", e);
         }
         
-        result.put("items", result, itemIDs.toArray());
         result.put("count", result, count);
+        result.put("items", result, itemIDs.toArray());
+        result.put("lenses", result, lenses.toArray());
     
         return result;
     }

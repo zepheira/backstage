@@ -4,10 +4,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.mozilla.javascript.Scriptable;
+import org.openrdf.model.Resource;
+import org.openrdf.query.TupleQuery;
+import org.openrdf.query.algebra.Projection;
+import org.openrdf.query.algebra.ProjectionElem;
+import org.openrdf.query.algebra.ProjectionElemList;
 import org.openrdf.query.algebra.ValueExpr;
 import org.openrdf.query.algebra.Var;
+import org.openrdf.query.parser.ParsedTupleQuery;
+import org.openrdf.repository.sail.SailRepositoryConnection;
 
 import edu.mit.simile.backstage.model.TupleQueryBuilder;
+import edu.mit.simile.backstage.util.MyTupleQuery;
 
 abstract public class Expression {
     static public Expression construct(Scriptable o) {
@@ -40,6 +48,30 @@ abstract public class Expression {
             variableValues, 
             variableTypes
         );
+    }
+    
+    public ExpressionQueryResult computeOutputOnItem(
+        Resource item,
+        Database database, 
+        SailRepositoryConnection connection
+    ) throws ExpressionException {
+        
+        TupleQueryBuilder builder = new TupleQueryBuilder();
+        Var itemVar = builder.makeVar("item", item);
+        
+		ExpressionResult expressionResult = computeOutputOnItem(database, builder, itemVar);
+        if (expressionResult.valueExpr instanceof Var) {
+        	Var resultVar = (Var) expressionResult.valueExpr;
+        	
+            ProjectionElemList projectionElements = new ProjectionElemList();
+            projectionElements.addElement(new ProjectionElem(resultVar.getName()));
+            
+            Projection projection = new Projection(builder.makeFilterTupleExpr(), projectionElements);
+            TupleQuery query = new MyTupleQuery(new ParsedTupleQuery(projection), connection);
+            
+            return new ExpressionQueryResult(query, expressionResult.valueType, resultVar);
+        }
+        return null;
     }
     
     abstract public ExpressionResult computeOutput(
