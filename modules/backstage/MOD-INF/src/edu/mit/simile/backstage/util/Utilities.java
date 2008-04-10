@@ -6,6 +6,9 @@ import java.util.Collection;
 import java.util.Date;
 
 import org.mozilla.javascript.Scriptable;
+import org.openrdf.model.Literal;
+import org.openrdf.model.Resource;
+import org.openrdf.model.Value;
 
 import edu.mit.simile.backstage.model.data.Expression;
 
@@ -43,5 +46,9 @@ abstract public class Utilities {
 	static public String getString(Scriptable scriptable, String name) {
 		Object o = scriptable.get(name, scriptable);
 		return (o instanceof String) ? (String) o : null;
+	}
+	
+	static public String valueToString(Value value) {
+		return (value instanceof Literal) ? ((Literal) value).getLabel() : ((Resource) value).stringValue();
 	}
 }

@@ -39,7 +39,7 @@ Exhibit.LensRegistry.prototype.createLensFromBackstage = function(serverNode, di
     var lens = new Exhibit.Lens();
     var lensTemplate = this.getLensFromServerNode(serverNode);
     if (lensTemplate == null) {
-        // NOT YET IMPLEMENTED
+        Exhibit.Lens.constructDefaultFromBackstage(serverNode, div, uiContext);
     } else {
         Exhibit.Lens.constructFromBackstage(
             Exhibit.LensRegistry._getCompiledLens(lensTemplate, uiContext), serverNode, div);
@@ -129,6 +129,76 @@ Exhibit.LensRegistry._getTemplateNodeServerSideConfiguration = function(node) {
     return r;
 };
 
+Exhibit.Lens.constructDefaultFromBackstage = function(serverNode, div, uiContext) {
+    var template = {
+        elmt:       div,
+        className:  "exhibit-lens",
+        children: [
+            {   tag:        "div",
+                className:  "exhibit-lens-title",
+                title:      serverNode.label,
+                children:   [ 
+                    serverNode.label + " (",
+                    {   tag:        "a",
+                        href:       Exhibit.Persistence.getItemLink(serverNode.itemID),
+                        target:     "_blank",
+                        children:   [ Exhibit.l10n.itemLinkLabel ]
+                    },
+                    ")"
+                ]
+            },
+            {   tag:        "div",
+                className:  "exhibit-lens-body",
+                children: [
+                    {   tag:        "table",
+                        className:  "exhibit-lens-properties",
+                        field:      "propertiesTable"
+                    }
+                ]
+            }
+        ]
+    };
+    var dom = SimileAjax.DOM.createDOMFromTemplate(template);
+    div.setAttribute("ex:itemID", serverNode.itemID);
+    
+    if ("propertyValues" in serverNode) {
+        var propertyValues = serverNode.propertyValues;
+        var j = 0;
+        
+        for (var propertyID in propertyValues) {
+            var pair = propertyValues[propertyID];
+            
+            var tr = dom.propertiesTable.insertRow(j++);
+            tr.className = "exhibit-lens-property";
+            
+            var tdName = tr.insertCell(0);
+            tdName.className = "exhibit-lens-property-name";
+            tdName.innerHTML = pair.propertyLabel + ": ";
+            
+            var tdValues = tr.insertCell(1);
+            tdValues.className = "exhibit-lens-property-values";
+            
+            if (pair.valueType == "item") {
+                for (var m = 0; m < pair.values.length; m++) {
+                    if (m > 0) {
+                        tdValues.appendChild(document.createTextNode(", "));
+                    }
+                    var value = pair.values[m];
+                    
+                    tdValues.appendChild(Exhibit.UI.makeItemSpan(value.id, value.label, uiContext));
+                }
+            } else {
+                for (var m = 0; m < pair.values.length; m++) {
+                    if (m > 0) {
+                        tdValues.appendChild(document.createTextNode(", "));
+                    }
+                    tdValues.appendChild(Exhibit.UI.makeValueSpan(pair.values[m], pair.valueType));
+                }
+            }
+        }
+    }
+};
+
 Exhibit.Lens.constructFromBackstage = function(clientNode, serverNode, parentElmt) {
     var elmt = Exhibit.Lens._constructFromBackstage(clientNode, serverNode, parentElmt);
     elmt.style.display = "block";
@@ -143,10 +213,13 @@ Exhibit.Lens._constructFromBackstage = function(clientNode, serverNode, parentEl
     
     var children = clientNode.children;
     if (clientNode.condition != null) {
-        if (templateNode.condition.test == "if-exists" || templateNode.condition.test == "if") {
+        if (templateNode.condition.test == "if-exists") {
             if (!serverNode.condition) {
                 return;
             }
+        } else if (templateNode.condition.test == "if") {
+            // NOT IMPLEMENTED YET
+            return;
         } else if (templateNode.condition.test == "select") {
             // NOT IMPLEMENTED YET
             return;

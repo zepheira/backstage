@@ -29,6 +29,7 @@ import edu.mit.simile.babel.exhibit.ExhibitOntology;
 import edu.mit.simile.backstage.ExhibitIdentity;
 import edu.mit.simile.backstage.data.AccessedDataLink;
 import edu.mit.simile.backstage.util.SailUtilities;
+import edu.mit.simile.backstage.util.Utilities;
 
 
 public class Database {
@@ -58,6 +59,7 @@ public class Database {
     
     private Map<URI, String>     _itemUriToId = new HashMap<URI, String>();
     private Map<String, URI>     _itemIdToUri = new HashMap<String, URI>();
+    private Map<String, String>	 _itemIdToLabel = new HashMap<String, String>();
     private boolean              _abbreviatedItems = false;
     
     public Database(ExhibitIdentity identity, List<AccessedDataLink> dataLinks) {
@@ -384,6 +386,50 @@ public class Database {
     
     public URI getTypeURI(String id) {
     	return _typeIdToUri.get(id);
+    }
+    
+    public URI getPropertyURI(String id) {
+    	return _propertyIdToUri.get(id);
+    }
+    
+    public String getPropertyId(URI uri) {
+    	return _propertyUriToId.get(uri);
+    }
+    
+    public String getItemLabel(String itemID) {
+    	String label = _itemIdToLabel.get(itemID);
+    	if (label == null) {
+            getRepository();
+            
+        	URI itemURI = _itemIdToUri.get(itemID);
+        	if (itemURI != null) {
+	            try {
+	            	
+		            SailConnection sc = _sail.getConnection();
+		            try {
+		                CloseableIteration<? extends Statement, SailException> i = 
+		                	sc.getStatements(itemURI, RDFS.LABEL, null, true);
+		                    
+		                try {
+		                	if (i.hasNext()) {
+		                		label = Utilities.valueToString(i.next().getObject());
+		                	}
+		                } finally {
+		                	i.close();
+		                }    		
+		            } finally {
+		            	sc.close();
+		            }
+	            } catch (SailException e) {
+	            }
+        	}
+        	
+        	if (label == null) {
+        		label = itemID;
+        	}
+        	_itemIdToLabel.put(itemID, label);
+    	}
+    	return label;
     }
     
     synchronized void abbreviateItems() {

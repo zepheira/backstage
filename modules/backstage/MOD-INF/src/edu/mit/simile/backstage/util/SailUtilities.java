@@ -14,6 +14,8 @@ import org.openrdf.sail.SailConnection;
 import org.openrdf.sail.SailException;
 
 public class SailUtilities {
+	static public Resource[] noContext = new Resource[] {};
+	
     static public String valueToString(Value o) {
         return (o instanceof Literal) ? 
                 ((Literal) o).getLabel() : 

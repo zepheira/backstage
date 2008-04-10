@@ -7,8 +7,18 @@
 
     <link href="http://wingerz.com/lego/lego.js" type="application/json" rel="exhibit/data" />
 
-    <script src="http://127.0.0.1:8181/backstage/exhibit/api/exhibit-api.js?autoCreate=false"></script>
+    <script src="http://static.simile.mit.edu/exhibit/api-2.0/exhibit-api.js?autoCreate=false"></script>
     <script src="http://127.0.0.1:8181/backstage/api/backstage-api.js"></script>
+    <script type="text/javascript">
+        Backstage.JsonpTransport.removeScripts = false;
+        
+        function mouseOver(elmt) {
+            elmt.style.background = "#eee";
+        }
+        function mouseOut(elmt) {
+            elmt.style.background = "none";
+        }
+    </script>
     <style>
         body {
             font-family:    Tahoma, Arial, sans serif;
@@ -18,13 +28,25 @@
         }
         table { font-size: 100%; }
         tr { vertical-align: top; }
+        
+        .a-lens {
+            border:         1px solid #ccc;
+            margin-bottom:  2em;
+        }
     </style>
-    <script type="text/javascript">
-        Backstage.JsonpTransport.removeScripts = false;
-    </script>
 </head> 
 <body>
 <div id="content">
+    <div ex:role="lens" class="a-lens" onmouseover="mouseOver(this);" onmouseout="mouseOut(this);">
+        <table cellspacing="10"><tr>
+            <td><img ex:src-content=".thumbnail" /></td>
+            <td>
+                <div><b ex:content=".label"></b> (<span ex:content=".year"></span>)</div>
+                <div>Categories: <span ex:content=".cat"></span></div>
+            </td>
+        </tr></table>
+    </div>
+    
     <table width="100%" cellspacing="20"><tr valign="top">
         <td>
             <div id="title-panel">

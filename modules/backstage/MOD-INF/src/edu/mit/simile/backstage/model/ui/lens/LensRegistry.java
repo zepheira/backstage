@@ -19,7 +19,7 @@ public class LensRegistry {
     public void configure(Scriptable config, BackChannel backChannel) {
     	Object o = config.get("defaultLens", config);
     	if (o != null) {
-    		_defaultLens = new Lens((Scriptable) o);
+    		_defaultLens = new TemplatedLens((Scriptable) o);
     	}
     	
     	o = config.get("typeToLens", config);
@@ -29,7 +29,7 @@ public class LensRegistry {
     		Object[] ids = typeToLens.getIds();
     		for (Object i : ids) {
     			String id = (String) i;
-    			_typeToLens.put(id, new Lens((Scriptable) typeToLens.get(id, typeToLens)));
+    			_typeToLens.put(id, new TemplatedLens((Scriptable) typeToLens.get(id, typeToLens)));
     		}
     	}
     }
@@ -42,7 +42,7 @@ public class LensRegistry {
     	} else if (_parent != null) {
     		return _parent.getLens(typeId);
     	} else {
-    		return null;
+    		return new DefaultLens();
     	}
     }
 }
