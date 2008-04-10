@@ -18,30 +18,21 @@ import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.repository.Repository;
-import org.openrdf.repository.RepositoryException;
-import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.sail.Sail;
 import org.openrdf.sail.SailConnection;
 import org.openrdf.sail.SailException;
-import org.openrdf.sail.memory.MemoryStore;
 
 import edu.mit.simile.babel.exhibit.ExhibitOntology;
-import edu.mit.simile.backstage.ExhibitIdentity;
-import edu.mit.simile.backstage.data.AccessedDataLink;
 import edu.mit.simile.backstage.util.SailUtilities;
 import edu.mit.simile.backstage.util.Utilities;
 
 
-public class Database {
-    private static final long serialVersionUID = -8804204966521106254L;
-    private static Logger _logger = Logger.getLogger(Database.class);
+abstract public class Database {
+    protected static final long serialVersionUID = -8804204966521106254L;
+    protected static Logger _logger = Logger.getLogger(Database.class);
     
-    final private ExhibitIdentity           _identity;
-    final private List<AccessedDataLink>    _dataLinks;
-    
-    private int         _referenceCount;
-    private Sail        _sail;
-    private Repository  _repository;
+    protected Sail        _sail;
+    protected Repository  _repository;
     
     /*
      * Cached computed information
@@ -61,27 +52,6 @@ public class Database {
     private Map<String, URI>     _itemIdToUri = new HashMap<String, URI>();
     private Map<String, String>	 _itemIdToLabel = new HashMap<String, String>();
     private boolean              _abbreviatedItems = false;
-    
-    public Database(ExhibitIdentity identity, List<AccessedDataLink> dataLinks) {
-        _identity = identity;
-        _dataLinks = new LinkedList<AccessedDataLink>(dataLinks);
-    }
-    
-    public ExhibitIdentity getIdentity() {
-        return _identity;
-    }
-    
-    public int getReferenceCount() {
-        return _referenceCount;
-    }
-    
-    public void addReference() {
-        _referenceCount++;
-    }
-    
-    public void removeReference() {
-        _referenceCount--;
-    }
     
     public List<PropertyRecord> getPropertyRecords() {
         computeCachedInformation();
@@ -349,26 +319,7 @@ public class Database {
         return id;
     }
     
-    synchronized public Repository getRepository() {
-        if (_repository == null) {
-            _sail = new MemoryStore();
-            _repository = new SailRepository(_sail);
-            try {
-                _repository.initialize();
-                
-                for (AccessedDataLink dataLink : _dataLinks) {
-                    try {
-                        dataLink.loadData(_identity.getURL(), _sail);
-                    } catch (Exception e) {
-                        _logger.error("Failed to load data into exhibit from " + dataLink.url.toExternalForm(), e);
-                    }
-                }
-            } catch (RepositoryException e) {
-                _logger.error("Failed to initialize repository", e);
-            }
-        }
-        return _repository;
-    }
+    abstract public Repository getRepository();
     
     public String getItemId(URI uri) {
         abbreviateItems();
@@ -432,7 +383,7 @@ public class Database {
     	return label;
     }
     
-    synchronized void abbreviateItems() {
+    synchronized protected void abbreviateItems() {
         if (_abbreviatedItems) {
             return;
         }

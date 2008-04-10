@@ -134,11 +134,16 @@ jsonpMethods["add-data-links"] = function(request, params, exhibit) {
     var links = params.links;
     for (var i = 0; i < links.length; i++) {
         var link = links[i];
-        exhibit.addDataLink(
-            link.url, 
-            (link.mimeType != null && link.mimeType != "") ? link.mimeType : "application/json", 
-            (link.charset != null && link.charset != "") ? link.charset : "utf-8"
-        );
+        var url = link.url;
+        if (url == "http://localhost/") { // TODO: what do we use here?
+            exhibit.addHostedDataLink();
+        } else {
+            exhibit.addDataLink(
+                link.url, 
+                (link.mimeType != null && link.mimeType != "") ? link.mimeType : "application/json", 
+                (link.charset != null && link.charset != "") ? link.charset : "utf-8"
+            );
+        }
     }
     return { status: "OK" };
 };
@@ -164,7 +169,7 @@ jsonpMethods["configure-from-dom"] = function(request, params, exhibit) {
         var collection;
         
         switch (c.type) {
-        case "type-based":
+        case "types-based":
             collection = new TypeBasedCollection(exhibit, c.id);
             break;
         case "based":

@@ -6,7 +6,10 @@ if "%1" == "manage" then set PROFILE=-a jmx
 set CWD=%~p0
 
 rem set JAVA_HOME=/opt/jrockit
-set JAVA_OPTIONS=-Xms16M -Xmx32M
+
+if not "%JAVA_OPTIONS%" == "" goto gotJavaOptions
+set JAVA_OPTIONS=-Xms32M -Xmx512M
+:gotJavaOptions
 
 set JETTY_PORT=8181
 

@@ -277,7 +277,12 @@ Exhibit.Lens._constructFromBackstage = function(clientNode, serverNode, parentEl
     } else if (clientNode.content != null) {
         var results = serverNode.content;
         if (children != null) {
-            // NOT YET IMPLEMENTED
+            for (var x = 0; x < results.length; x++) {
+                var a = results[x];
+                for (var i = 0; i < children.length; i++) {
+                    Exhibit.Lens._constructFromBackstage(children[i], a[i], elmt);
+                }
+            }
         } else if (results.valueType == "item") {
             // NOT YET IMPLEMENTED
             for (var i = 0; i < results.values; i++) {

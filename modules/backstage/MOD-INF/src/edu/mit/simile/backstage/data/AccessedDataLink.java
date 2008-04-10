@@ -8,12 +8,12 @@ import java.util.Date;
 
 import org.openrdf.sail.Sail;
 
-abstract public class AccessedDataLink extends DataLink {
+abstract public class AccessedDataLink extends UnhostedDataLink {
     final public Date    expiresDate;
     final public Date    retrievedDate;
     final public boolean broken;
     
-    public AccessedDataLink(DataLink entry, Date expiresDate2, Date retrievedDate2, boolean broken2) {
+    public AccessedDataLink(UnhostedDataLink entry, Date expiresDate2, Date retrievedDate2, boolean broken2) {
         super(entry.url, entry.mimeType, entry.charset);
         expiresDate = expiresDate2;
         retrievedDate = retrievedDate2;

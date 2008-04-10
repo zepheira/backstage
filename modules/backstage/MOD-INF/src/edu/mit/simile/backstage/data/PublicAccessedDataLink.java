@@ -16,7 +16,7 @@ import edu.mit.simile.babel.exhibit.ExhibitJsonReader;
 public class PublicAccessedDataLink extends AccessedDataLink {
     private static Logger _logger = Logger.getLogger(AccessedDataLink.class);
 
-    public PublicAccessedDataLink(DataLink entry, Date expiresDate2, Date retrievedDate2, boolean broken2) {
+    public PublicAccessedDataLink(UnhostedDataLink entry, Date expiresDate2, Date retrievedDate2, boolean broken2) {
         super(entry, expiresDate2, retrievedDate2, broken2);
     }
 

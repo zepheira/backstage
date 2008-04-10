@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.Set;
 
 import edu.mit.simile.backstage.data.AccessedDataLink;
-import edu.mit.simile.backstage.data.DataLink;
 import edu.mit.simile.backstage.data.NullAccessedDataLink;
 import edu.mit.simile.backstage.data.PublicAccessedDataLink;
-import edu.mit.simile.backstage.model.data.Database;
+import edu.mit.simile.backstage.data.UnhostedDataLink;
+import edu.mit.simile.backstage.model.data.UnhostedDatabase;
 
 /**
  * A database trace consists of all databases (instantiations) that have the same identity.
@@ -32,8 +32,8 @@ public class DatabaseTrace {
     private ExhibitIdentity        _identity;
     private List<AccessedDataLink> _dataLinks;
     
-    private Set<Database>        _oldDatabases = new HashSet<Database>();
-    private Database             _latestDatabase;
+    private Set<UnhostedDatabase>  _oldDatabases = new HashSet<UnhostedDatabase>();
+    private UnhostedDatabase       _latestDatabase;
     
     public DatabaseTrace(ExhibitIdentity identity) {
         _identity = identity;
@@ -44,7 +44,7 @@ public class DatabaseTrace {
         return _identity;
     }
     
-    public Database getDatabase(List<DataLink> dataLinks) {
+    public UnhostedDatabase getDatabase(List<UnhostedDataLink> dataLinks) {
         boolean same = _latestDatabase != null && _dataLinks.size() == dataLinks.size();
         
         if (same) {
@@ -52,7 +52,7 @@ public class DatabaseTrace {
             
             for (int i = 0; i < _dataLinks.size(); i++) {
                 AccessedDataLink myDataLink = _dataLinks.get(i);
-                DataLink theirDataLink = dataLinks.get(i);
+                UnhostedDataLink theirDataLink = dataLinks.get(i);
                 
                 if (!myDataLink.url.equals(theirDataLink.url) ||
                     !myDataLink.mimeType.equals(theirDataLink.mimeType) ||
@@ -94,7 +94,7 @@ public class DatabaseTrace {
                 _dataLinks.add(createAccessedDataLink(dataLinks.get(i)));
             }
             
-            _latestDatabase = new Database(_identity, _dataLinks);
+            _latestDatabase = new UnhostedDatabase(_identity, _dataLinks);
             
             _oldDatabases.add(_latestDatabase);
         }
@@ -104,7 +104,7 @@ public class DatabaseTrace {
         return _latestDatabase;
     }
     
-    public void releaseDatabase(Database database) {
+    public void releaseDatabase(UnhostedDatabase database) {
         database.removeReference();
         if (database.getReferenceCount() == 0) {
             _oldDatabases.remove(database);
@@ -140,7 +140,7 @@ public class DatabaseTrace {
         }
     }
     
-    protected AccessedDataLink createAccessedDataLink(DataLink dataLink) {
+    protected AccessedDataLink createAccessedDataLink(UnhostedDataLink dataLink) {
         String protocol = dataLink.url.getProtocol();
         if (protocol.equals("http") || protocol.equals("https") || protocol.equals("ftp")) {
             return createPublicAccessedDataLink(dataLink);
@@ -154,7 +154,7 @@ public class DatabaseTrace {
         }
     }
     
-    protected PublicAccessedDataLink createPublicAccessedDataLink(DataLink dataLink) {
+    protected PublicAccessedDataLink createPublicAccessedDataLink(UnhostedDataLink dataLink) {
         try {
             URLConnection connection = dataLink.url.openConnection();
             

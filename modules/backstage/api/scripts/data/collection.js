@@ -18,10 +18,14 @@ Backstage.Collection.create = function(id, configuration, backstage) {
     var collection = new Backstage.Collection(id, backstage);
     
     if ("itemTypes" in configuration) {
+        collection._type = "types-based";
         collection._itemTypes = configuration.itemTypes;
         collection._update = Backstage.Collection._typeBasedCollection_update;
+        collection.getServerSideConfiguration = Backstage.Collection._typeBasedCollection_getServerSideConfiguration;
     } else {
+        collection._type = "all-items";
         collection._update = Backstage.Collection._allItemsCollection_update;
+        collection.getServerSideConfiguration = Backstage.Collection._allItemsCollection_getServerSideConfiguration;
     }
     
     return collection;
@@ -49,10 +53,14 @@ Backstage.Collection.createFromDOM = function(id, elmt, backstage) {
     
     var itemTypes = Exhibit.getAttribute(elmt, "itemTypes", ",");
     if (itemTypes != null && itemTypes.length > 0) {
+        collection._type = "types-based";
         collection._itemTypes = itemTypes;
         collection._update = Backstage.Collection._typeBasedCollection_update;
+        collection.getServerSideConfiguration = Backstage.Collection._typeBasedCollection_getServerSideConfiguration;
     } else {
+        collection._type = "all-items";
         collection._update = Backstage.Collection._allItemsCollection_update;
+        collection.getServerSideConfiguration = Backstage.Collection._allItemsCollection_getServerSideConfiguration;
     }
     
     return collection;
@@ -94,6 +102,13 @@ Backstage.Collection._allItemsCollection_update = function() {
     this._onRootItemsChanged();
 };
 
+Backstage.Collection._allItemsCollection_getServerSideConfiguration = function() {
+    return {
+        id:     this._id,
+        type:   this._type
+    };
+};
+
 Backstage.Collection._typeBasedCollection_update = function() {
     var newItems = new Exhibit.Set();
     for (var i = 0; i < this._itemTypes.length; i++) {
@@ -102,6 +117,14 @@ Backstage.Collection._typeBasedCollection_update = function() {
     
     this._items = newItems;
     this._onRootItemsChanged();
+};
+
+Backstage.Collection._typeBasedCollection_getServerSideConfiguration = function() {
+    return {
+        id:         this._id,
+        type:       this._type,
+        itemTypes:  this._itemTypes.join(";")
+    };
 };
 
 Backstage.Collection._basedCollection_update = function() {
@@ -133,13 +156,6 @@ Backstage.Collection.prototype.dispose = function() {
     this._listeners = null;
     this._items = null;
     this._restrictedItems = null;
-};
-
-Backstage.Collection.prototype.getServerSideConfiguration = function() {
-    return {
-        id:     this._id,
-        type:   this._type
-    };
 };
 
 Backstage.Collection.prototype.addListener = function(listener) {

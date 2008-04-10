@@ -5,6 +5,7 @@ package edu.mit.simile.backstage.model.ui.lens;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.mozilla.javascript.Scriptable;
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
@@ -26,6 +27,8 @@ import edu.mit.simile.backstage.util.SailUtilities;
 import edu.mit.simile.backstage.util.ScriptableArrayBuilder;
 
 class DomLensNode extends LensNode {
+    protected static Logger _logger = Logger.getLogger(DomLensNode.class);
+    
 	protected String		_control;
 	
 	protected String		_conditionTest;
@@ -41,20 +44,24 @@ class DomLensNode extends LensNode {
 		
 	}
 	
-	public void render(URI item, Scriptable result, Database database, SailRepositoryConnection connection) {
-		if (!testCondition(item, result, database, connection)) {
+	public void render(Value value, Scriptable result, Database database, SailRepositoryConnection connection) {
+		if (!testCondition(value, result, database, connection)) {
 			return;
 		}
 		
 		if (_contentAttributes != null) {
-			generateContentAttributes(item, result, database, connection);
+			generateContentAttributes(value, result, database, connection);
 		}
 		if (_subcontentAttributes != null) {
-			generateSubontentAttributes(item, result, database, connection);
+			generateSubcontentAttributes(value, result, database, connection);
 		}
 		
 		if (_contentExpression != null) {
-			generateContent(item, result, database, connection);
+			if (_children != null) {
+				generateContentWithInnerTemplates(value, result, database, connection);
+			} else {
+				generateContent(value, result, database, connection);
+			}
 		} else if (_children != null) {
 			ScriptableArrayBuilder arrayBuilder = new ScriptableArrayBuilder();
 			
@@ -64,7 +71,7 @@ class DomLensNode extends LensNode {
 				} else {
 			        DefaultScriptableObject o = new DefaultScriptableObject();
 			        
-			        ((DomLensNode) node).render(item, o, database, connection);
+			        ((DomLensNode) node).render(value, o, database, connection);
 			        
 					arrayBuilder.add(o);
 				}
@@ -74,7 +81,7 @@ class DomLensNode extends LensNode {
 		}
 	}
 	
-	protected boolean testCondition(URI item, Scriptable result, Database database, SailRepositoryConnection connection) {
+	protected boolean testCondition(Value value, Scriptable result, Database database, SailRepositoryConnection connection) {
 		if (_conditionTest == null) {
 			return true;
 		}
@@ -82,7 +89,7 @@ class DomLensNode extends LensNode {
 		boolean r = false;
 		
         try {
-			ExpressionQueryResult eqr = _conditionExpression.computeOutputOnItem(item, database, connection);
+			ExpressionQueryResult eqr = _conditionExpression.computeOutputOnValue(value, database, connection);
 	        if (eqr != null) {
                 TupleQueryResult queryResult = eqr.tupleQuery.evaluate();
                 try {
@@ -91,15 +98,19 @@ class DomLensNode extends LensNode {
 					} else if ("if".equals(_conditionTest)) {
 						if (queryResult.hasNext()) {
 							BindingSet bindingSet = queryResult.next();
-							Value value = bindingSet.getValue(eqr.resultVar.getName());
-							if (value instanceof Literal) {
-								r = ((Literal) value).booleanValue();
+							Value value2 = bindingSet.getValue(eqr.resultVar.getName());
+							if (value2 instanceof Literal) {
+								r = ((Literal) value2).booleanValue();
 							}
 						}
 					}
                 } finally {
                     queryResult.close();
                 }
+	        } else {
+				if (value instanceof Literal) {
+					r = ((Literal) value).booleanValue();
+				}
 	        }
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -111,24 +122,63 @@ class DomLensNode extends LensNode {
 		return r;
 	}
 	
-	protected void generateContent(URI item, Scriptable result, Database database, SailRepositoryConnection connection) {
+	protected void generateContentWithInnerTemplates(Value value, Scriptable result, Database database, SailRepositoryConnection connection) {
 		ScriptableArrayBuilder arrayBuilder = new ScriptableArrayBuilder();
-		String valueType = "text";
 		
         try {
-			ExpressionQueryResult eqr = _contentExpression.computeOutputOnItem(item, database, connection);
+			ExpressionQueryResult eqr = _contentExpression.computeOutputOnValue(value, database, connection);
 	        if (eqr != null) {
                 TupleQueryResult queryResult = eqr.tupleQuery.evaluate();
                 try {
                 	while (queryResult.hasNext()) {
                 		BindingSet bindingSet = queryResult.next();
-                		Value value = bindingSet.getValue(eqr.resultVar.getName());
+                		Value value2 = bindingSet.getValue(eqr.resultVar.getName());
                 		
-                		if (value instanceof URI) {
-                			arrayBuilder.add(renderInnerItem((URI) value, database, connection));
-                		} else {
-                			arrayBuilder.add(((Literal) value).getLabel());
-                		}
+                		arrayBuilder.add(generateInnerContentWithInnerTemplates(value2, database, connection));
+                	}
+                } finally {
+                    queryResult.close();
+                }
+	        } else {
+        		arrayBuilder.add(generateInnerContentWithInnerTemplates(value, database, connection));
+	        }
+		} catch (Exception e) {
+			_logger.error("", e);
+		}
+		
+		result.put("content", result, arrayBuilder.toArray());
+	}
+	
+	protected Object generateInnerContentWithInnerTemplates(Value value, Database database, SailRepositoryConnection connection) {
+		ScriptableArrayBuilder arrayBuilder = new ScriptableArrayBuilder();
+		for (LensNode node : _children) {
+			if (node instanceof StringLensNode) {
+				arrayBuilder.add("");
+			} else {
+		        DefaultScriptableObject o = new DefaultScriptableObject();
+		        
+		        ((DomLensNode) node).render(value, o, database, connection);
+		        
+				arrayBuilder.add(o);
+			}
+		}
+		return arrayBuilder.toArray();
+	}
+	
+	protected void generateContent(Value value, Scriptable result, Database database, SailRepositoryConnection connection) {
+		ScriptableArrayBuilder arrayBuilder = new ScriptableArrayBuilder();
+		String valueType = "text";
+		
+        try {
+			ExpressionQueryResult eqr = _contentExpression.computeOutputOnValue(value, database, connection);
+	        if (eqr != null) {
+                TupleQueryResult queryResult = eqr.tupleQuery.evaluate();
+                try {
+                	while (queryResult.hasNext()) {
+                		BindingSet bindingSet = queryResult.next();
+                		Value value2 = bindingSet.getValue(eqr.resultVar.getName());
+                		
+               			arrayBuilder.add(renderInnerValue(value2, database, connection));
                 	}
                 } finally {
                     queryResult.close();
@@ -146,7 +196,7 @@ class DomLensNode extends LensNode {
 		result.put("content", result, o);
 	}
 	
-	protected void generateContentAttributes(URI item, Scriptable result, Database database, SailRepositoryConnection connection) {
+	protected void generateContentAttributes(Value value, Scriptable result, Database database, SailRepositoryConnection connection) {
 		ScriptableArrayBuilder arrayBuilder = new ScriptableArrayBuilder();
 		
 		for (ContentAttribute a : _contentAttributes) {
@@ -157,13 +207,13 @@ class DomLensNode extends LensNode {
 	        	boolean first = true;
 	        	StringBuffer sb = new StringBuffer();
 	        	
-				ExpressionQueryResult eqr = a.expression.computeOutputOnItem(item, database, connection);
+				ExpressionQueryResult eqr = a.expression.computeOutputOnValue(value, database, connection);
 		        if (eqr != null) {
 	                TupleQueryResult queryResult = eqr.tupleQuery.evaluate();
 	                try {
 	                	while (queryResult.hasNext()) {
 	                		BindingSet bindingSet = queryResult.next();
-	                		Value value = bindingSet.getValue(eqr.resultVar.getName());
+	                		Value value2 = bindingSet.getValue(eqr.resultVar.getName());
 	                		
 	                		if (first) {
 	                			first = false;
@@ -171,11 +221,7 @@ class DomLensNode extends LensNode {
 	                			sb.append(";");
 	                		}
 	                		
-	                		if (value instanceof URI) {
-	                			sb.append(renderInnerItemToText((URI) value, database, connection));
-	                		} else {
-	                			sb.append(((Literal) value).getLabel());
-	                		}
+                			sb.append(renderInnerValueToText(value2, database, connection));
 	                	}
 	                } finally {
 	                    queryResult.close();
@@ -184,8 +230,7 @@ class DomLensNode extends LensNode {
 		        
 		        o.put("value", o, sb.toString());
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				_logger.error("", e);
 			}
 			
 			arrayBuilder.add(o);
@@ -194,7 +239,7 @@ class DomLensNode extends LensNode {
 		result.put("contentAttributes", result, arrayBuilder.toArray());
 	}
 	
-	protected void generateSubontentAttributes(URI item, Scriptable result, Database database, SailRepositoryConnection connection) {
+	protected void generateSubcontentAttributes(Value value, Scriptable result, Database database, SailRepositoryConnection connection) {
 		ScriptableArrayBuilder arrayBuilder = new ScriptableArrayBuilder();
 		
 		for (SubcontentAttribute a : _subcontentAttributes) {
@@ -208,15 +253,15 @@ class DomLensNode extends LensNode {
         		} else {
         	        try {
 			        	boolean first = true;
-						ExpressionQueryResult eqr = ((ExpressionFragment) f).expression.computeOutputOnItem(
-								item, database, connection);
+						ExpressionQueryResult eqr = ((ExpressionFragment) f).expression.computeOutputOnValue(
+								value, database, connection);
 						
 				        if (eqr != null) {
 			                TupleQueryResult queryResult = eqr.tupleQuery.evaluate();
 			                try {
 			                	while (queryResult.hasNext()) {
 			                		BindingSet bindingSet = queryResult.next();
-			                		Value value = bindingSet.getValue(eqr.resultVar.getName());
+			                		Value value2 = bindingSet.getValue(eqr.resultVar.getName());
 			                		
 			                		if (first) {
 			                			first = false;
@@ -224,19 +269,16 @@ class DomLensNode extends LensNode {
 			                			sb.append(";");
 			                		}
 			                		
-			                		if (value instanceof URI) {
-			                			sb.append(renderInnerItemToText((URI) value, database, connection));
-			                		} else {
-			                			sb.append(((Literal) value).getLabel());
-			                		}
+		                			sb.append(renderInnerValueToText(value2, database, connection));
 			                	}
 			                } finally {
 			                    queryResult.close();
 			                }
+				        } else {
+				        	sb.append(renderInnerValueToText(value, database, connection));
 				        }
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						_logger.error(e);
 					}
         		}
         	}
@@ -246,6 +288,14 @@ class DomLensNode extends LensNode {
 		}
 		
 		result.put("subcontentAttributes", result, arrayBuilder.toArray());
+	}
+	
+	protected Object renderInnerValue(Value value, Database database, SailRepositoryConnection connection) {
+		if (value instanceof URI) {
+			return renderInnerItem((URI) value, database, connection);
+		} else {
+			return ((Literal) value).getLabel();
+		}
 	}
 	
 	protected Scriptable renderInnerItem(URI item, Database database, SailRepositoryConnection connection) {
@@ -261,6 +311,14 @@ class DomLensNode extends LensNode {
 		}
 		
 		return o;
+	}
+	
+	protected String renderInnerValueToText(Value value, Database database, SailRepositoryConnection connection) {
+		if (value instanceof URI) {
+			return renderInnerItemToText((URI) value, database, connection);
+		} else {
+			return ((Literal) value).getLabel();
+		}
 	}
 	
 	protected String renderInnerItemToText(URI item, Database database, SailRepositoryConnection connection) {

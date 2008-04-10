@@ -6,6 +6,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.Scriptable;
 import org.openrdf.model.Literal;
+import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.query.BindingSet;
@@ -215,7 +216,7 @@ public class ListFacet extends Facet {
             Value value = bindingSet.getValue(_valueVar.getName());
             Value count = bindingSet.getValue(_countVar.getName());
             
-            String s = ((Literal) value).getLabel();
+            String s = valueToString(value);
             int c = Integer.parseInt(count.stringValue());
             boolean selected = _selection.contains(s);
             
@@ -233,5 +234,15 @@ public class ListFacet extends Facet {
     	
         result.put("values", result, facetChoices.toArray());
         result.put("selectionCount", result, selectionCount);
+    }
+    
+    protected String valueToString(Value value) {
+    	if (value instanceof Literal) {
+    		return ((Literal) value).getLabel();
+    	}
+    	
+    	return ((URI) value).stringValue();
+    	/*Database database = _context.getDatabase();
+    	return database.getItemLabel(database.getItemId((URI) value));*/
     }
 }

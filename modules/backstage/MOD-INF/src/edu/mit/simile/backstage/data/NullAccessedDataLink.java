@@ -7,7 +7,7 @@ import org.openrdf.sail.Sail;
 
 public class NullAccessedDataLink extends AccessedDataLink {
 
-    public NullAccessedDataLink(DataLink entry, Date expiresDate2, Date retrievedDate2, boolean broken2) {
+    public NullAccessedDataLink(UnhostedDataLink entry, Date expiresDate2, Date retrievedDate2, boolean broken2) {
         super(entry, expiresDate2, retrievedDate2, broken2);
     }
 

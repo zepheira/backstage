@@ -66,7 +66,6 @@ public class Path extends Expression {
         String      rootName = _rootVariable != null ? _rootVariable : "value";
         ValueExpr   valueExpr = variableValues.get(rootName);
         String      valueType = variableTypes.get(rootName);
-        
         for (PathSegment segment : _segments) {
             if (valueExpr instanceof Var) {
                 Var input = (Var) valueExpr;

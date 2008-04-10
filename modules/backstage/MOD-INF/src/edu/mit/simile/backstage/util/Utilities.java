@@ -13,6 +13,8 @@ import org.openrdf.model.Value;
 import edu.mit.simile.backstage.model.data.Expression;
 
 abstract public class Utilities {
+    //private static Logger _logger = Logger.getLogger(Utilities.class);
+    
     static public Date parseLastModifiedDate(String s) {
         try {
             return new SimpleDateFormat("MM/dd/yyyy H:m:s").parse(s);
@@ -51,4 +53,5 @@ abstract public class Utilities {
 	static public String valueToString(Value value) {
 		return (value instanceof Literal) ? ((Literal) value).getLabel() : ((Resource) value).stringValue();
 	}
+	
 }

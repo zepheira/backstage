@@ -1,5 +1,6 @@
 package edu.mit.simile.backstage;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.List;
@@ -8,9 +9,13 @@ import java.util.Map;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 
-import edu.mit.simile.backstage.data.DataLink;
+import org.apache.commons.collections.ExtendedProperties;
+
+import edu.mit.simile.backstage.data.UnhostedDataLink;
 import edu.mit.simile.backstage.model.Exhibit;
 import edu.mit.simile.backstage.model.data.Database;
+import edu.mit.simile.backstage.model.data.HostedDatabase;
+import edu.mit.simile.backstage.model.data.UnhostedDatabase;
 import edu.mit.simile.butterfly.ButterflyModuleImpl;
 
 public class BackstageModule extends ButterflyModuleImpl {
@@ -24,6 +29,7 @@ public class BackstageModule extends ButterflyModuleImpl {
      * HTTP HEAD requests, which take time.
      */
     static Map<ExhibitIdentity, DatabaseTrace>[] s_databaseTracesMaps;
+    static HostedDatabase						 s_hostedDatabase;
     
     @SuppressWarnings("unchecked")
     @Override
@@ -37,7 +43,7 @@ public class BackstageModule extends ButterflyModuleImpl {
         }
     }
     
-    public Database getDatabase(ExhibitIdentity identity, List<DataLink> dataLinks) {
+    public Database getDatabase(ExhibitIdentity identity, List<UnhostedDataLink> dataLinks) {
         Map<ExhibitIdentity, DatabaseTrace> databaseTraces = getDatabaseTraceMap(identity);
         synchronized (databaseTraces) {
             DatabaseTrace databaseTrace = databaseTraces.get(identity);
@@ -49,7 +55,7 @@ public class BackstageModule extends ButterflyModuleImpl {
         }
     }
     
-    public void releaseDatabase(Database database) {
+    public void releaseDatabase(UnhostedDatabase database) {
         ExhibitIdentity identity = database.getIdentity();
         Map<ExhibitIdentity, DatabaseTrace> databaseTraces = getDatabaseTraceMap(identity);
         synchronized (databaseTraces) {
@@ -62,6 +68,21 @@ public class BackstageModule extends ButterflyModuleImpl {
                 }
             }
         }
+    }
+    
+    public Database getHostedDatabase() {
+    	if (s_hostedDatabase == null) {
+	    	ExtendedProperties properties = getProperties();
+	    	String sourceString = properties.getString("backstage.hostedData.source");
+	    	String databaseString = properties.getString("backstage.hostedData.database");
+	    	
+	    	File source = (sourceString == null || sourceString.length() == 0) ? null : new File(sourceString);
+	    	File database = (databaseString == null || databaseString.length() == 0) ? 
+	    			new File("database") : new File(databaseString);
+	    	
+	    	s_hostedDatabase = new HostedDatabase(source, database);
+    	}
+    	return s_hostedDatabase;
     }
     
     /**
