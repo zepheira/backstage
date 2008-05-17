@@ -5,10 +5,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.log4j.Logger;
@@ -19,7 +22,6 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.repository.Repository;
-import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.rio.ParseErrorListener;
@@ -31,8 +33,13 @@ import org.openrdf.rio.ntriples.NTriplesParser;
 import org.openrdf.rio.rdfxml.RDFXMLParser;
 import org.openrdf.rio.turtle.TurtleParser;
 import org.openrdf.sail.Sail;
+import org.openrdf.sail.SailConnection;
+import org.openrdf.sail.SailException;
 import org.openrdf.sail.memory.MemoryStore;
 import org.openrdf.sail.nativerdf.NativeStore;
+
+import edu.mit.simile.babel.BabelReader;
+import edu.mit.simile.babel.exhibit.ExhibitJsonReader;
 
 public class DataLoadingUtilities {
     private static Logger _logger = Logger.getLogger(DataLoadingUtilities.class);
@@ -95,6 +102,8 @@ public class DataLoadingUtilities {
         } else if ("application/n3".equals(contentType) || "text/rdf+n3".equals(contentType)
                 || "application/turtle".equals(contentType) || "application/x-turtle".equals(contentType)) {
             lang = "N3";
+        } else if ("application/json".equals(contentType)) {
+            lang = "Exhibit/JSON";
         }
         if (_logger.isDebugEnabled()) _logger.debug(contentType + " -> " + lang);
         return lang;
@@ -125,6 +134,9 @@ public class DataLoadingUtilities {
                     || filename.endsWith(".xml")
                     || filename.endsWith(".owl")) {
                 lang = "RDFXML";
+            } else if (filename.endsWith(".json") 
+                    || filename.endsWith(".js")) {
+            	lang = "Exhibit/JSON";
             }
         }
 
@@ -139,7 +151,7 @@ public class DataLoadingUtilities {
         return uri.replace(':', '_').replace('/', '_');
     }
     
-    static public void loadDataFromDir(File dir, Repository repository, boolean forgiving) throws Exception {
+    static public void loadDataFromDir(File dir, Sail sail, boolean forgiving) throws Exception {
         if (!dir.exists()) {
             throw new FileNotFoundException("Cannot load data from " + dir.getAbsolutePath());
         }
@@ -151,16 +163,16 @@ public class DataLoadingUtilities {
 
             if (!file.isHidden()) {
                 if (file.isDirectory()) {
-                    loadDataFromDir(file, repository, forgiving);
+                    loadDataFromDir(file, sail, forgiving);
                 } else {
                     if (forgiving) {
                         try {
-                            loadDataFromFile(file, repository);
+                            loadDataFromFile(file, sail);
                         } catch (Exception e) {
                             _logger.warn("Failed to load data from " + file.getCanonicalPath(), e);
                         }
                     } else {
-                        loadDataFromFile(file, repository);
+                        loadDataFromFile(file, sail);
                     }
                 }
             }
@@ -176,12 +188,12 @@ public class DataLoadingUtilities {
         return stream;
     }
     
-    static public void loadDataFromFile(File file, Repository repository) throws Exception {
+    static public void loadDataFromFile(File file, Sail sail) throws Exception {
         String lang = fileToModelLang(file);
         if (lang != null) {
             InputStream fis = getStreamForFile(file);
             try {
-                loadDataFromStream(fis, file.toURL().toExternalForm(), lang, repository);
+                loadDataFromStream(fis, file.toURL().toExternalForm(), lang, sail);
             } catch (Exception e) {
                 throw new RuntimeException("Error loading data from file: " + file + " " + e.getMessage());
             } finally {
@@ -192,12 +204,11 @@ public class DataLoadingUtilities {
         }
     }
 
-    static public void loadDataFromConnection(URLConnection conn, URL url, String lang, String contentType,
-            Repository repository) throws Exception {
+    static public void loadDataFromConnection(URLConnection conn, URL url, String lang, String contentType, Sail sail) throws Exception {
         if (lang != null) {
             InputStream stream = conn.getInputStream();
             try {
-                loadDataFromStream(stream, url.toExternalForm(), lang, repository);
+                loadDataFromStream(stream, url.toExternalForm(), lang, sail);
             } catch (Exception e) {
                 throw new RuntimeException("Error loading data from URL: " + url + " " + e.getMessage());
             } finally {
@@ -208,7 +219,7 @@ public class DataLoadingUtilities {
         }
     }
 
-    static public void loadDataFromURL(URL url, String contentType, Repository repository) throws Exception {
+    static public void loadDataFromURL(URL url, String contentType, Sail sail) throws Exception {
         String lang = urlToModelLang(url, contentType);
         if (lang != null) {
             URLConnection conn = url.openConnection();
@@ -218,7 +229,7 @@ public class DataLoadingUtilities {
             conn.connect();
             InputStream stream = conn.getInputStream();
             try {
-                loadDataFromStream(stream, url.toExternalForm(), lang, repository);
+                loadDataFromStream(stream, url.toExternalForm(), lang, sail);
             } catch (Exception e) {
                 throw new RuntimeException("Error loading data from URL: " + url + " " + e.getMessage());
             } finally {
@@ -234,13 +245,26 @@ public class DataLoadingUtilities {
         conn.setRequestProperty("Accept", "application/rdf+xml, text/rdf+n3");
     }
 
-    static public void loadDataFromStream(InputStream stream, String sourceURL, String lang, Repository repository) throws Exception {
-
+    static public void loadDataFromStream(InputStream stream, String sourceURL, String lang, Sail sail) throws Exception {
         Repository r = createMemoryRepository();
 
-        try {
+        lang = lang.toLowerCase();
+        if ("exhibit/json".equals(lang)) {
+            Properties properties = new Properties();
+            
+            BabelReader reader = new ExhibitJsonReader();
+            try {
+                if (reader.takesReader()) {
+                    InputStreamReader isr = new InputStreamReader(stream);
+                  	reader.read(isr, sail, properties, Locale.getDefault());
+                } else {
+                   	reader.read(stream, sail, properties, Locale.getDefault());
+                }
+            } finally {
+                stream.close();
+            }
+        } else {
             RDFParser parser = null;
-            lang = lang.toLowerCase();
             if ("rdfxml".equals(lang)) {
                 parser = new RDFXMLParser(r.getValueFactory());
             } else if ("n3".equals(lang) || "turtle".equals(lang)) {
@@ -248,33 +272,33 @@ public class DataLoadingUtilities {
             } else if ("ntriples".equals(lang)) {
                 parser = new NTriplesParser(r.getValueFactory());
             }
-
-            RepositoryConnection c = null;
+            
             try {
-                c = repository.getConnection();
-                c.setAutoCommit(false);
-                BNodeConverterStatementHandler handler = new BNodeConverterStatementHandler(c);
-
-                parser.setRDFHandler(handler);
-                parser.setParseErrorListener(new LoggingParseErrorListener(sourceURL));
-                parser.setVerifyData(false);
-                parser.setStopAtFirstError(false);
-
-                parser.parse(stream, sourceURL);
-                
-                c.commit();
-
-                _logger.info("Read " + handler.m_count + " statements from '" + sourceURL + "'");
-            } catch (RepositoryException e) {
-                if (c != null) c.rollback();
-            } finally {
-                if (c != null) c.close();
-            }
-
-        } catch (Exception e) {
-            throw new ModelReadFromFileException("Failed to read data from '" + sourceURL + "'", e);
-        } finally {
-            stream.close();
+	            SailConnection c = null;
+	            try {
+	                c = sail.getConnection();
+	                BNodeConverterStatementHandler handler = new BNodeConverterStatementHandler(c);
+	
+	                parser.setRDFHandler(handler);
+	                parser.setParseErrorListener(new LoggingParseErrorListener(sourceURL));
+	                parser.setVerifyData(false);
+	                parser.setStopAtFirstError(false);
+	
+	                parser.parse(stream, sourceURL);
+	                
+	                c.commit();
+	
+	                _logger.info("Read " + handler.m_count + " statements from '" + sourceURL + "'");
+	            } catch (RepositoryException e) {
+	                if (c != null) c.rollback();
+	            } finally {
+	                if (c != null) c.close();
+	            }
+	        } catch (Exception e) {
+	            throw new ModelReadFromFileException("Failed to read data from '" + sourceURL + "'", e);
+	        } finally {
+	            stream.close();
+	        }
         }
     }
     
@@ -293,7 +317,7 @@ public class DataLoadingUtilities {
 
     static class BNodeConverterStatementHandler implements RDFHandler {
 
-        RepositoryConnection m_connection;
+        SailConnection m_connection;
         
         long m_count;
 
@@ -301,7 +325,7 @@ public class DataLoadingUtilities {
 
         Map<String,URI> m_bnodeIDToURI = new HashMap<String,URI>();
 
-        BNodeConverterStatementHandler(RepositoryConnection conn) throws RepositoryException {
+        BNodeConverterStatementHandler(SailConnection conn) throws RepositoryException {
             m_connection = conn;
         }
 
@@ -328,11 +352,11 @@ public class DataLoadingUtilities {
             }
 
             try {
-                m_connection.add(s, p, o);
+                m_connection.addStatement(s, p, o);
                 m_count++;
-            } catch (RepositoryException e) {
+            } catch (SailException e) {
                 _logger.error(e);
-            }
+			}
         }
 
         URI addBNode(String bnode) {
@@ -345,18 +369,12 @@ public class DataLoadingUtilities {
         }
 
         public void startRDF() throws RDFHandlerException {
-            try {
-                m_connection.setAutoCommit(false);
-            } catch (RepositoryException e) {
-                throw new RDFHandlerException(e);
-            }
         }
 
         public void endRDF() throws RDFHandlerException {
             try {
                 m_connection.commit();
-                m_connection.setAutoCommit(true);
-            } catch (RepositoryException e) {
+            } catch (SailException e) {
                 try {
                     m_connection.rollback();
                 } catch (Exception ee) {

@@ -2,12 +2,15 @@ package edu.mit.simile.backstage.model.data;
 
 import java.io.File;
 
+import org.apache.log4j.Logger;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.sail.SailRepository;
 
 import edu.mit.simile.backstage.util.DataLoadingUtilities;
 
 public class HostedDatabase extends Database {
+    protected static Logger _logger = Logger.getLogger(HostedDatabase.class);
+    
 	public HostedDatabase(File sourceToLoad, File databaseDir) {
 		boolean load = !databaseDir.exists();
 		
@@ -24,9 +27,9 @@ public class HostedDatabase extends Database {
 			} else {
 				try {
 					if (sourceToLoad.isDirectory()) {
-						DataLoadingUtilities.loadDataFromDir(sourceToLoad, _repository, true);
+						DataLoadingUtilities.loadDataFromDir(sourceToLoad, _sail, true);
 					} else {
-						DataLoadingUtilities.loadDataFromFile(sourceToLoad, _repository);
+						DataLoadingUtilities.loadDataFromFile(sourceToLoad, _sail);
 					}
 				} catch (Exception e) {
 					_logger.error("Failed to load hosted data source at " + sourceToLoad.getAbsolutePath(), e);
