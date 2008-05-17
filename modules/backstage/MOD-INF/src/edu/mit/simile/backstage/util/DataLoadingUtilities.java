@@ -155,6 +155,8 @@ public class DataLoadingUtilities {
         if (!dir.exists()) {
             throw new FileNotFoundException("Cannot load data from " + dir.getAbsolutePath());
         }
+        
+        _logger.info("Loading data from dir " + dir.getAbsolutePath());
 
         File[] files = dir.listFiles();
 
@@ -191,6 +193,8 @@ public class DataLoadingUtilities {
     static public void loadDataFromFile(File file, Sail sail) throws Exception {
         String lang = fileToModelLang(file);
         if (lang != null) {
+        	_logger.info("Loading data from file " + file.getAbsolutePath());
+        	
             InputStream fis = getStreamForFile(file);
             try {
                 loadDataFromStream(fis, file.toURL().toExternalForm(), lang, sail);
