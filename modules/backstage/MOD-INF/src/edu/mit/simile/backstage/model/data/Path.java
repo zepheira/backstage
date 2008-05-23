@@ -89,4 +89,23 @@ public class Path extends Expression {
         
         return new ExpressionResult(valueExpr, valueType);
     }
+    
+    @Override
+    public String toString() {
+    	StringBuffer sb = new StringBuffer();
+    	
+        if (_rootVariable != null) {
+        	sb.append(_rootVariable);
+        }
+        
+        for (PathSegment segment : _segments) {
+        	sb.append(segment.forward ? '.' : '!');
+        	if (segment.isArray) {
+        		sb.append('@');
+        	}
+        	sb.append(segment.propertyID);
+        }
+        
+        return sb.toString();
+    }
 }

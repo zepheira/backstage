@@ -29,9 +29,9 @@ public class Exhibit {
     private List<UnhostedDataLink>    	_dataLinks = new LinkedList<UnhostedDataLink>();
     private Database 					_database;
     
-    final private Map<String, Collection> 	_collectionMap = new HashMap<String, Collection>();
-    final private Map<String, Component> 	_componentMap = new HashMap<String, Component>();
-    final private Map<String, Context>		_contextMap = new HashMap<String, Context>();
+    final private Map<String, Collection> 		_collectionMap = new HashMap<String, Collection>();
+    final private Map<String, Component> 		_componentMap = new HashMap<String, Component>();
+    final private Map<String, Context>			_contextMap = new HashMap<String, Context>();
     
     private Context _context;
     

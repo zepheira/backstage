@@ -15,6 +15,7 @@ import org.openrdf.query.algebra.ProjectionElemList;
 import org.openrdf.query.algebra.TupleExpr;
 import org.openrdf.query.algebra.ValueExpr;
 import org.openrdf.query.algebra.Var;
+import org.openrdf.query.algebra.helpers.QueryModelTreePrinter;
 import org.openrdf.query.parser.ParsedTupleQuery;
 import org.openrdf.repository.sail.SailRepositoryConnection;
 
@@ -95,5 +96,31 @@ public class TupleQueryBuilder {
             new ParsedTupleQuery(makeProjection(projectionElements)),
             connection
         );
+    }
+    
+    public String getStringSerialization() {
+    	StringBuffer sb = new StringBuffer();
+    	
+    	boolean first = true;
+    	for (TupleExpr tupleExpr : _tupleExprs) {
+    		if (first) {
+    			first = false;
+    		} else {
+    			sb.append(';');
+    		}
+    		sb.append(QueryModelTreePrinter.printTree(tupleExpr));
+    	}
+    	
+    	for (ValueExpr valueExpr : _conditions) {
+    		if (first) {
+    			first = false;
+    			sb.append('|');
+    		} else {
+    			sb.append(';');
+    		}
+    		sb.append(QueryModelTreePrinter.printTree(valueExpr));
+    	}
+    	
+    	return sb.toString();
     }
 }

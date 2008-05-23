@@ -55,6 +55,8 @@ abstract public class Database {
     private Map<String, String>	 _itemIdToLabel = new HashMap<String, String>();
     private boolean              _abbreviatedItems = false;
     
+    private Map<String, CacheableQuery> 	_cacheableQueries = new HashMap<String, CacheableQuery>();
+
     public List<PropertyRecord> getPropertyRecords() {
         computeCachedInformation();
         return _propertyRecords;
@@ -88,6 +90,20 @@ abstract public class Database {
     public boolean isType(URI uri) {
     	computeCachedInformation();
     	return _typeUriToId.containsKey(uri);
+    }
+    
+    public void discardCacheableQuery(String key) {
+    	_cacheableQueries.remove(key);
+    }
+    
+    public Object cacheAndRun(String key, CacheableQuery cq) {
+    	if (_cacheableQueries.containsKey(key)) {
+    		cq = _cacheableQueries.get(key); // use the old one
+    	} else {
+    		_cacheableQueries.put(key, cq);
+    	}
+    	
+    	return cq.run();
     }
     
     private void computeCachedInformation() {
