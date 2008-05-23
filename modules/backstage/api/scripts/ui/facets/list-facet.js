@@ -194,8 +194,11 @@ Backstage.ListFacet.prototype.applyRestrictions = function(restrictions) {
             self._valueSet.add(restrictions.selection[i]);
         }
         self._selectMissing = restrictions.selectMissing;
+        
+        Exhibit.UI.hideBusyIndicator();
     };
     
+    Exhibit.UI.showBusyIndicator();
     this._uiContext.getBackstage().asyncCall(
         "facet-apply-restrictions", 
         {   facetID:        this._id,
