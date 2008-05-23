@@ -11,6 +11,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
@@ -37,10 +38,11 @@ abstract public class Database {
     /*
      * Cached computed information
      */
-    private List<PropertyRecord> _propertyRecords;
+    private List<PropertyRecord> 		_propertyRecords;
     private Map<String, PropertyRecord> _propertyIDToRecord;
     
-    private List<TypeRecord>     _typeRecords;
+    private List<TypeRecord>     	_typeRecords;
+    private Map<String, TypeRecord> _typeIDToRecord;
     
     private Map<URI, String>     _typeUriToId = new HashMap<URI, String>();
     private Map<String, URI>     _typeIdToUri = new HashMap<String, URI>();
@@ -63,9 +65,29 @@ abstract public class Database {
         return _propertyIDToRecord.get(id);
     }
     
+    public PropertyRecord getPropertyRecord(URI uri) {
+        computeCachedInformation();
+        return getPropertyRecord(_propertyUriToId.get(uri));
+    }
+    
     public List<TypeRecord> getTypeRecords() {
         computeCachedInformation();
         return _typeRecords;
+    }
+    
+    public TypeRecord getTypeRecord(String id) {
+        computeCachedInformation();
+        return _typeIDToRecord.get(id);
+    }
+    
+    public TypeRecord getTypeRecord(URI uri) {
+        computeCachedInformation();
+        return getTypeRecord(_typeUriToId.get(uri));
+    }
+    
+    public boolean isType(URI uri) {
+    	computeCachedInformation();
+    	return _typeUriToId.containsKey(uri);
     }
     
     private void computeCachedInformation() {
@@ -134,6 +156,7 @@ abstract public class Database {
     
     private void internalBuildTypeRecords(SailConnection sc) {
         _typeRecords = new LinkedList<TypeRecord>();
+        _typeIDToRecord = new HashMap<String, TypeRecord>();
         
         getRepository();
         
@@ -166,6 +189,7 @@ abstract public class Database {
             TypeRecord r = createTypeRecord(type, sc);
             if (r != null) {
                 _typeRecords.add(r);
+                _typeIDToRecord.put(r.id, r);
             }
         }
     }
@@ -320,6 +344,10 @@ abstract public class Database {
     }
     
     abstract public Repository getRepository();
+    public Sail getSail() {
+    	getRepository();
+    	return _sail;
+    }
     
     public String getItemId(URI uri) {
         abbreviateItems();
@@ -381,6 +409,36 @@ abstract public class Database {
         	_itemIdToLabel.put(itemID, label);
     	}
     	return label;
+    }
+    
+    public String getItemLabel(URI itemURI) {
+    	String itemID = _itemUriToId.get(itemURI);
+    	return itemID != null ? getItemLabel(itemID) : null;
+    }
+    
+    public String valueToLabel(Value value) {
+        if (value instanceof URI) {
+        	URI uri = (URI) value;
+        	if (isType(uri)) {
+        		TypeRecord r = getTypeRecord(uri);
+        		if (r != null) {
+        			return r.label;
+        		}
+        	} else {
+            	String label = getItemLabel((URI) value);
+            	if (label == null) {
+            		label = getItemId((URI) value);
+            	}
+            	
+            	if (label != null) {
+            		return label;
+            	}
+        	}
+        	
+        	return uri.stringValue();
+        } else {
+        	return ((Literal) value).getLabel();
+        }
     }
     
     synchronized protected void abbreviateItems() {

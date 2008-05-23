@@ -9,6 +9,7 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.TupleQuery;
@@ -35,6 +36,7 @@ import edu.mit.simile.backstage.model.data.Database;
 import edu.mit.simile.backstage.model.data.Expression;
 import edu.mit.simile.backstage.model.data.ExpressionException;
 import edu.mit.simile.backstage.model.data.ExpressionResult;
+import edu.mit.simile.backstage.model.data.Database.TypeRecord;
 import edu.mit.simile.backstage.util.DefaultScriptableObject;
 import edu.mit.simile.backstage.util.Group2;
 import edu.mit.simile.backstage.util.MyTupleQuery;
@@ -197,10 +199,7 @@ public class ListFacet extends Facet {
         ValueExpr input, 
         ValueExpr previousClauses
     ) {
-        Value value = ("item".equals(valueType)) ? 
-            _context.getDatabase().getItemURI(valueAsString) :
-            new LiteralImpl(valueAsString);
-            
+        Value value = stringToValue(valueAsString);
         Compare compare = new Compare(input, builder.makeVar("v", value), CompareOp.EQ);
         
         return previousClauses == null ? compare : new Or(previousClauses, compare);
@@ -209,6 +208,7 @@ public class ListFacet extends Facet {
     protected void createComponentState(TupleQueryResult queryResult, Scriptable result) throws QueryEvaluationException {
         ScriptableArrayBuilder facetChoices = new ScriptableArrayBuilder();
         int selectionCount = 0;
+        Database database = _context.getDatabase();
         
         while (queryResult.hasNext()) {
             BindingSet bindingSet = queryResult.next();
@@ -224,7 +224,7 @@ public class ListFacet extends Facet {
             valueO.put("value", valueO, s);
             valueO.put("count", valueO, c);
             valueO.put("selected", valueO, selected);
-            
+            valueO.put("label", valueO, database.valueToLabel(value));
             facetChoices.add(valueO);
             
             if (selected) {
@@ -238,11 +238,19 @@ public class ListFacet extends Facet {
     
     protected String valueToString(Value value) {
     	if (value instanceof Literal) {
-    		return ((Literal) value).getLabel();
+    		return "l" + ((Literal) value).getLabel();
     	}
     	
-    	return ((URI) value).stringValue();
-    	/*Database database = _context.getDatabase();
-    	return database.getItemLabel(database.getItemId((URI) value));*/
+    	return "r" + ((URI) value).stringValue();
+    }
+    
+    protected Value stringToValue(String s) {
+    	if (s.length() == 0) {
+    		return null;
+    	} else if (s.charAt(0) == 'r') {
+    		return new URIImpl(s.substring(1));
+    	} else {
+    		return new LiteralImpl(s.substring(1));
+    	}
     }
 }

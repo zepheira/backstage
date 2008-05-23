@@ -8,6 +8,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.repository.sail.SailRepositoryConnection;
+import org.openrdf.sail.SailConnection;
 
 import edu.mit.simile.backstage.model.data.Database;
 import edu.mit.simile.backstage.model.ui.lens.Lens;
@@ -85,25 +86,28 @@ public class Context {
         DefaultScriptableObject result = new DefaultScriptableObject();
         result.put("itemID", result, itemID);
         
-        Database database = getDatabase();
-        
-        URI itemURI = database.getItemURI(itemID);
         String typeId = "Item";
         try {
-            SailRepositoryConnection connection = (SailRepositoryConnection)
-                database.getRepository().getConnection();
+            Database database = getDatabase();
+            URI itemURI = database.getItemURI(itemID);
             
+            SailConnection connection = database.getSail().getConnection();
             try {
             	Value type = SailUtilities.getObject(connection, itemURI, RDF.TYPE);
             	if (type instanceof URI) {
             		typeId = database.getTypeId((URI) type);
             	}
-            	
-            	Lens lens = _lensRegistry.getLens(typeId);
-            	
-            	lens.render(itemURI, result, database, connection);
             } finally {
                 connection.close();
+            }
+            	
+        	Lens lens = _lensRegistry.getLens(typeId);
+        	
+            SailRepositoryConnection connection2 = (SailRepositoryConnection) database.getRepository().getConnection();
+            try {
+            	lens.render(itemURI, result, database, connection2);
+            } finally {
+                connection2.close();
             }
         } catch (Exception e) {
             _logger.error("Error generating lens for " + itemID, e);
