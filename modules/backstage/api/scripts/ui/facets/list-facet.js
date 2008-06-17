@@ -212,6 +212,7 @@ Backstage.ListFacet.prototype._reconstruct = function() {
     var entries = this._state.values;
     var facetHasSelection = this._state.selectionCount > 0;
     
+	var omittedCount = 0;
     var self = this;
     var containerDiv = this._dom.valuesContainer;
     containerDiv.style.display = "none";
@@ -219,6 +220,11 @@ Backstage.ListFacet.prototype._reconstruct = function() {
     
     var constructFacetItemFunction = Exhibit.FacetUtilities[this._settings.scroll ? "constructFacetItem" : "constructFlowingFacetItem"];
     var constructValue = function(entry) {
+		if (entry.count == 1 && !entry.selected) {
+			omittedCount++;
+			return;
+		}
+		
         var label = "label" in entry ? entry.label : entry.value;
         
         var onSelect = function(elmt, evt, target) {
@@ -248,6 +254,13 @@ Backstage.ListFacet.prototype._reconstruct = function() {
     for (var j = 0; j < entries.length; j++) {
         constructValue(entries[j]);
     }
+	
+	if (omittedCount > 0) {
+		var omittedDiv = document.createElement("div");
+		omittedDiv.innerHTML = "<center>Omitted " + omittedCount + " choices with counts of 1</center>";
+        containerDiv.appendChild(omittedDiv);
+	}
+	
     containerDiv.style.display = "block";
     
     this._dom.setSelectionCount(this._state.selectionCount);

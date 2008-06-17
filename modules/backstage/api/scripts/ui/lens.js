@@ -140,7 +140,7 @@ Exhibit.Lens.constructDefaultFromBackstage = function(serverNode, div, uiContext
                 children:   [ 
                     serverNode.label + " (",
                     {   tag:        "a",
-                        href:       Exhibit.Persistence.getItemLink(serverNode.itemID),
+                        href:       serverNode.itemURI,
                         target:     "_blank",
                         children:   [ Exhibit.l10n.itemLinkLabel ]
                     },
