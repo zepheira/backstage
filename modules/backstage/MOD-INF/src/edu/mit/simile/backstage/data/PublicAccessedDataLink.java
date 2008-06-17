@@ -12,6 +12,7 @@ import org.openrdf.sail.Sail;
 
 import edu.mit.simile.babel.BabelReader;
 import edu.mit.simile.babel.exhibit.ExhibitJsonReader;
+import edu.mit.simile.backstage.util.DataLoadingUtilities;
 
 public class PublicAccessedDataLink extends AccessedDataLink {
     private static Logger _logger = Logger.getLogger(AccessedDataLink.class);
@@ -28,6 +29,8 @@ public class PublicAccessedDataLink extends AccessedDataLink {
 
         if (mimeType.equals("application/json")) {
             loadExhibitJSON(exhibitURL, url, charset, sail);
+        } else {
+        	DataLoadingUtilities.loadDataFromURL(url, mimeType, sail);
         }
     }
 

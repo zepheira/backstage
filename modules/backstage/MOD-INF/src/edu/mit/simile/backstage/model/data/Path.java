@@ -71,6 +71,10 @@ public class Path extends Expression {
                 Var input = (Var) valueExpr;
                 
                 PropertyRecord record = database.getPropertyRecord(segment.propertyID);
+                if (record == null) {
+                	throw new ExpressionException("No property can be aliased to '" + segment.propertyID + "'");
+                }
+                
                 Var output = builder.makeVar("seg");
                 Var propertyVar = builder.makeVar("seg", record.uri);
                 if (segment.forward) {
