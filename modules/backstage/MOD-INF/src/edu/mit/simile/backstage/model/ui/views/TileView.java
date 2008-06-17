@@ -12,6 +12,7 @@ import org.openrdf.repository.sail.SailRepositoryConnection;
 
 import edu.mit.simile.backstage.model.Context;
 import edu.mit.simile.backstage.model.TupleQueryBuilder;
+import edu.mit.simile.backstage.model.data.CacheableQuery;
 import edu.mit.simile.backstage.model.data.Database;
 import edu.mit.simile.backstage.util.DefaultScriptableObject;
 import edu.mit.simile.backstage.util.ScriptableArrayBuilder;
@@ -25,52 +26,70 @@ public class TileView extends View {
 
     @Override
     public Scriptable getComponentState() {
-        Database database = _context.getDatabase();
+        TupleQueryBuilder builder = new TupleQueryBuilder();
+        Var itemVar = getCollection().getRestrictedItems(builder, null);
+
+        String key = "tile-view-rendering:" + builder.getStringSerialization();
+        Scriptable result = (Scriptable)
+        	_context.getDatabase().cacheAndRun(key, new ViewRenderingCacheableQuery(builder, itemVar));
         
-        DefaultScriptableObject result = new DefaultScriptableObject();
-        ScriptableArrayBuilder itemIDs = new ScriptableArrayBuilder();
-        ScriptableArrayBuilder lenses = new ScriptableArrayBuilder();
-        
-        int count = 0;
-        
-        try {
-            TupleQueryBuilder builder = new TupleQueryBuilder();
-            
-            Var itemVar = getCollection().getRestrictedItems(builder, null);
-            
-            SailRepositoryConnection connection = (SailRepositoryConnection)
-                database.getRepository().getConnection();
-            
-            try {
-                TupleQuery query = builder.makeTupleQuery(itemVar, connection);
-                TupleQueryResult queryResult = query.evaluate();
-                try {
-                    while (queryResult.hasNext()) {
-                        BindingSet bindingSet = queryResult.next();
-                        Value v = bindingSet.getValue(itemVar.getName());
-                        if (v instanceof URI) {
-                            if (count < 20) {
-                            	String itemID = database.getItemId((URI) v);
-                                itemIDs.add(itemID);
-                                lenses.add(_context.generateLens(itemID));
-                            }
-                            count++;
-                        }
-                    }
-                } finally {
-                    queryResult.close();
-                }
-            } finally {
-                connection.close();
-            }
-        } catch (Exception e) {
-            _logger.error("Error querying for restricted items", e);
-        }
-        
-        result.put("count", result, count);
-        result.put("items", result, itemIDs.toArray());
-        result.put("lenses", result, lenses.toArray());
-    
         return result;
+    }
+    
+    protected class ViewRenderingCacheableQuery extends CacheableQuery {
+    	final TupleQueryBuilder _builder;
+    	final Var _itemVar;
+    	
+    	ViewRenderingCacheableQuery(TupleQueryBuilder builder, Var itemVar) {
+    		_builder = builder;
+    		_itemVar = itemVar;
+    	}
+    	
+		@Override
+		protected Object internalRun() {
+	        Database database = _context.getDatabase();
+	        
+	        DefaultScriptableObject result = new DefaultScriptableObject();
+	        ScriptableArrayBuilder itemIDs = new ScriptableArrayBuilder();
+	        ScriptableArrayBuilder lenses = new ScriptableArrayBuilder();
+	        
+	        int count = 0;
+	        
+	        try {
+	            SailRepositoryConnection connection = (SailRepositoryConnection)
+	                database.getRepository().getConnection();
+	            
+	            try {
+	                TupleQuery query = _builder.makeTupleQuery(_itemVar, connection);
+	                TupleQueryResult queryResult = query.evaluate();
+	                try {
+	                    while (queryResult.hasNext()) {
+	                        BindingSet bindingSet = queryResult.next();
+	                        Value v = bindingSet.getValue(_itemVar.getName());
+	                        if (v instanceof URI) {
+	                            if (count < 20) {
+	                            	String itemID = database.getItemId((URI) v);
+	                                itemIDs.add(itemID);
+	                                lenses.add(_context.generateLens(itemID));
+	                            }
+	                            count++;
+	                        }
+	                    }
+	                } finally {
+	                    queryResult.close();
+	                }
+	            } finally {
+	                connection.close();
+	            }
+	        } catch (Exception e) {
+	            _logger.error("Error querying for restricted items", e);
+	        }
+	        
+	        result.put("count", result, count);
+	        result.put("items", result, itemIDs.toArray());
+	        result.put("lenses", result, lenses.toArray());
+	    
+	        return result;
+		}
     }
 }

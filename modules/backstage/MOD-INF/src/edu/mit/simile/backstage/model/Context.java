@@ -10,6 +10,7 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.repository.sail.SailRepositoryConnection;
 import org.openrdf.sail.SailConnection;
 
+import edu.mit.simile.backstage.model.data.CacheableQuery;
 import edu.mit.simile.backstage.model.data.Database;
 import edu.mit.simile.backstage.model.ui.lens.Lens;
 import edu.mit.simile.backstage.model.ui.lens.LensRegistry;
@@ -83,39 +84,58 @@ public class Context {
     }
     
     public Scriptable generateLens(String itemID) {
-        DefaultScriptableObject result = new DefaultScriptableObject();
-        result.put("itemID", result, itemID);
-        
-        String typeId = "Item";
-        try {
-            Database database = getDatabase();
-            URI itemURI = database.getItemURI(itemID);
-            
-            SailConnection connection = database.getSail().getConnection();
-            try {
-            	Value type = SailUtilities.getObject(connection, itemURI, RDF.TYPE);
-            	if (type instanceof URI) {
-            		typeId = database.getTypeId((URI) type);
-            	}
-            } finally {
-                connection.close();
-            }
-            	
-        	Lens lens = _lensRegistry.getLens(typeId);
-        	
-            SailRepositoryConnection connection2 = (SailRepositoryConnection) database.getRepository().getConnection();
-            try {
-            	lens.render(itemURI, result, database, connection2);
-            } finally {
-                connection2.close();
-            }
-        } catch (Exception e) {
-            _logger.error("Error generating lens for " + itemID, e);
-            result.put("error", result, e.toString());
-        }
-        
-        result.put("itemType", result, typeId);
+    	String key = "lens-rendering:" + itemID;
+        Scriptable result = (Scriptable)
+        	getDatabase().cacheAndRun(key, new LensRenderingCacheableQuery(itemID));
         
         return result;
+    }
+    
+    protected class LensRenderingCacheableQuery extends CacheableQuery {
+    	final String _itemID;
+    	
+		LensRenderingCacheableQuery(String itemID) {
+			_itemID = itemID;
+		}
+		
+		@Override
+		protected Object internalRun() {
+	        DefaultScriptableObject result = new DefaultScriptableObject();
+	        result.put("itemID", result, _itemID);
+	        
+	        String typeId = "Item";
+	        try {
+	            Database database = getDatabase();
+	            URI itemURI = database.getItemURI(_itemID);
+	            
+	            result.put("itemURI", result, itemURI.toString());
+	            
+	            SailConnection connection = database.getSail().getConnection();
+	            try {
+	            	Value type = SailUtilities.getObject(connection, itemURI, RDF.TYPE);
+	            	if (type instanceof URI) {
+	            		typeId = database.getTypeId((URI) type);
+	            	}
+	            } finally {
+	                connection.close();
+	            }
+	            	
+	        	Lens lens = _lensRegistry.getLens(typeId);
+	        	
+	            SailRepositoryConnection connection2 = (SailRepositoryConnection) database.getRepository().getConnection();
+	            try {
+	            	lens.render(itemURI, result, database, connection2);
+	            } finally {
+	                connection2.close();
+	            }
+	        } catch (Exception e) {
+	            _logger.error("Error generating lens for " + _itemID, e);
+	            result.put("error", result, e.toString());
+	        }
+	        
+	        result.put("itemType", result, typeId);
+	        
+	        return result;
+		}
     }
 }
