@@ -2,11 +2,20 @@
  *  Collection
  *======================================================================
  */
+
+/**
+ * NB, all Backstage.Collection()._listeners related material is commented
+ * out, largely because Backstage does not need listeners to operate (the
+ * interaction with the server covers and responds with all changes, so
+ * local listeners are not wholly necessary at this stage).  If they come
+ * back, look to replace the listener-related material with jQuery events.
+ */
+
 Backstage.Collection = function(id, database) {
     this._id = id;
     this._database = database;
     
-    this._listeners = new SimileAjax.ListenerQueue();
+    //this._listeners = new SimileAjax.ListenerQueue();
     this._facets = [];
     this._updating = false;
     
@@ -146,26 +155,26 @@ Backstage.Collection.prototype.getID = function() {
 
 Backstage.Collection.prototype.dispose = function() {
     if ("_baseCollection" in this) {
-        this._baseCollection.removeListener(this._listener);
+        //this._baseCollection.removeListener(this._listener);
         this._baseCollection = null;
         this._expression = null;
     } else {
-        this._database.removeListener(this._listener);
+        //this._database.removeListener(this._listener);
     }
     this._database = null;
     this._listener = null;
     
-    this._listeners = null;
+    //this._listeners = null;
     this._items = null;
     this._restrictedItems = null;
 };
 
 Backstage.Collection.prototype.addListener = function(listener) {
-    this._listeners.add(listener);
+    //this._listeners.add(listener);
 };
 
 Backstage.Collection.prototype.removeListener = function(listener) {
-    this._listeners.remove(listener);
+    //this._listeners.remove(listener);
 };
 
 Backstage.Collection.prototype.addFacet = function(facet) {
@@ -174,7 +183,7 @@ Backstage.Collection.prototype.addFacet = function(facet) {
     if (facet.hasRestrictions()) {
         this._computeRestrictedItems();
         this._updateFacets(null);
-        this._listeners.fire("onItemsChanged", []);
+        //this._listeners.fire("onItemsChanged", []);
     } else {
         facet.update(this.getRestrictedItems());
     }
@@ -187,7 +196,7 @@ Backstage.Collection.prototype.removeFacet = function(facet) {
             if (facet.hasRestrictions()) {
                 this._computeRestrictedItems();
                 this._updateFacets(null);
-                this._listeners.fire("onItemsChanged", []);
+                //this._listeners.fire("onItemsChanged", []);
             }
             break;
         }
@@ -238,17 +247,17 @@ Backstage.Collection.prototype.onFacetUpdated = function(facetChanged) {
     if (!this._updating) {
         this._computeRestrictedItems();
         this._updateFacets(facetChanged);
-        this._listeners.fire("onItemsChanged", []);
+        //this._listeners.fire("onItemsChanged", []);
     }
 }
 
 Backstage.Collection.prototype._onRootItemsChanged = function() {
-    this._listeners.fire("onRootItemsChanged", []);
+    //this._listeners.fire("onRootItemsChanged", []);
     
     this._computeRestrictedItems();
     this._updateFacets(null);
     
-    this._listeners.fire("onItemsChanged", []);
+    //this._listeners.fire("onItemsChanged", []);
 };
 
 //Exhibit.Collection = Backstage.Collection;
