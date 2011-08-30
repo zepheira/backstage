@@ -73,14 +73,12 @@ public class BackstageModule extends ButterflyModuleImpl {
     public Database getHostedDatabase() {
     	if (s_hostedDatabase == null) {
 	    	ExtendedProperties properties = getProperties();
-	    	String sourceString = properties.getString("backstage.hostedData.source");
 	    	String databaseString = properties.getString("backstage.hostedData.database");
 	    	
-	    	File source = (sourceString == null || sourceString.length() == 0) ? null : new File(sourceString);
 	    	File database = (databaseString == null || databaseString.length() == 0) ? 
 	    			new File("database") : new File(databaseString);
 	    	
-	    	s_hostedDatabase = new HostedDatabase(source, database);
+	    	s_hostedDatabase = new HostedDatabase(database);
     	}
     	return s_hostedDatabase;
     }

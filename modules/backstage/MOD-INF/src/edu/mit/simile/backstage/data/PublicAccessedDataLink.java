@@ -14,6 +14,8 @@ import edu.mit.simile.babel.BabelReader;
 import edu.mit.simile.babel.exhibit.ExhibitJsonReader;
 import edu.mit.simile.backstage.util.DataLoadingUtilities;
 
+// not currently used
+
 public class PublicAccessedDataLink extends AccessedDataLink {
     private static Logger _logger = Logger.getLogger(AccessedDataLink.class);
 
@@ -27,21 +29,18 @@ public class PublicAccessedDataLink extends AccessedDataLink {
             return;
         }
 
-        if (mimeType.equals("application/json")) {
-            loadExhibitJSON(exhibitURL, url, charset, sail);
-        } else {
-        	DataLoadingUtilities.loadDataFromURL(url, mimeType, sail);
-        }
+        loadExhibitJSON(exhibitURL, url, sail);
+        //DataLoadingUtilities.loadDataFromURL(url, mimeType, sail);
     }
 
-    static public void loadExhibitJSON(URL exhibitURL, URL dataURL, String charset, Sail sail) throws Exception {
+    static public void loadExhibitJSON(URL exhibitURL, URL dataURL, Sail sail) throws Exception {
         Properties properties = new Properties();
         
         BabelReader reader = new ExhibitJsonReader();
         InputStream is = dataURL.openStream();
         try {
             if (reader.takesReader()) {
-                InputStreamReader isr = new InputStreamReader(is, charset);
+                InputStreamReader isr = new InputStreamReader(is);
                 try {
                     reader.read(isr, sail, properties, Locale.getDefault());
                 } finally {
