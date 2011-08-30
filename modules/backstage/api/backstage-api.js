@@ -34,6 +34,9 @@
             "backstage.css",
         ];
         
+        /**
+         * commenting out for now, would be good to tie to exhibit 3 locale
+         * no locales exist yet, so this is doing nothing
         var defaultClientLocales = ("language" in navigator ? navigator.language : navigator.browserLanguage).split(";");
         for (var l = 0; l < defaultClientLocales.length; l++) {
             var locale = defaultClientLocales[l];
@@ -45,14 +48,15 @@
                 Backstage.locales.push(locale);
             }
         }
+        */
 
         var paramTypes = { bundle:Boolean, autoCreate:Boolean };
         if (typeof Backstage_urlPrefix == "string") {
             Backstage.urlPrefix = Backstage_urlPrefix;
             if ("Backstage_parameters" in window) {
-                SimileAjax.parseURLParameters(Backstage_parameters,
-                                              Backstage.params,
-                                              paramTypes);
+                Exhibit.parseURLParameters(Backstage_parameters,
+                                           Backstage.params,
+                                           paramTypes);
             }
         } else {
             var url = SimileAjax.findScript(document, "/backstage-api.js");
@@ -61,10 +65,12 @@
                 return;
             }
             Backstage.urlPrefix = url.substr(0, url.indexOf("backstage-api.js"));
-        
-            SimileAjax.parseURLParameters(url, Backstage.params, paramTypes);
+            Exhibit.parseURLParameters(url, Backstage.params, paramTypes);
         }
 
+        /**
+         * commenting out for now, would be good to tie to exhibit 3 locale
+         * no locales exist yet, so this is doing nothing
         if (Backstage.params.locale) { // ISO-639 language codes,
             // optional ISO-3166 country codes (2 characters)
             if (Backstage.params.locale != "en") {
@@ -75,13 +81,11 @@
                 Backstage.locales.push(Backstage.params.locale);
             }
         }
+        */
 
         var scriptURLs = Backstage.params.js || [];
         var cssURLs = Backstage.params.css || [];
-        
-        /*
-         *  Core scripts and styles
-         */
+
         if (Backstage.params.bundle) {
             scriptURLs.push(Backstage.urlPrefix + "backstage-bundle.js");
             cssURLs.push(Backstage.urlPrefix + "backstage-bundle.css");
@@ -89,13 +93,17 @@
             SimileAjax.prefixURLs(scriptURLs, Backstage.urlPrefix + "scripts/", javascriptFiles);
             SimileAjax.prefixURLs(cssURLs, Backstage.urlPrefix + "styles/", cssFiles);
         }
-        
+
         /*
          *  Localization
          */
+        /**
+         * commenting out for now, would be good to tie to exhibit 3 locale
+         * no locales exist yet, so this is doing nothing
         for (var i = 0; i < Backstage.locales.length; i++) {
             scriptURLs.push(Backstage.urlPrefix + "locales/" + Backstage.locales[i] + "/locale.js");
         };
+        */
         
         /*
          *  Autocreate
@@ -103,11 +111,16 @@
         if (Backstage.params.autoCreate) {
             scriptURLs.push(Backstage.urlPrefix + "scripts/create.js");
         }
-        
-        SimileAjax.includeJavascriptFiles(document, "", scriptURLs);
+
         SimileAjax.includeCssFiles(document, "", cssURLs);
+        for (var i = 0; i < cssURLs.length; i++) {
+            $("head:eq(0)").append("<link rel=\"stylesheet\" type=\"text/css\" href=\"" + cssURLs[i] + "\" />");
+        }
+        for (var i = 0; i < scriptURLs.length; i++) {
+            $LAB.script(scriptURLs[i]);
+        }
         Backstage.loaded = true;
     };
 
-    loadMe();
-})();
+    $(document).one("scriptsLoaded.exhibit", loadMe);
+}());
