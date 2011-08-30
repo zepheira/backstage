@@ -41,8 +41,9 @@ function process(path, request, response) {
             }
             // extract any facet selection state from query params. Unlike Backstage
             // restrictions which were per-facet, "restrictions" contains the state of all
-            // facets. JSON for now for simplicity.
-            var restrictions = butterfly.parseJSON(unescape(extractQueryParamValue(request,"r")));
+            // facets. JSON for now for simplicity, but would be more transparent as a
+            // regular URL query term.
+            var restrictions = butterfly.parseJSON(unescape(extractQueryParamValue(request,"restr")));
 
             // remove some state by resetting and rebuilding restrictions with each query.
             // the performance will likely suck, but it's a start.
@@ -50,8 +51,9 @@ function process(path, request, response) {
 
             if (restrictions) {
                 var result = facetApplyRestrictions(request, restrictions, exhibit);
-                respond(request,response,result);
             }
+            respond(request,response,result);
+            return;
         } else {
             butterfly.sendError(request, response, 404, "Page not found");
             return;
@@ -96,12 +98,7 @@ function respond(request,response,result) {
         response.setStatus(result.status);
     }
 
-    var out = result.out;
-    if ( typeof(result.out) != "string" ) {
-        out = butterfly.toJSONString(out);
-    }
-  
-    butterfly.sendJSON(request, response, out);
+    butterfly.sendJSON(request, response, result.out);
 }
 
 function getSlug(request) {
@@ -148,14 +145,17 @@ function parseQueryParams(request) {
     var qs = request.getQueryString();
     if ( qs == null ) return queryParams;
 
-    for (p in qs.split("&")) {
+    var qss = qs.split("&");
+    for (var i=0; i<qss.length; i++) {
+        var p = qss[i];
         nv = p.split("=");
+        var o = {}
         if (nv.length == 2) {
-            var n = nv[0]; var v = nv[1];
-            queryParams.push({n:v});
+            o[nv[0]] = nv[1];
+            queryParams.push(o);
         } else {
-            var n = nv[0];
-            queryParams.push({n:null});
+            o[nv[0]] = null;
+            queryParams.push(o);
         }
     }
     return queryParams;
@@ -164,9 +164,15 @@ function parseQueryParams(request) {
 function extractQueryParamValue(request,param) {
     qp = parseQueryParams(request);
     var paramValue = null;
-    for (p in qp) {
-        if (p.indexOf(param)>-1) {
-            paramValue = p[param];
+    for (var i=0; i<qp.length; i++) {
+        var nv = qp[i];
+        var n = v = null;
+        for (tmp in nv) { // one property per object
+            n = tmp;
+            v = nv[tmp];
+        }
+        if (n.indexOf(param)>-1) {
+            paramValue = v;
             break;
         }
     }
@@ -350,21 +356,24 @@ function configureExhibit(request, params, exhibit) {
     return processBackChannel(result, backChannel);
 }
 
-function facetApplyRestrictions(request, facetID, restrictions, exhibit) {
+function facetApplyRestrictions(request, restrictions, exhibit) {
     importPackage(Packages.edu.mit.simile.backstage.model);
     
     var result = {};
     
-    var backChannel = null;
-    for (restr in restrictions) {
+    for (i in restrictions) {
         // only the last backchannel is used to determine the respons. we do it
         // this way to work with the legacy statefulness of Backstage
         var backChannel = new BackChannel();
-        var facet = exhibit.getComponent(restr.f);
-        facet.applyRestrictions(restr, backChannel);
+        var facet = exhibit.getComponent(restrictions[i].facetID);
+        if ( facet ) {
+            facet.applyRestrictions(restrictions[i].restrictions, backChannel);
+        } else {
+            return {"status":400,"out":"Invalid facet id: "+restrictions[i].facetID};
+        }
     }
     
-    return processBackChannel(result, backChannel);
+    return {"status":200,"out":processBackChannel(result, backChannel)};
 }
 
 function facetClearRestrictions(request, exhibit) {
@@ -374,9 +383,11 @@ function facetClearRestrictions(request, exhibit) {
     
     comps = exhibit.getAllComponents().toArray();
     for (var i=0; i<comps.length; i++ ) {
-        var backChannel = new BackChannel();
-        comps[i].clearRestrictions(backChannel);
+        if ( "clearRestrictions" in comps[i] ) { // facets only
+            var backChannel = new BackChannel();
+            comps[i].clearRestrictions(backChannel);
+        }
     }
     
-    return processBackChannel(result, backChannel);
+    return {"status":200,"out":processBackChannel(result, backChannel)};
 }
