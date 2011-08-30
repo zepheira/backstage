@@ -21,7 +21,7 @@ Backstage.UI.viewClassNameToViewClass = function(name) {
         try {
             return Backstage.UI._stringToObject(name, "View");
         } catch (e) {
-            SimileAjax.Debug.warn("Unknown viewClass " + name);
+            Exhibit.Debug.warn("Unknown viewClass " + name);
         }
     }
     return Backstage.TileView;
@@ -37,7 +37,7 @@ Backstage.UI.facetClassNameToFacetClass = function(name) {
         try {
             return Backstage.UI._stringToObject(name, "Facet");
         } catch (e) {
-            SimileAjax.Debug.warn("Unknown facetClass " + name);
+            Exhibit.Debug.warn("Unknown facetClass " + name);
         }
     }
     return Backstage.ListFacet;

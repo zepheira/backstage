@@ -40,7 +40,7 @@ Backstage.JobQueue.prototype._onTimeout = function() {
     try {
         done = this._currentJob.run();
     } catch (e) {
-        SimileAjax.Debug.log(e);
+        Exhibit.Debug.log(e);
     }
     
     if (done) {

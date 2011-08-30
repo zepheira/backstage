@@ -34,7 +34,7 @@ Backstage.JsonpTransport.prototype.asyncCall = function(method, params, onSucces
         method:         method,
         paramsAsString: Backstage.JSON.toJSONString(params),
         onSuccess:      (onSuccess == undefined) ? function() {} : onSuccess,
-        onError:        (onError == undefined) ? function(e) { SimileAjax.Debug.log(e); } : onError,
+        onError:        (onError == undefined) ? function(e) { Exhibit.Debug.log(e); } : onError,
         id:             "call-" + new Date().getTime() + "-" + Math.floor(1000 * Math.random()),
         complete:       false
     };
@@ -91,7 +91,7 @@ Backstage.JsonpTransport.prototype._onSuccessCallback = function(o) {
         try {
             this._currentCall.onSuccess(o);
         } catch (e) {
-            SimileAjax.Debug.log(e);
+            Exhibit.Debug.log(e);
         }
         this._currentCall = null;
     } else {
@@ -105,11 +105,11 @@ Backstage.JsonpTransport.prototype._onErrorCallback = function(e) {
     
     e = (e == undefined) ? { code: 500, message: "Unknown error" } : e;
     
-    SimileAjax.Debug.log("error calling " + this._currentCall.method + ": " + e.code + " " + e.message); 
+    Exhibit.Debug.log("error calling " + this._currentCall.method + ": " + e.code + " " + e.message); 
     try {
         this._currentCall.onError(e);
     } catch (e2) {
-        SimileAjax.Debug.log(e2);
+        Exhibit.Debug.log(e2);
     }
     this._currentCall = null;
     this._makeNextCall();
