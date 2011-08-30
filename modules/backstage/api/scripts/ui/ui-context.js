@@ -212,9 +212,9 @@ Backstage.UIContext.registerLensFromDOM = function(elmt, lensRegistry) {
         template = url;
     } else {
         var id = Exhibit.getAttribute(elmt, "template");
-        var elmt2 = document.getElementById(id);
-        if (elmt2 != null) {
-            template = elmt2;
+        var elmt2 = $("#" + id);
+        if (elmt2.length > 0) {
+            template = elmt2.get(0);
         } else {
             template = elmt;
         }
@@ -242,7 +242,7 @@ Backstage.UIContext.registerLenses = function(configuration, lensRegistry) {
         if (typeof lensSelector == "function") {
             lensRegistry.addLensSelector(lensSelector);
         } else {
-            SimileAjax.Debug.log("lensSelector is not a function");
+            Exhibit.Debug.log("lensSelector is not a function");
         }
     }
 };
@@ -266,10 +266,10 @@ Backstage.UIContext.registerLensesFromDOM = function(parentNode, lensRegistry) {
             if (typeof lensSelector == "function") {
                 lensRegistry.addLensSelector(lensSelector);
             } else {
-                SimileAjax.Debug.log("lensSelector expression " + lensSelectorString + " is not a function");
+                Exhibit.Debug.log("lensSelector expression " + lensSelectorString + " is not a function");
             }
         } catch (e) {
-            SimileAjax.Debug.exception(e, "Bad lensSelector expression: " + lensSelectorString);
+            Exhibit.Debug.exception(e, "Bad lensSelector expression: " + lensSelectorString);
         }
     }
 };

@@ -102,7 +102,7 @@ Backstage._Impl.prototype.asyncCall = function(method, params, onSuccess, onErro
                 } else if (onError != undefined) {
                     onError(e);
                 } else {
-                    SimileAjax.Debug.log(e);
+                    Exhibit.Debug.log(e);
                 }
             }
         );
@@ -143,7 +143,7 @@ Backstage._Impl.prototype.loadDataLinks = function(onSuccess, onError) {
     this._internalAddDataLinks(
         links, 
         function(o) { 
-            //SimileAjax.Debug.log("Data links loaded.");
+            //Exhibit.Debug.log("Data links loaded.");
             if (typeof onSuccess == "function") {
                 onSuccess();
             }
@@ -204,7 +204,7 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
         try {
             this._uiContext.registerLensFromDOM(elmt);
         } catch (e) {
-            SimileAjax.Debug.exception(e);
+            Exhibit.Debug.exception(e);
         }
     }
     
@@ -222,12 +222,11 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
                 if (component != null) {
                     var serverSideConfig = component.getServerSideConfiguration();
                     serverSideConfig.id = id;
-                    
                     self._componentMap[id] = component;
                     self._domConfiguration.components.push(serverSideConfig);
                 }
             } catch (e) {
-                SimileAjax.Debug.exception(e);
+                Exhibit.Debug.exception(e);
             }
         }
     };
@@ -278,10 +277,10 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
     }
     
     this._domConfiguration.uiContext = this._uiContext.getServerSideConfiguration();
-    
+
     this._internalConfigureFromDOM(
         function(o) { 
-            //SimileAjax.Debug.log("Backstage configured from DOM.");
+            //Exhibit.Debug.log("Backstage configured from DOM.");
             if (typeof onSuccess == "function") {
                 onSuccess();
             }
@@ -295,7 +294,7 @@ Backstage._Impl.prototype._initialize = function(onSuccess, onError) {
         "initialize-session", 
         { isid: this._isid, refererUrlSHA1: Backstage.SHA1.hex_sha1(document.location.href) }, 
         function(o) { 
-            //SimileAjax.Debug.log("Backstage initialized.");
+            //Exhibit.Debug.log("Backstage initialized.");
             if (typeof onSuccess == "function") {
                 onSuccess();
             }
@@ -339,7 +338,10 @@ Backstage._Impl.prototype._internalConfigureFromDOM = function(onSuccess, onErro
     this.asyncCall(
         "configure-from-dom", 
         { configuration: this._domConfiguration }, 
-        function(o) { onSuccess(); },
+        function(o) {
+            $(document).trigger("exhibitConfigured.exhibit");
+            onSuccess();
+        },
         onError
     );
 };
@@ -357,7 +359,7 @@ Backstage._Impl.prototype._processComponentStates = function(states) {
             var component = this._componentMap[state.id];
             component.onNewState(state);
         } catch (e) {
-            SimileAjax.Debug.exception(e);
+            Exhibit.Debug.exception(e);
         }
     }
 };
@@ -369,7 +371,7 @@ Backstage._Impl.prototype._processComponentUpdates = function(updates) {
             var component = this._componentMap[update.id];
             component.onUpdate(update);
         } catch (e) {
-            SimileAjax.Debug.exception(e);
+            Exhibit.Debug.exception(e);
         }
     }
 };

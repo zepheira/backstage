@@ -64,7 +64,7 @@ Backstage.TileView.prototype._initializeUI = function() {
             }
         ]
     };
-    this._dom = SimileAjax.DOM.createDOMFromTemplate(template);
+    this._dom = $.simileDOM("template", template);
 
     //this._reconstruct();
 };

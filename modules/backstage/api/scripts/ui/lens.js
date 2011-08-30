@@ -158,7 +158,7 @@ Exhibit.Lens.constructDefaultFromBackstage = function(serverNode, div, uiContext
             }
         ]
     };
-    var dom = SimileAjax.DOM.createDOMFromTemplate(template);
+    var dom = $.simileDOM("template", template);
     div.setAttribute("ex:itemID", serverNode.itemID);
     
     if ("propertyValues" in serverNode) {
@@ -201,13 +201,13 @@ Exhibit.Lens.constructDefaultFromBackstage = function(serverNode, div, uiContext
 
 Exhibit.Lens.constructFromBackstage = function(clientNode, serverNode, parentElmt) {
     var elmt = Exhibit.Lens._constructFromBackstage(clientNode, serverNode, parentElmt);
-    elmt.style.display = "block";
+    $(elmt).show();
     return elmt;
 };
 
 Exhibit.Lens._constructFromBackstage = function(clientNode, serverNode, parentElmt) {
     if (typeof clientNode == "string") {
-        parentElmt.appendChild(document.createTextNode(clientNode));
+        parentElmt.append(document.createTextNode(clientNode));
         return;
     }
     
@@ -233,11 +233,9 @@ Exhibit.Lens._constructFromBackstage = function(clientNode, serverNode, parentEl
             var attribute = contentAttributes[i];
             var value = serverNode.contentAttributes[i].value;
             if (attribute.isStyle) {
-                elmt.style[attribute.name] = value;
-            } else if ("class" == attribute.name) {
-                elmt.className = value;
+                elmt.css(attribute.name, value);
             } else if (Exhibit.Lens._attributeValueIsSafe(attribute.name, value)) {
-                elmt.setAttribute(attribute.name, value);
+                elmt.attr(attribute.name, value);
             }
         }
     }
@@ -248,11 +246,9 @@ Exhibit.Lens._constructFromBackstage = function(clientNode, serverNode, parentEl
             var value = serverNode.subcontentAttributes[i].value;
             
             if (attribute.isStyle) {
-                elmt.style[attribute.name] = value;
-            } else if ("class" == attribute.name) {
-                elmt.className = value;
+                elmt.css(attribute.name, value);
             } else if (Exhibit.Lens._attributeValueIsSafe(attribute.name, value)) {
-                elmt.setAttribute(attribute.name, value);
+                elmt.attr(attribute.name, value);
             }
         }
     }

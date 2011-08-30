@@ -5,8 +5,10 @@
 
 Backstage.ListFacet = function(containerElmt, uiContext, id) {
     this._id = id;
+    this._localID = null;
     this._div = containerElmt;
     this._uiContext = uiContext;
+    this._expressionString = null;
     this._settings = {};
     
     this._valueSet = new Exhibit.Set();
@@ -44,6 +46,7 @@ Backstage.ListFacet.createFromDOM = function(configElmt, containerElmt, uiContex
     try {
         var expressionString = Exhibit.getAttribute(configElmt, "expression");
         if (expressionString != null && expressionString.length > 0) {
+            facet._expressionString = expressionString;
             facet._expression = Exhibit.ExpressionParser.parse(expressionString);
         }
         
@@ -59,7 +62,7 @@ Backstage.ListFacet.createFromDOM = function(configElmt, containerElmt, uiContex
             facet._selectMissing = (selectMissing == "true");
         }
     } catch (e) {
-        SimileAjax.Debug.exception(e, "ListFacet: Error processing configuration of list facet");
+        Exhibit.Debug.exception(e, "ListFacet: Error processing configuration of list facet");
     }
     Backstage.ListFacet._configure(facet, configuration);
     
@@ -73,6 +76,7 @@ Backstage.ListFacet._configure = function(facet, configuration) {
     Exhibit.SettingsUtilities.collectSettings(configuration, Backstage.ListFacet._settingSpecs, facet._settings);
     
     if ("expression" in configuration) {
+        facet._expressionString = configuration.expression;
         facet._expression = Exhibit.ExpressionParser.parse(configuration.expression);
     }
     if ("selection" in configuration) {
@@ -110,9 +114,21 @@ Backstage.ListFacet._configure = function(facet, configuration) {
     if ("colorCoder" in facet._settings) {
         //facet._colorCoder = facet._uiContext.getExhibit().getComponent(facet._settings.colorCoder);
     }
-}
+
+    facet._setLocalID();
+    facet._register();
+};
+
+Backstage.ListFacet.prototype._register = function() {
+    Exhibit.Registry.register(Exhibit.Facet._registryKey, this.getID(), this);
+};
+
+Backstage.ListFacet.prototype._unregister = function() {
+    Exhibit.Registry.unregister(Exhibit.Facet._registryKey, this.getID());
+};
 
 Backstage.ListFacet.prototype.dispose = function() {
+    this._unregister();
     this._div.innerHTML = "";
 
     this._dom = null;
@@ -121,9 +137,31 @@ Backstage.ListFacet.prototype.dispose = function() {
     this._uiContext = null;
 };
 
+Backstage.ListFacet.prototype._setLocalID = function() {
+    this._localID = $(this._div).attr("id");
+
+    // @@@ not very unique
+    if (typeof localID === "undefined" || localID === null) {
+        this._localID = "facet"
+            + "-"
+            + this._expressionString
+            + "-"
+            + this._uiContext.getCollection().getID();
+    }
+};
+
+Backstage.ListFacet.prototype.getServerID = function() {
+    return this._id;
+};
+
+Backstage.ListFacet.prototype.getID = function() {
+    return this._localID;
+};
+
 Backstage.ListFacet.prototype._initializeUI = function() {
     var self = this;
     this._dom = Exhibit.FacetUtilities[this._settings.scroll ? "constructFacetFrame" : "constructFlowingFacetFrame"](
+        this,
         this._div,
         this._settings.facetLabel,
         function(elmt, evt, target) { self._clearSelections(); },
@@ -215,8 +253,8 @@ Backstage.ListFacet.prototype._reconstruct = function() {
 	var omittedCount = 0;
     var self = this;
     var containerDiv = this._dom.valuesContainer;
-    containerDiv.style.display = "none";
-    containerDiv.innerHTML = "";
+    $(containerDiv).hide();
+    $(containerDiv).empty();
     
     var constructFacetItemFunction = Exhibit.FacetUtilities[this._settings.scroll ? "constructFacetItem" : "constructFlowingFacetItem"];
     var constructValue = function(entry) {
@@ -227,15 +265,15 @@ Backstage.ListFacet.prototype._reconstruct = function() {
 		
         var label = "label" in entry ? entry.label : entry.value;
         
-        var onSelect = function(elmt, evt, target) {
+        var onSelect = function(evt) {
             self._filter(entry.value, label, false);
-            SimileAjax.DOM.cancelEvent(evt);
-            return false;
+            evt.preventDefault();
+            evt.stopPropagation();
         };
-        var onSelectOnly = function(elmt, evt, target) {
+        var onSelectOnly = function(evt) {
             self._filter(entry.value, label, !(evt.ctrlKey || evt.metaKey));
-            SimileAjax.DOM.cancelEvent(evt);
-            return false;
+            evt.preventDefault();
+            evt.stopPropagation();
         };
         var elmt = constructFacetItemFunction(
             label, 
@@ -248,7 +286,7 @@ Backstage.ListFacet.prototype._reconstruct = function() {
             self._uiContext
         );
         
-        containerDiv.appendChild(elmt);
+        $(containerDiv).append(elmt);
     };
     
     for (var j = 0; j < entries.length; j++) {
@@ -256,12 +294,12 @@ Backstage.ListFacet.prototype._reconstruct = function() {
     }
 	
 	if (omittedCount > 0) {
-		var omittedDiv = document.createElement("div");
-		omittedDiv.innerHTML = "<center>Omitted " + omittedCount + " choices with counts of 1</center>";
-        containerDiv.appendChild(omittedDiv);
+		var omittedDiv = $("<div>");
+		$(omittedDiv).html("<center>Omitted " + omittedCount + " choices with counts of 1</center>");
+        $(containerDiv).append(omittedDiv);
 	}
 	
-    containerDiv.style.display = "block";
+    $(containerDiv).show();
     
     this._dom.setSelectionCount(this._state.selectionCount);
 };
@@ -321,28 +359,50 @@ Backstage.ListFacet.prototype._filter = function(value, label, selectOnly) {
     
     var newRestrictions = { selection: newValues.toArray(), selectMissing: newSelectMissing };
     var oldRestrictions = { selection: oldValues.toArray(), selectMissing: oldSelectMissing };
-    
-    SimileAjax.History.addLengthyAction(
-        function() { self.applyRestrictions(newRestrictions); },
-        function() { self.applyRestrictions(oldRestrictions); },
+
+    Exhibit.History.pushComponentState(
+        this,
+        Exhibit.Facet._registryKey,
+        newRestrictions,
         (selectOnly && !wasOnlyThingSelected) ?
             String.substitute(
                 Exhibit.FacetUtilities.l10n["facetSelectOnlyActionTitle"],
                 [ label, this._settings.facetLabel ]) :
             String.substitute(
                 Exhibit.FacetUtilities.l10n[wasSelected ? "facetUnselectActionTitle" : "facetSelectActionTitle"],
-                [ label, this._settings.facetLabel ])
+                [ label, this._settings.facetLabel ]),
+        true
     );
 };
 
 Backstage.ListFacet.prototype._clearSelections = function() {
-    var state = {};
+    var state = {
+        "selection": [],
+        "selectMissing": false
+    };
     var self = this;
-    SimileAjax.History.addLengthyAction(
-        function() { state.restrictions = self.clearAllRestrictions(); },
-        function() { self.applyRestrictions(state.restrictions); },
+    Exhibit.History.pushComponentState(
+        this,
+        Exhibit.Facet._registryKey,
+        state,
         String.substitute(
             Exhibit.FacetUtilities.l10n["facetClearSelectionsActionTitle"],
             [ this._settings.facetLabel ])
     );
+};
+
+Backstage.ListFacet.prototype.exportState = function() {
+    var s = this._valueSet.toArray();
+    return {
+        "selection": s,
+        "selectMissing": this._selectMissing
+    };
+};
+
+Backstage.ListFacet.prototype.importState = function(state) {
+    if (state.selection.length === 0 && !state.selectMissing) {
+        this.clearAllRestrictions();
+    } else {
+        this.applyRestrictions(state);
+    }
 };
