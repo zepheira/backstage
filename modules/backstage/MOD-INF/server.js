@@ -20,6 +20,7 @@ function process(path, request, response) {
         if (pathSegs[0] == "data") {
             if (pathSegs.length == 1) {
                 // return HTML form for file upload
+                CORSify(request,response);
                 butterfly.sendString(request, response, "<html><body>Upload form goes here</body></html>", "utf-8", "text/html");
                 return;
             } else if (pathSegs.length == 2) {
@@ -36,7 +37,7 @@ function process(path, request, response) {
             }
             exhibit = backstage.getExhibit(request, pathSegs[1])
             if (exhibit == null) {
-                butterfly.sendError(request, response, 404, "Exhibit not found");
+                butterfly.sendError(request, response, 404, "Exhibit session not found");
                 return;
             }
             // extract any facet selection state from query params. Unlike Backstage
@@ -52,6 +53,7 @@ function process(path, request, response) {
             if (restrictions) {
                 var result = facetApplyRestrictions(request, restrictions, exhibit);
             }
+            CORSify(request,response,exhibit);
             respond(request,response,result);
             return;
         } else {
@@ -62,6 +64,7 @@ function process(path, request, response) {
             if (pathSegs.length == 1) {
                 var result = uploadExhibitData(request);
                 respond(request,response,result);
+                return;
             } else if (pathSegs.length == 2) {
                 // uploadExhibitData(), appending to existing data. TBD.
             } else {
@@ -73,7 +76,9 @@ function process(path, request, response) {
         } else if (pathSegs[0] == "exhibit-session") {
             if (pathSegs.length == 1) {
                 var result = uploadExhibitConfig(request,response)
+                CORSify(request,response);
                 respond(request,response,result);
+                return;
             } else {
                 butterfly.sendError(request, response, 500, "Unable to take action on this exhibit");
                 return;
@@ -82,10 +87,19 @@ function process(path, request, response) {
             butterfly.sendError(request, response, 404, "Page not found");
             return;
         }
+    } else if (method == "OPTIONS") { // CORS-only
+        butterfly.log("inbound origin = "+request.getHeader("Origin"));
+        CORSify(request,response);
+        butterfly.sendString(request, response, "", "utf-8", "text/plain");
     } else {
         butterfly.sendError(request, response, 501, "Unsupported method");
         return;
     }
+}
+
+function CORSify(request,response,exhibit) {
+    // wide open
+    response.setHeader("Access-Control-Allow-Origin","*");
 }
 
 function respond(request,response,result) {
