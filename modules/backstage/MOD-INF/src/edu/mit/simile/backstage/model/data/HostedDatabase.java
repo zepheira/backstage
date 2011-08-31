@@ -11,31 +11,9 @@ import edu.mit.simile.backstage.util.DataLoadingUtilities;
 public class HostedDatabase extends Database {
     protected static Logger _logger = Logger.getLogger(HostedDatabase.class);
     
-	public HostedDatabase(File sourceToLoad, File databaseDir) {
-		boolean load = !databaseDir.exists();
-		
+	public HostedDatabase(File databaseDir) {
 		_repository = DataLoadingUtilities.createNativeRepository(databaseDir);
 		_sail = ((SailRepository) _repository).getSail();
-		
-		if (load) {
-			if (sourceToLoad == null) {
-				_logger.warn("No hosted data source to load");
-			} else if (!sourceToLoad.exists()) {
-				_logger.warn("Hosted data source " + sourceToLoad.getAbsolutePath() + " does not exist");
-			} else if (!sourceToLoad.canRead()) {
-				_logger.warn("Hosted data source " + sourceToLoad.getAbsolutePath() + " is not readable");
-			} else {
-				try {
-					if (sourceToLoad.isDirectory()) {
-						DataLoadingUtilities.loadDataFromDir(sourceToLoad, _sail, true);
-					} else {
-						DataLoadingUtilities.loadDataFromFile(sourceToLoad, _sail);
-					}
-				} catch (Exception e) {
-					_logger.error("Failed to load hosted data source at " + sourceToLoad.getAbsolutePath(), e);
-				}
-			}
-		}
 	}
 	
 	@Override

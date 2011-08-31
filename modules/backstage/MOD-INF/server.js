@@ -1,71 +1,239 @@
 function process(path, request, response) {
-    var method = request.getMethod();
+    //
+    // Resource URLs;
+    //
+    // /data/ - POST Exhibit JSON data here. Returns a 201 pointing to ...
+    // /data/<slug>/ - reference URL used in the Exhibit HTML template. POST here to add more data(TBD).
+    // /exhibit-session - where configurations of lenses and facets are POSTed, returning 201 to...
+    // /exhibit-session/<slug>/ - which is where the facet queries are performed
+    //
+
+    // Backstage is stateful so we need sessions to hold on to our Exhibit objects
     var session = request.getSession(true);
-    var pendingCalls = session.getAttribute("pendingCalls");
-    if (pendingCalls == null) {
-        pendingCalls = {};
-        session.setAttribute("pendingCalls", pendingCalls);
-    }
     
+    var method = request.getMethod();
+    var pathSegs = path.split("/");
+    if ((pathSegs[pathSegs.length-1]).length == 0) {
+        pathSegs.pop() // remove trailing empty string due to terminating "/"
+    }
     if (method == "GET") {
-        if (path == "api/jsonpc") {
-            var id = request.getParameter("id");
-            var params = request.getParameter("params");
-            
-            var call;
-            if (id in pendingCalls) {
-                call = pendingCalls[id];
-                call.params = call.params + params;
+        if (pathSegs[0] == "data") {
+            if (pathSegs.length == 1) {
+                // return HTML form for file upload
+                butterfly.sendString(request, response, "<html><body>Upload form goes here</body></html>", "utf-8", "text/html");
+                return;
+            } else if (pathSegs.length == 2) {
+                butterfly.sendError(request, response, 405, "Data export feature unavailable at the moment");
+                return;
             } else {
-                call = pendingCalls[id] = {
-                    id:         id,
-                    method:     request.getParameter("method"),
-                    params:     "" + params,
-                    callback:   request.getParameter("callback"),
-                    error:      request.getParameter("error")
-                }
+                butterfly.sendError(request, response, 404, "Page not found");
+                return;
             }
-            
-            var complete = request.getParameter("complete") == "true";
-            if (complete) {
-                delete pendingCalls[id];
-                processJsonpCall(request, response, call);
-            } else {
-                butterfly.sendJSONP(request, response, { status: "OK" }, call.callback);
+        } else if (pathSegs[0] == "exhibit-session") {
+            if (pathSegs.length != 2) {
+                butterfly.sendError(request, response, 404, "Page not found");
+                return;
             }
+            exhibit = backstage.getExhibit(request, pathSegs[1])
+            if (exhibit == null) {
+                butterfly.sendError(request, response, 404, "Exhibit not found");
+                return;
+            }
+            // extract any facet selection state from query params. Unlike Backstage
+            // restrictions which were per-facet, "restrictions" contains the state of all
+            // facets. JSON for now for simplicity, but would be more transparent as a
+            // regular URL query term.
+            var restrictions = butterfly.parseJSON(unescape(extractQueryParamValue(request,"restr")));
+
+            // remove some state by resetting and rebuilding restrictions with each query.
+            // the performance will likely suck, but it's a start.
+            var result = facetClearRestrictions(request, exhibit);
+
+            if (restrictions) {
+                var result = facetApplyRestrictions(request, restrictions, exhibit);
+            }
+            respond(request,response,result);
+            return;
+        } else {
+            butterfly.sendError(request, response, 404, "Page not found");
+            return;
         }
     } else if (method == "POST") {
-    }
-}
-
-function processJsonpCall(request, response, call) {
-    butterfly.log("JSONPC " + call.id + " method: " + call.method + ", payload: " + call.params);
-    try {
-        var params = butterfly.parseJSON(call.params);
-        if (call.method in jsonpMethods) {
-            var f = jsonpMethods[call.method];
-            if (f.requiresExhibit) {
-                var exhibit = backstage.getExhibit(request, params.isid);
-                if (exhibit != null) {
-                    var result = f(request, params, exhibit);
-                    butterfly.sendJSONP(request, response, result, call.callback);
-                } else {
-                    sendError(request, response, 410, "Interactive session has expired.", call.error);
-                }
+        if (pathSegs[0] == "data") {
+            if (pathSegs.length == 1) {
+                var result = uploadExhibitData(request);
+                respond(request,response,result);
+            } else if (pathSegs.length == 2) {
+                // uploadExhibitData(), appending to existing data. TBD.
             } else {
-                var result = f(request, params);
-                butterfly.sendJSONP(request, response, result, call.callback);
+                butterfly.sendError(request, response, 404, "Data not found");
+                return;
+            }
+        //} else if (pathSegs[0] == "localstore") {
+            // create/update the HostedDatabase
+        } else if (pathSegs[0] == "exhibit-session") {
+            if (pathSegs.length == 1) {
+                var result = uploadExhibitConfig(request,response)
+                respond(request,response,result);
+            } else {
+                butterfly.sendError(request, response, 500, "Unable to take action on this exhibit");
+                return;
             }
         } else {
-            sendError(request, response, 404, "JSONP Method " + call.method + " Not Found", call.error);
+            butterfly.sendError(request, response, 404, "Page not found");
+            return;
         }
-    } catch (e) {
-        sendError(request, response, 500, "Internal Server Error: " + e, call.error);
+    } else {
+        butterfly.sendError(request, response, 501, "Unsupported method");
+        return;
     }
 }
 
-function sendError(request, response, code, message, callback) {
-    butterfly.sendJSONP(request, response, { code: code, message: message }, callback);
+function respond(request,response,result) {
+    // Generic handling between controller functions and Butterfly HTTP response
+    if ( "location" in result ) {
+        response.setHeader("Location",result.location);
+    }
+    if ( "status" in result ) {
+        response.setStatus(result.status);
+    }
+
+    butterfly.sendJSON(request, response, result.out);
+}
+
+function getSlug(request) {
+    // Can't only use getParameter since we need to extract the query param for both GET
+    // and POST requests.  We also use Atom's Slug header, falling back to a UUID-like
+    // string when no slug-hint is provided
+    var slug = ""
+    if ( request.getMethod().toUpperCase() == "GET" ) {
+        slug = request.getParameter("slug");
+    } else {
+        slug = extractQueryParamValue(request,"slug");
+    }
+    if (slug == null) {
+        slug = request.getHeader("slug");
+    }
+    if (slug == null) {
+        slug = randomString();
+    }
+    return encodeURIComponent(slug);
+}
+
+function uploadExhibitConfig(request,response) {
+    // Configure exhibit from lens and facet descriptions
+
+    var exhibitSlug = randomString();
+    var exhibit = backstage.getExhibit(request, exhibitSlug);
+    var params = readBodyAsJSON(request);
+    if (exhibit == null) {
+        exhibit = backstage.createExhibit(request, params.refererUrlSHA1, exhibitSlug);
+        var result;
+        try {
+            result = configureExhibit(request,params,exhibit);
+            return {"status":201,"out":result,"location":"/exhibit-session/"+exhibitSlug};
+        } catch(errtext) {
+            return {"status":500,"out":errtext};
+        }
+    } else {
+        return {"status":500,"out": "An exhibit by that name already exists"};
+    }
+}
+
+function parseQueryParams(request) {
+    var queryParams = new Array();
+    var qs = request.getQueryString();
+    if ( qs == null ) return queryParams;
+
+    var qss = qs.split("&");
+    for (var i=0; i<qss.length; i++) {
+        var p = qss[i];
+        nv = p.split("=");
+        var o = {}
+        if (nv.length == 2) {
+            o[nv[0]] = nv[1];
+            queryParams.push(o);
+        } else {
+            o[nv[0]] = null;
+            queryParams.push(o);
+        }
+    }
+    return queryParams;
+}
+
+function extractQueryParamValue(request,param) {
+    qp = parseQueryParams(request);
+    var paramValue = null;
+    for (var i=0; i<qp.length; i++) {
+        var nv = qp[i];
+        var n = v = null;
+        for (tmp in nv) { // one property per object
+            n = tmp;
+            v = nv[tmp];
+        }
+        if (n.indexOf(param)>-1) {
+            paramValue = v;
+            break;
+        }
+    }
+    return paramValue;
+}
+
+function randomString() {
+   // generates slugs for anonymous data
+   return (((1+Math.random())*0x1000000000000)|0).toString(16).substring(1);
+}
+
+function readBodyAsJSON(request) {
+    reader = request.getReader();
+    line = reader.readLine();
+    var json = "";
+    while (line != null ) {
+        json += line;
+        line = reader.readLine();
+    }
+    return butterfly.parseJSON(json);
+}
+
+function uploadExhibitData(request) {
+    importPackage(Packages.java.io);
+    importPackage(Packages.java.lang);
+    importPackage(Packages.edu.mit.simile.backstage.util);
+    importPackage(Packages.org.openrdf.repository.sail);
+    importPackage(Packages.org.openrdf.sail.memory);
+
+    var dataSlug = getSlug(request);
+    var dbDir = System.getProperty("backstage.databaseDir","databases");
+    var fullDbDir = File(dbDir,dataSlug);
+
+    if (fullDbDir.exists()) {
+        return {"status":500, "out": "The slug '"+dataSlug+"'is already in use"};
+    }
+
+    // create repo
+    var sail = MemoryStore(fullDbDir);
+    var repository = new SailRepository(sail);
+    repository.initialize();
+
+    // populate from request body
+    var lang = DataLoadingUtilities.contentTypeToLang(request.getContentType());
+    DataLoadingUtilities.loadDataFromStream( request.getInputStream(),
+                                             request.getRequestURL(),
+                                             lang, sail );
+
+    // these repo objects are garbage now, but then recreated when UnhostedDatabase is
+    // instantiated in the trace. Inefficient, so please FIXME
+
+    return {"status":201,"location":"/data/"+dataSlug, "out":"Data successfully uploaded"};
+}
+
+function addDataLink(exhibit, link) {
+    var url = link.url;
+    if (url == "http://localhost/hosted-database") {
+        //exhibit.addHostedDataLink();  // disable hosted mode for now
+    } else {
+        exhibit.addDataLink(link.url);
+    }
 }
 
 function processBackChannel(result, backChannel) {
@@ -78,12 +246,10 @@ function processBackChannel(result, backChannel) {
     return result;
 }
 
-var jsonpMethods = {};
-
 function getDatabase(exhibit, params, result) {
     var database = exhibit.getDatabase();
     if (!params._system.initialized) {
-        butterfly.log("Exhibit session needs initialization");
+        butterfly.log("Exhibit database needs initialization");
         result._system = {
             properties: {},
             types: {}
@@ -113,43 +279,7 @@ function getDatabase(exhibit, params, result) {
     return database;
 }
 
-/*
-jsonpMethods["test"] = function(request, params) {
-    return { pong: params.ping };
-};
-*/
-jsonpMethods["test2"] = function(request, params, exhibit) {
-    var result = {};
-    var database = getDatabase(exhibit, params, result);
-    return result;
-};
-jsonpMethods["test2"].requiresExhibit = true;
-
-jsonpMethods["initialize-session"] = function(request, params) {
-    /* var exhibit = */ backstage.createExhibit(request, params.refererUrlSHA1, params.isid);
-    return { status: "OK" };
-};
-
-jsonpMethods["add-data-links"] = function(request, params, exhibit) {
-    var links = params.links;
-    for (var i = 0; i < links.length; i++) {
-        var link = links[i];
-        var url = link.url;
-        if (url == "http://localhost/") { // TODO: what do we use here?
-            exhibit.addHostedDataLink();
-        } else {
-            exhibit.addDataLink(
-                link.url, 
-                (link.mimeType != null && link.mimeType != "") ? link.mimeType : "application/json", 
-                (link.charset != null && link.charset != "") ? link.charset : "utf-8"
-            );
-        }
-    }
-    return { status: "OK" };
-};
-jsonpMethods["add-data-links"].requiresExhibit = true;
-
-jsonpMethods["configure-from-dom"] = function(request, params, exhibit) {
+function configureExhibit(request, params, exhibit) {
     var result = {};
     var configuration = params.configuration;
     
@@ -157,12 +287,22 @@ jsonpMethods["configure-from-dom"] = function(request, params, exhibit) {
     importPackage(Packages.edu.mit.simile.backstage.model.data);
     importPackage(Packages.edu.mit.simile.backstage.model.ui.views);
     importPackage(Packages.edu.mit.simile.backstage.model.ui.facets);
-    
+
+    var match = configuration.link.url.match(/http:\/\/(\S+?)[\/:]/);
+    if ( match == null || match.length < 2 ) {
+        throw "Invalid URL";
+    }
+    var host = match[1];
+    if ( host.toLowerCase() != "localhost" ) {
+        throw "Cannot exhibit non-localhost URLs";
+    }
+    addDataLink(exhibit, configuration.link);
+
     // this initializes the database's client side information if it's not already initialized.
     var database = getDatabase(exhibit, params, result); 
     
     var backChannel = new BackChannel();
-    
+
     var collections = configuration.collections;
     for (var i = 0; i < collections.length; i++) {
         var c = collections[i];
@@ -214,49 +354,40 @@ jsonpMethods["configure-from-dom"] = function(request, params, exhibit) {
     }
     
     return processBackChannel(result, backChannel);
-};
-jsonpMethods["configure-from-dom"].requiresExhibit = true;
+}
 
-jsonpMethods["facet-apply-restrictions"] = function(request, params, exhibit) {
+function facetApplyRestrictions(request, restrictions, exhibit) {
     importPackage(Packages.edu.mit.simile.backstage.model);
     
     var result = {};
-    var backChannel = new BackChannel();
     
-    var facetID = params.facetID;
-    var facet = exhibit.getComponent(facetID);
-    facet.applyRestrictions(params.restrictions, backChannel);
-    
-    return processBackChannel(result, backChannel);
-};
-jsonpMethods["facet-apply-restrictions"].requiresExhibit = true;
-
-jsonpMethods["facet-clear-restrictions"] = function(request, params, exhibit) {
-    importPackage(Packages.edu.mit.simile.backstage.model);
-    
-    var result = {};
-    var backChannel = new BackChannel();
-    
-    var facetID = params.facetID;
-    var facet = exhibit.getComponent(facetID);
-    facet.clearRestrictions(backChannel);
-    
-    return processBackChannel(result, backChannel);
-};
-jsonpMethods["facet-clear-restrictions"].requiresExhibit = true;
-
-jsonpMethods["generate-lens"] = function(request, params, exhibit) {
-    importPackage(Packages.edu.mit.simile.backstage.model);
-    
-    var result = { lenses: [] };
-    var backChannel = new BackChannel();
-    
-    var contextID = params.contextID;
-    var context = exhibit.getContext(contextID);
-    for (var i = 0; i < params.itemIDs.length; i++) {
-        result.lenses.push(context.generateLens(params.itemIDs[i]));
+    for (i in restrictions) {
+        // only the last backchannel is used to determine the respons. we do it
+        // this way to work with the legacy statefulness of Backstage
+        var backChannel = new BackChannel();
+        var facet = exhibit.getComponent(restrictions[i].facetID);
+        if ( facet ) {
+            facet.applyRestrictions(restrictions[i].restrictions, backChannel);
+        } else {
+            return {"status":400,"out":"Invalid facet id: "+restrictions[i].facetID};
+        }
     }
     
-    return processBackChannel(result, backChannel);
-};
-jsonpMethods["generate-lens"].requiresExhibit = true;
+    return {"status":200,"out":processBackChannel(result, backChannel)};
+}
+
+function facetClearRestrictions(request, exhibit) {
+    importPackage(Packages.edu.mit.simile.backstage.model);
+    
+    var result = {};
+    
+    comps = exhibit.getAllComponents().toArray();
+    for (var i=0; i<comps.length; i++ ) {
+        if ( "clearRestrictions" in comps[i] ) { // facets only
+            var backChannel = new BackChannel();
+            comps[i].clearRestrictions(backChannel);
+        }
+    }
+    
+    return {"status":200,"out":processBackChannel(result, backChannel)};
+}

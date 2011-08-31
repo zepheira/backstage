@@ -1,20 +1,14 @@
 package edu.mit.simile.backstage.data;
 
+// used to contain other advisory metadata when the URL was dereferenced for its data,
+// but now only the URL is needed. FIXME; replace by URL
+
 import java.net.URL;
 
 public class UnhostedDataLink extends DataLink {
     final public URL      url;
-    final public String   mimeType;
-    final public String   charset;
     
-    public UnhostedDataLink(
-        URL     url2,
-        String  mimeType2,
-        String  charset2
-    ) {
+    public UnhostedDataLink( URL url2) {
         url = url2;
-        mimeType = mimeType2;
-        charset = charset2;
     }
-
 }
