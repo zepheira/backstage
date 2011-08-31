@@ -33,8 +33,10 @@ one-line UNIX command:
 
 ```
 
-Not every one copied over is a direct dependency.  The list of vital
-Backstage module JARs:
+Not every one copied over is a direct dependency; the indirect ones may
+produce conflicts with Butterfly's classloading and should be removed.
+The list of vital Backstage module JARs (anything not in Babel, Aduna, or
+Sesame, other than commons-codec, should be removed):
 
 ```
 aduna-commons-collections-2.8.0.jar
