@@ -59,7 +59,18 @@
                                            paramTypes);
             }
         } else {
-            var url = SimileAjax.findScript(document, "/backstage-api.js");
+            var url = null;
+            var scripts = document.getElementsByTagName("script");
+            for (var i = 0; i < scripts.length; i++) {
+                var script = scripts[i];
+                if (script.hasAttribute("src")) {
+                    var url = script.getAttribute("src");
+                    if (url.indexOf("/backstage-api.js") >= 0 && url.indexOf("/exhibit-api.js") === -1) {
+                        Backstage.urlPrefix = url.substr(0, url.indexOf("backstage-api.js"));
+                        break;
+                    }
+                }
+            }
             if (url == null) {
                 Backstage.error = new Error("Failed to derive URL prefix for Simile Backstage API code files");
                 return;
@@ -83,9 +94,11 @@
         }
         */
 
-        var scriptURLs = Backstage.params.js || [];
-        var cssURLs = Backstage.params.css || [];
+        var scriptURLs = Backstage.params.js || [].concat(javascriptFiles);
+        var cssURLs = Backstage.params.css || [].concat(cssFiles);
 
+        /**
+         * no bundling
         if (Backstage.params.bundle) {
             scriptURLs.push(Backstage.urlPrefix + "backstage-bundle.js");
             cssURLs.push(Backstage.urlPrefix + "backstage-bundle.css");
@@ -93,6 +106,7 @@
             SimileAjax.prefixURLs(scriptURLs, Backstage.urlPrefix + "scripts/", javascriptFiles);
             SimileAjax.prefixURLs(cssURLs, Backstage.urlPrefix + "styles/", cssFiles);
         }
+        */
 
         /*
          *  Localization
@@ -109,15 +123,14 @@
          *  Autocreate
          */
         if (Backstage.params.autoCreate) {
-            scriptURLs.push(Backstage.urlPrefix + "scripts/create.js");
+            scriptURLs.push("create.js");
         }
 
-        SimileAjax.includeCssFiles(document, "", cssURLs);
         for (var i = 0; i < cssURLs.length; i++) {
-            $("head:eq(0)").append("<link rel=\"stylesheet\" type=\"text/css\" href=\"" + cssURLs[i] + "\" />");
+            $("head:eq(0)").append("<link rel=\"stylesheet\" type=\"text/css\" href=\"" + Backstage.urlPrefix + "styles/" + cssURLs[i] + "\" />");
         }
         for (var i = 0; i < scriptURLs.length; i++) {
-            $LAB.script(scriptURLs[i]);
+            $LAB.script(Backstage.urlPrefix + "scripts/" + scriptURLs[i]);
         }
         Backstage.loaded = true;
     };
