@@ -9,8 +9,9 @@ Usage
 -----
 
 You will need a JVM installed with appropriate enviornment settings
-(`JAVA_HOME`, etc) along with [Maven 2.x][4].  You will also need
-[SIMILE Butterfly][3] installed in a peer directory to Backstage, like:
+(`JAVA_HOME`, etc) along with [Maven 2.x][4]+.  You will also need
+[Babel][5] as well as [SIMILE Butterfly][3].  Butterfly should be
+installed in a peer directory to Backstage, like:
 
 ```
 src/
@@ -20,7 +21,12 @@ src/
 
 Butterfly can be checked out from the SIMILE repository with SVN.
 
+Run `mvn install` for Babel to install the dependencies Backstage
+needs.  Babel is currently in the process of transitioning to Maven
+Central and is not reliably available in other Maven repositories.
+
 [1]: http://simile.mit.edu/repository/backstage/trunk/
-[2]: http://github.com/zepheira/exhibit3/
+[2]: https://github.com/zepheira/exhibit3/
 [3]: http://simile.mit.edu/repository/butterfly/trunk/
 [4]: http://maven.apache.org/
+[5]: https://github.com/zepheira/babel/
