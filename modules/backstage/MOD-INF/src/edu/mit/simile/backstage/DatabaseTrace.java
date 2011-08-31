@@ -54,9 +54,7 @@ public class DatabaseTrace {
                 AccessedDataLink myDataLink = _dataLinks.get(i);
                 UnhostedDataLink theirDataLink = dataLinks.get(i);
                 
-                if (!myDataLink.url.equals(theirDataLink.url) ||
-                    !myDataLink.mimeType.equals(theirDataLink.mimeType) ||
-                    !myDataLink.charset.equals(theirDataLink.charset)) {
+                if (!myDataLink.url.equals(theirDataLink.url)) {
                     
                     same = false;
                     break;

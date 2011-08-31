@@ -14,7 +14,7 @@ abstract public class AccessedDataLink extends UnhostedDataLink {
     final public boolean broken;
     
     public AccessedDataLink(UnhostedDataLink entry, Date expiresDate2, Date retrievedDate2, boolean broken2) {
-        super(entry.url, entry.mimeType, entry.charset);
+        super(entry.url);
         expiresDate = expiresDate2;
         retrievedDate = retrievedDate2;
         broken = broken2;

@@ -19,7 +19,7 @@ import edu.mit.simile.backstage.model.data.UnhostedDatabase;
 import edu.mit.simile.backstage.model.ui.Component;
 
 public class Exhibit {
-    private static Logger _logger = Logger.getLogger(Database.class);
+    private static Logger _logger = Logger.getLogger(Exhibit.class);
 
     private static final long serialVersionUID = -1105545561204629924L;
     
@@ -99,14 +99,14 @@ public class Exhibit {
         return _contextMap.get(id);
     }
     
-    public void addDataLink(String url, String mimeType, String charset) throws MalformedURLException {
+    public void addDataLink(String url) throws MalformedURLException {
         if (_database != null) {
             throw new InternalError("Cannot add more data link after exhibit already initialized");
         } else if (_dataLinks == null) {
         	throw new InternalError("Cannot add data link to an exhibit with hosted data");
         }
         
-        UnhostedDataLink dataLink = new UnhostedDataLink(new URL(url), mimeType, charset);
+        UnhostedDataLink dataLink = new UnhostedDataLink(new URL(url));
         
         _dataLinks.add(dataLink);
     }
