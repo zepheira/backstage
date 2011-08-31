@@ -55,8 +55,7 @@ function process(path, request, response) {
             respond(request,response,result);
             return;
         } else {
-            butterfly.sendError(request, response, 404, "Page not found");
-            return;
+            return false;
         }
     } else if (method == "POST") {
         if (pathSegs[0] == "data") {
