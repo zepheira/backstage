@@ -13,11 +13,10 @@ Backstage.create = function(cont) {
  *==================================================
  */
 Backstage._Impl = function(cont) {
-    // interactive session id
-    this._isid = "is" + Math.floor(1000000 * Math.random());
     this._initialized = false;
+
+    this._exhibitSession = null;
     
-    this._jsonpTransport = new Backstage.JsonpTransport(Backstage.urlPrefix + "jsonpc");
     this._jobQueue = new Backstage.JobQueue();
     
     this._dataLinks = [];
@@ -27,6 +26,8 @@ Backstage._Impl = function(cont) {
     
     this._uiContext = Backstage.UIContext.createRootContext({}, this);
     this._domConfiguration = {
+        refererUrlSHA1: Backstage.SHA1.hex_sha1(document.location.href),
+        link:           {},
         role:           "exhibit",
         uiContext:      this._uiContext.getServerSideConfiguration(),
         collections:    [],
@@ -34,14 +35,14 @@ Backstage._Impl = function(cont) {
     };
     this._collectionMap = {};
     this._componentMap= {};
-    
+
     /*
      *  We use window.setTimeout because otherwise, on Opera 9, cont gets
      *  called before this constructor returns. This means that the
      *  Backstage object hasn't been assigned to some variable in the caller
      *  and cont won't be able to retrieve it.
      */
-    this._initialize(function() { window.setTimeout(cont, 0); });
+    window.setTimeout(cont, 0);
 };
 
 Backstage._Impl.prototype.dispose = function() {
@@ -67,19 +68,18 @@ Backstage._Impl.prototype.getDefaultCollection = function() {
  *  reconstructing the server's state should the connection got closed, and
  *  for handling system data that piggybacks on normal calls.
  */
-Backstage._Impl.prototype.asyncCall = function(method, params, onSuccess, onError) {
-    // add the interactive session id
-    params.isid = this._isid;
-    
+Backstage._Impl.prototype.asyncCall = function(method, url, params, onSuccess, onError) {
     // flag to cause initialization data to flow back in case we're not initialized
     params._system = { initialized: this._initialized };
+    console.log(JSON.stringify(params));
     
     var self = this;
     var f = function() {
-        self._jsonpTransport.asyncCall(
-            method, 
-            params, 
-            function(o) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (this.readyState == 4 && String(this.status).substring(0,1) == "2") {
+                var respHdrs = this.getAllResponseHeaders();
+                var o = JSON.parse(this.responseText);
                 if ("_system" in o) {
                     // process system data that piggybacks on normal calls
                     self._processSystemData(o._system);
@@ -93,25 +93,31 @@ Backstage._Impl.prototype.asyncCall = function(method, params, onSuccess, onErro
                     self._processComponentUpdates(o._componentUpdates);
                 }
                 if (typeof onSuccess == "function") {
-                    onSuccess(o);
+                    onSuccess(o,respHdrs);
                 }
-            },
-            function(e) {
-                if (e.code == 410) { // 410:Gone
+            } else if (this.readyState == 4 && String(this.status).substring(0,1) != "2") {
+                if (this.status == 410) { // 410:Gone
                     self._reinitialize(f);
                 } else if (onError != undefined) {
                     onError(e);
                 } else {
-                    Exhibit.Debug.log(e);
+                    Exhibit.Debug.log(this.status);
                 }
             }
-        );
-    };
+        }
+        xhr.open(method,url);
+        if (method == "PUT" || method == "POST") {
+            xhr.setRequestHeader("Content-Type","text/plain"); // FIXME; work around Chrome(?) CORS madness
+            xhr.send(JSON.stringify(params));
+        } else {
+            xhr.send();
+        }
+    }
     f();
 };
 
 Backstage._Impl.prototype.clearAsyncCalls = function() {
-    this._jsonpTransport.clear();
+    //this._jsonpTransport.clear();
 };
 
 Backstage._Impl.prototype.queueJob = function(job) {
@@ -129,27 +135,17 @@ Backstage._Impl.prototype.loadDataLinks = function(onSuccess, onError) {
         var linkElmts = heads[h].getElementsByTagName("link");
         for (var l = 0; l < linkElmts.length; l++) {
             var link = linkElmts[l];
-            if (link.rel.match(/\bexhibit\/data\b/)) {
-                links.push({
-                    url:        link.href,
-                    mimeType:   link.type,
-                    charset:    link.charset
-                });
+            if (link.rel.match(/\bexhibit\/data\b/) || link.rel.match(/\bexhibit-data\b/)) {
+                this._domConfiguration.link = { "url": link.href }; // only one per exhibit now. last one wins
             }
         }
     }
     
     this._dataLinks = this._dataLinks.concat(links);
-    this._internalAddDataLinks(
-        links, 
-        function(o) { 
-            //Exhibit.Debug.log("Data links loaded.");
-            if (typeof onSuccess == "function") {
-                onSuccess();
-            }
-        },
-        onError
-    );
+
+    if (typeof onSuccess == "function") {
+        onSuccess();
+    }
 };
 
 Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) {
@@ -222,6 +218,7 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
                 if (component != null) {
                     var serverSideConfig = component.getServerSideConfiguration();
                     serverSideConfig.id = id;
+                    
                     self._componentMap[id] = component;
                     self._domConfiguration.components.push(serverSideConfig);
                 }
@@ -278,73 +275,23 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
     
     this._domConfiguration.uiContext = this._uiContext.getServerSideConfiguration();
 
-    this._internalConfigureFromDOM(
-        function(o) { 
-            //Exhibit.Debug.log("Backstage configured from DOM.");
-            if (typeof onSuccess == "function") {
-                onSuccess();
-            }
-        },
-        onError
-    );
+    this._configureFromDOM(onSuccess,onError);
 };
 
-Backstage._Impl.prototype._initialize = function(onSuccess, onError) {
-    this._jsonpTransport.asyncCall(
-        "initialize-session", 
-        { isid: this._isid, refererUrlSHA1: Backstage.SHA1.hex_sha1(document.location.href) }, 
-        function(o) { 
+Backstage._Impl.prototype._configureFromDOM = function(onSuccess, onError) {
+    console.log("foo");
+    this.asyncCall("POST",Backstage.urlPrefix+"../exhibit-session/",
+        {configuration:this._domConfiguration},
+        function(o,loc) {
             //Exhibit.Debug.log("Backstage initialized.");
+            this._exhibitSession = loc;
             if (typeof onSuccess == "function") {
                 onSuccess();
             }
         },
         onError
     );
-};
-
-Backstage._Impl.prototype._reinitialize = function(onSuccess) {
-    this._initialized = false;
-    
-    var onError = function(e) {
-        /*
-         *  We couldn't reconstruct the server's state from the client's state. This is really bad.
-         */
-        alert("We're sorry: \n" +
-              "This session has been inactive for too long and cannot be continued.\n" +
-              "Please refresh the page to start a new session.");
-    };
-    
-    var self = this;
-    var addDataLinks = function() {
-        self._internalAddDataLinks(self._dataLinks, configureFromDom, onError);
-    };
-    var configureFromDom = function() {
-        self._internalConfigureFromDOM(onSuccess, onError);
-    };
-    this._initialize(addDataLinks, onError);
-};
-
-Backstage._Impl.prototype._internalAddDataLinks = function(links, onSuccess, onError) {
-    this._jsonpTransport.asyncCall(
-        "add-data-links", 
-        { isid: this._isid, links: links }, 
-        onSuccess ? function(o) { onSuccess(); } : null,
-        onError
-    );
-};
-
-Backstage._Impl.prototype._internalConfigureFromDOM = function(onSuccess, onError) {
-    this.asyncCall(
-        "configure-from-dom", 
-        { configuration: this._domConfiguration }, 
-        function(o) {
-            $(document).trigger("exhibitConfigured.exhibit");
-            onSuccess();
-        },
-        onError
-    );
-};
+}
 
 Backstage._Impl.prototype._processSystemData = function(o) {
     this._properties = o.properties;
