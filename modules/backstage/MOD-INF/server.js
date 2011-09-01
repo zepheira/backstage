@@ -130,7 +130,9 @@ function process(path, request, response) {
 
 function CORSify(request,response,exhibit) {
     // wide open
-    response.setHeader("Access-Control-Allow-Origin","*");
+    var origin = request.getHeader("Origin");
+    response.setHeader("Access-Control-Allow-Origin", origin);
+    response.setHeader("Access-Control-Allow-Credentials", "true");
     response.setHeader("Access-Control-Allow-Methods","GET, PUT, POST, OPTIONS");
     response.setHeader("Access-Control-Expose-Headers","Location");
 }
@@ -168,7 +170,6 @@ function getSlug(request) {
 
 function uploadExhibitConfig(request,response) {
     // Configure exhibit from lens and facet descriptions
-
     var exhibitSlug = randomString();
     var exhibit = backstage.getExhibit(request, exhibitSlug);
     var params = readBodyAsJSON(request);
