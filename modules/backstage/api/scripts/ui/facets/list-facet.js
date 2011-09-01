@@ -164,7 +164,7 @@ Backstage.ListFacet.prototype._initializeUI = function() {
         this,
         this._div,
         this._settings.facetLabel,
-        function(elmt, evt, target) { self._clearSelections(); },
+        function(evt) { self._clearSelections(); },
         this._uiContext
     );
     
@@ -282,7 +282,7 @@ Backstage.ListFacet.prototype._reconstruct = function() {
             onSelectOnly,
             self._uiContext
         );
-        
+
         $(containerDiv).append(elmt);
     };
     
