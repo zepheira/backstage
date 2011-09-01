@@ -286,6 +286,7 @@ Backstage._Impl.prototype._configureFromDOM = function(onSuccess, onError) {
             //Exhibit.Debug.log("Backstage initialized.");
             this._exhibitSession = loc;
             if (typeof onSuccess == "function") {
+                $(document).trigger("exhibitConfigured.exhibit");
                 onSuccess();
             }
         },
