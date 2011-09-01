@@ -258,7 +258,7 @@ function uploadExhibitData(request) {
     }
 
     // create repo
-    var sail = MemoryStore(fullDbDir);
+    var sail = new MemoryStore(fullDbDir);
     var repository = new SailRepository(sail);
     repository.initialize();
 
