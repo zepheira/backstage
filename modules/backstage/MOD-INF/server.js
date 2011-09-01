@@ -6,6 +6,7 @@ function process(path, request, response) {
     // /data/<slug>/ - reference URL used in the Exhibit HTML template. POST here to add more data(TBD).
     // /exhibit-session - where configurations of lenses and facets are POSTed, returning 201 to...
     // /exhibit-session/<slug>/ - which is where the facet queries are performed
+    // /exhibit-session/<slug>/component/<compid> - components of the exhibit, where you can POST state
     //
 
     // Backstage is stateful so we need sessions to hold on to our Exhibit objects
@@ -35,7 +36,9 @@ function process(path, request, response) {
                 butterfly.sendError(request, response, 404, "Page not found");
                 return;
             }
-            exhibit = backstage.getExhibit(request, pathSegs[1])
+            // could check for "components" under here, but probably not useful
+
+            var exhibit = backstage.getExhibit(request, pathSegs[1])
             if (exhibit == null) {
                 butterfly.sendError(request, response, 404, "Exhibit session not found");
                 return;
@@ -48,10 +51,10 @@ function process(path, request, response) {
 
             // remove some state by resetting and rebuilding restrictions with each query.
             // the performance will likely suck, but it's a start.
-            var result = facetClearRestrictions(request, exhibit);
+            var result = clearAllFacetRestrictions(request, exhibit);
 
             if (restrictions) {
-                var result = facetApplyRestrictions(request, restrictions, exhibit);
+                var result = applyAllFacetRestrictions(request, restrictions, exhibit);
             }
             CORSify(request,response,exhibit);
             respond(request,response,result);
@@ -71,8 +74,6 @@ function process(path, request, response) {
                 butterfly.sendError(request, response, 404, "Data not found");
                 return;
             }
-        //} else if (pathSegs[0] == "localstore") {
-            // create/update the HostedDatabase
         } else if (pathSegs[0] == "exhibit-session") {
             if (pathSegs.length == 1) {
                 var result = uploadExhibitConfig(request,response)
@@ -87,10 +88,40 @@ function process(path, request, response) {
             butterfly.sendError(request, response, 404, "Page not found");
             return;
         }
+    } else if (method == "PUT" ) {
+        if (pathSegs[0] == "exhibit-session") {
+            if (pathSegs.length == 4 && pathSegs[2]=="component") {
+                var compId = pathSegs[3];
+                var exhibit = backstage.getExhibit(request, pathSegs[1])
+                if (exhibit == null) {
+                    butterfly.sendError(request, response, 404, "Exhibit session not found");
+                    return;
+                }
+
+                var comp = exhibit.getComponent(compId);
+                if (comp == null) {
+                    butterfly.sendError(request, response, 404, "Component not found");
+                    return;
+                }
+
+                var restr = readBodyAsJSON(request);
+                var result;
+                if ("restrictions" in restr) {
+                    result = facetApplyRestrictions(comp,restr.restrictions);
+                } else {
+                    result = facetClearRestrictions(comp);
+                }
+
+                CORSify(request,response);
+                respond(request,response,result);
+                return;
+            }
+        }
+        return;
     } else if (method == "OPTIONS") { // CORS-only
-        butterfly.log("inbound origin = "+request.getHeader("Origin"));
         CORSify(request,response);
         butterfly.sendString(request, response, "", "utf-8", "text/plain");
+        return;
     } else {
         butterfly.sendError(request, response, 501, "Unsupported method");
         return;
@@ -100,6 +131,7 @@ function process(path, request, response) {
 function CORSify(request,response,exhibit) {
     // wide open
     response.setHeader("Access-Control-Allow-Origin","*");
+    response.setHeader("Access-Control-Expose-Headers","Location");
 }
 
 function respond(request,response,result) {
@@ -144,7 +176,9 @@ function uploadExhibitConfig(request,response) {
         var result;
         try {
             result = configureExhibit(request,params,exhibit);
-            return {"status":201,"out":result,"location":"/exhibit-session/"+exhibitSlug};
+            var location = "/exhibit-session/"+exhibitSlug;
+            result.location = location; // stick in body since Chrome can't expose the header
+            return {"status":201,"out":result,"location":location};
         } catch(errtext) {
             return {"status":500,"out":errtext};
         }
@@ -369,7 +403,7 @@ function configureExhibit(request, params, exhibit) {
     return processBackChannel(result, backChannel);
 }
 
-function facetApplyRestrictions(request, restrictions, exhibit) {
+function applyAllFacetRestrictions(request, restrictions, exhibit) {
     importPackage(Packages.edu.mit.simile.backstage.model);
     
     var result = {};
@@ -389,7 +423,7 @@ function facetApplyRestrictions(request, restrictions, exhibit) {
     return {"status":200,"out":processBackChannel(result, backChannel)};
 }
 
-function facetClearRestrictions(request, exhibit) {
+function clearAllFacetRestrictions(request, exhibit) {
     importPackage(Packages.edu.mit.simile.backstage.model);
     
     var result = {};
@@ -404,3 +438,24 @@ function facetClearRestrictions(request, exhibit) {
     
     return {"status":200,"out":processBackChannel(result, backChannel)};
 }
+
+function facetApplyRestrictions(facet,restrictions) {
+    importPackage(Packages.edu.mit.simile.backstage.model);
+
+    var result = {};
+    var backChannel = new BackChannel();
+    facet.applyRestrictions(restrictions, backChannel);
+
+    return {"status":200,"out":processBackChannel(result, backChannel)};
+}
+
+function facetClearRestrictions(facet) {
+    importPackage(Packages.edu.mit.simile.backstage.model);
+
+    var result = {};
+    var backChannel = new BackChannel();
+
+    facet.clearRestrictions(backChannel);
+
+    return {"status":200,"out":processBackChannel(result, backChannel)};
+};
