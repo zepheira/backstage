@@ -73,40 +73,46 @@ Backstage._Impl.prototype.asyncCall = function(method, url, params, onSuccess, o
     params._system = { initialized: this._initialized };
     
     var self = this;
-    $.ajax({
-        "url": url,
-        "type": method,
-        "crossDomain": true,
-        "data": JSON.stringify(params),
-        "contentType": "text/plain",
-        "dataType": "json",
-        "success": function(data, status, jqxhr) {
-            if (typeof data._system !== "undefined") {
-                // process system data that piggybacks on normal calls
-                self._processSystemData(data._system);
+    var f = function() {
+        $.ajax({
+            "url": url,
+            "type": method,
+            "crossDomain": true,
+            "data": JSON.stringify(params),
+            "contentType": "text/plain",
+            "xhrFields": {
+                "withCredentials": true
+            },
+            "dataType": "json",
+            "success": function(data, status, jqxhr) {
+                if (typeof data._system !== "undefined") {
+                    // process system data that piggybacks on normal calls
+                    self._processSystemData(data._system);
+                }
+                if (typeof data._componentStates !== "undefined") {
+                    // process component states that piggyback on normal calls
+                    self._processComponentStates(data._componentStates);
+                }
+                if (typeof data._componentUpdates !== "undefined") {
+                    // process component states that piggyback on normal calls
+                    self._processComponentUpdates(data._componentUpdates);
+                }
+                if (typeof onSuccess === "function") {
+                    onSuccess(data, jqxhr.getAllResponseHeaders());
+                }
+            },
+            "error": function(jqxhr, status, ex) {
+                if (jqxhr.status === 410) { // 410:Gone
+                    self._reinitialize(f);
+                } else if (typeof onError === "function") {
+                    onError(ex);
+                } else {
+                    Exhibit.Debug.log(jqxhr);
+                }
             }
-            if (typeof data._componentStates !== "undefined") {
-                // process component states that piggyback on normal calls
-                self._processComponentStates(data._componentStates);
-            }
-            if (typeof data._componentUpdates !== "undefined") {
-                // process component states that piggyback on normal calls
-                self._processComponentUpdates(data._componentUpdates);
-            }
-            if (typeof onSuccess === "function") {
-                onSuccess(data, jqxhr.getAllResponseHeaders());
-            }
-        },
-        "error": function(jqxhr, status, ex) {
-            if (jqxhr.status === 410) { // 410:Gone
-                self._reinitialize(f);
-            } else if (typeof onError === "function") {
-                onError(ex);
-            } else {
-                Exhibit.Debug.log(this.status);
-            }
-        }
-    });
+        });
+    };
+    f();
 };
 
 Backstage._Impl.prototype.clearAsyncCalls = function() {
