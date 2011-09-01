@@ -131,6 +131,7 @@ function process(path, request, response) {
 function CORSify(request,response,exhibit) {
     // wide open
     response.setHeader("Access-Control-Allow-Origin","*");
+    response.setHeader("Access-Control-Allow-Methods","GET, PUT, POST, OPTIONS");
     response.setHeader("Access-Control-Expose-Headers","Location");
 }
 
