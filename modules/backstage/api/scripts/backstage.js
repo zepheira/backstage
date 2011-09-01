@@ -71,49 +71,42 @@ Backstage._Impl.prototype.getDefaultCollection = function() {
 Backstage._Impl.prototype.asyncCall = function(method, url, params, onSuccess, onError) {
     // flag to cause initialization data to flow back in case we're not initialized
     params._system = { initialized: this._initialized };
-    console.log(JSON.stringify(params));
     
     var self = this;
-    var f = function() {
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (this.readyState == 4 && String(this.status).substring(0,1) == "2") {
-                var respHdrs = this.getAllResponseHeaders();
-                var o = JSON.parse(this.responseText);
-                if ("_system" in o) {
-                    // process system data that piggybacks on normal calls
-                    self._processSystemData(o._system);
-                }
-                if ("_componentStates" in o) {
-                    // process component states that piggyback on normal calls
-                    self._processComponentStates(o._componentStates);
-                }
-                if ("_componentUpdates" in o) {
-                    // process component states that piggyback on normal calls
-                    self._processComponentUpdates(o._componentUpdates);
-                }
-                if (typeof onSuccess == "function") {
-                    onSuccess(o,respHdrs);
-                }
-            } else if (this.readyState == 4 && String(this.status).substring(0,1) != "2") {
-                if (this.status == 410) { // 410:Gone
-                    self._reinitialize(f);
-                } else if (onError != undefined) {
-                    onError(e);
-                } else {
-                    Exhibit.Debug.log(this.status);
-                }
+    $.ajax({
+        "url": url,
+        "type": method,
+        "crossDomain": true,
+        "data": JSON.stringify(params),
+        "contentType": "text/plain",
+        "dataType": "json",
+        "success": function(data, status, jqxhr) {
+            if (typeof data._system !== "undefined") {
+                // process system data that piggybacks on normal calls
+                self._processSystemData(data._system);
+            }
+            if (typeof data._componentStates !== "undefined") {
+                // process component states that piggyback on normal calls
+                self._processComponentStates(data._componentStates);
+            }
+            if (typeof data._componentUpdates !== "undefined") {
+                // process component states that piggyback on normal calls
+                self._processComponentUpdates(data._componentUpdates);
+            }
+            if (typeof onSuccess === "function") {
+                onSuccess(data, jqxhr.getAllResponseHeaders());
+            }
+        },
+        "error": function(jqxhr, status, ex) {
+            if (jqxhr.status === 410) { // 410:Gone
+                self._reinitialize(f);
+            } else if (typeof onError === "function") {
+                onError(ex);
+            } else {
+                Exhibit.Debug.log(this.status);
             }
         }
-        xhr.open(method,url);
-        if (method == "PUT" || method == "POST") {
-            xhr.setRequestHeader("Content-Type","text/plain"); // FIXME; work around Chrome(?) CORS madness
-            xhr.send(JSON.stringify(params));
-        } else {
-            xhr.send();
-        }
-    }
-    f();
+    });
 };
 
 Backstage._Impl.prototype.clearAsyncCalls = function() {
@@ -279,13 +272,17 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
 };
 
 Backstage._Impl.prototype._configureFromDOM = function(onSuccess, onError) {
-    console.log("foo");
-    this.asyncCall("POST",Backstage.urlPrefix+"../exhibit-session/",
-        {configuration:this._domConfiguration},
-        function(o,loc) {
-            //Exhibit.Debug.log("Backstage initialized.");
-            this._exhibitSession = loc;
-            if (typeof onSuccess == "function") {
+    var self = this;
+    this.asyncCall(
+        "POST",
+        Backstage.urlPrefix+"../exhibit-session/",
+        {
+            "configuration": self._domConfiguration
+        },
+        function(o) {
+            Exhibit.Debug.log(o);
+            self._exhibitSession = o.location;
+            if (typeof onSuccess === "function") {
                 $(document).trigger("exhibitConfigured.exhibit");
                 onSuccess();
             }
