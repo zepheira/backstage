@@ -213,12 +213,9 @@ Backstage.ListFacet.prototype.clearAllRestrictions = function() {
             self._selectMissing = false;
         };
         
-        this._uiContext.getBackstage().asyncCall(
-            "facet-clear-restrictions", 
-            {   facetID: this._id
-            }, 
-            onSuccess
-        );
+        var url = Backstage.urlPrefix+".."+window.backstage._sessionPath+"/component/"+this._id;
+        console.log("clear PUTting to url: "+url);
+        this._uiContext.getBackstage().asyncCall("PUT", url, {}, onSuccess);
     }
     return restrictions;
 };
@@ -237,11 +234,11 @@ Backstage.ListFacet.prototype.applyRestrictions = function(restrictions) {
     };
     
     Exhibit.UI.showBusyIndicator();
+    var url = Backstage.urlPrefix+".."+window.backstage._sessionPath+"/component/"+this._id;
+    console.log("apply PUTting to url: "+url);
     this._uiContext.getBackstage().asyncCall(
-        "facet-apply-restrictions", 
-        {   facetID:        this._id,
-            restrictions:   restrictions
-        }, 
+        "PUT",url,
+        { restrictions: restrictions }, 
         onSuccess
     );
 };
