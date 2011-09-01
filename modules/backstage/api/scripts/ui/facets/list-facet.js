@@ -213,7 +213,7 @@ Backstage.ListFacet.prototype.clearAllRestrictions = function() {
             self._selectMissing = false;
         };
         
-        var url = Backstage.urlPrefix+".."+window.backstage._sessionPath+"/component/"+this._id;
+        var url = Backstage.urlPrefix+".."+backstage._exhibitSession+"/component/"+this._id;
         console.log("clear PUTting to url: "+url);
         this._uiContext.getBackstage().asyncCall("PUT", url, {}, onSuccess);
     }
@@ -234,10 +234,11 @@ Backstage.ListFacet.prototype.applyRestrictions = function(restrictions) {
     };
     
     Exhibit.UI.showBusyIndicator();
-    var url = Backstage.urlPrefix+".."+window.backstage._sessionPath+"/component/"+this._id;
+    var url = Backstage.urlPrefix+".."+backstage._exhibitSession+"/component/"+this._id;
     console.log("apply PUTting to url: "+url);
     this._uiContext.getBackstage().asyncCall(
-        "PUT",url,
+        "PUT",
+        url,
         { restrictions: restrictions }, 
         onSuccess
     );
