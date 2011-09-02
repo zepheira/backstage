@@ -43,7 +43,7 @@ public class BackstageModule extends ButterflyModuleImpl {
         }
     }
     
-    public Database getDatabase(ExhibitIdentity identity, List<UnhostedDataLink> dataLinks) {
+    public Database getDatabase(ExhibitIdentity identity, UnhostedDataLink dataLink) {
         Map<ExhibitIdentity, DatabaseTrace> databaseTraces = getDatabaseTraceMap(identity);
         synchronized (databaseTraces) {
             DatabaseTrace databaseTrace = databaseTraces.get(identity);
@@ -51,7 +51,7 @@ public class BackstageModule extends ButterflyModuleImpl {
                 databaseTrace = new DatabaseTrace(identity);
                 databaseTraces.put(identity, databaseTrace);
             }
-            return databaseTrace.getDatabase(dataLinks);
+            return databaseTrace.getDatabase(dataLink);
         }
     }
     

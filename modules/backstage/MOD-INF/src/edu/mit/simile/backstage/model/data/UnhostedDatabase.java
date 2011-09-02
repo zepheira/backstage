@@ -25,13 +25,13 @@ import edu.mit.simile.backstage.data.AccessedDataLink;
 
 public class UnhostedDatabase extends Database {
     final private ExhibitIdentity                    _identity;
-    final private List<AccessedDataLink>    _dataLinks;
+    final private AccessedDataLink    _dataLink;
     
     private int _referenceCount;
     
-    public UnhostedDatabase(ExhibitIdentity identity, List<AccessedDataLink> dataLinks) {
+    public UnhostedDatabase(ExhibitIdentity identity, AccessedDataLink dataLink) {
         _identity = identity;
-        _dataLinks = new LinkedList<AccessedDataLink>(dataLinks);
+        _dataLink = dataLink;
     }
     
     public ExhibitIdentity getIdentity() {
@@ -53,11 +53,11 @@ public class UnhostedDatabase extends Database {
     synchronized public Repository getRepository() {
         if (_repository == null) {
             String dbDir = System.getProperty("backstage.databaseDir","databases");
-            AccessedDataLink link = _dataLinks.iterator().next(); // only supports one link
-            String dbUrl = link.url.toString();
+            String dbUrl = _dataLink.url.toString();
             String dbName = dbUrl.substring(dbUrl.lastIndexOf("/")+1);
             File fullDbDir = new File(dbDir,dbName);
             _sail = new MemoryStore(new File(dbDir,dbName));
+            _logger.error("created new MemoryStore for "+dbName+" = "+_sail);
             _repository = new SailRepository(_sail);
             try {
                 _repository.initialize();

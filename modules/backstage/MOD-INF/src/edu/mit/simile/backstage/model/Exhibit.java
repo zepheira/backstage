@@ -26,7 +26,7 @@ public class Exhibit {
     final private BackstageModule     	_module;
     final private ExhibitIdentity     	_exhibitIdentity;
     
-    private List<UnhostedDataLink>    	_dataLinks = new LinkedList<UnhostedDataLink>();
+    private UnhostedDataLink    	_dataLink = null;
     private Database 					_database;
     
     final private Map<String, Collection> 		_collectionMap = new HashMap<String, Collection>();
@@ -45,7 +45,7 @@ public class Exhibit {
         if (_database != null) {
             _logger.info("Disposing interaction session for " + _exhibitIdentity.toString());
             
-            if (_dataLinks != null) { // unhosted
+            if (_dataLink != null) { // unhosted
             	_module.releaseDatabase((UnhostedDatabase) _database);
             }
             _database = null;
@@ -54,8 +54,8 @@ public class Exhibit {
 
     public Database getDatabase() {
         if (_database == null) {
-        	if (_dataLinks != null) {
-        		_database = _module.getDatabase(_exhibitIdentity, _dataLinks);
+        	if (_dataLink != null) {
+        		_database = _module.getDatabase(_exhibitIdentity, _dataLink);
         	} else {
         		_database = _module.getHostedDatabase();
         	}
@@ -102,25 +102,19 @@ public class Exhibit {
     public void addDataLink(String url) throws MalformedURLException {
         if (_database != null) {
             throw new InternalError("Cannot add more data link after exhibit already initialized");
-        } else if (_dataLinks == null) {
-        	throw new InternalError("Cannot add data link to an exhibit with hosted data");
         }
         
         UnhostedDataLink dataLink = new UnhostedDataLink(new URL(url));
         
-        _dataLinks.add(dataLink);
+        _dataLink = dataLink;
     }
     
     public void addHostedDataLink() {
         if (_database != null) {
             throw new InternalError("Cannot add more data link after exhibit already initialized");
         }
-    	if (_dataLinks != null) {
-    		if (_dataLinks.size() > 0) {
-    			throw new InternalError("Cannot hosted data link when there is already another data link");
-    		}
-        	_dataLinks.clear();
-        	_dataLinks = null;
+    	if (_dataLink != null) {
+            _dataLink = null;
     	}
     }
 }
