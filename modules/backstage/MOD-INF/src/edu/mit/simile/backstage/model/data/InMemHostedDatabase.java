@@ -14,28 +14,32 @@ import org.openrdf.sail.SailException;
 import org.openrdf.sail.SailConnection;
 
 import edu.mit.simile.backstage.ExhibitIdentity;
-import edu.mit.simile.backstage.data.AccessedDataLink;
+import edu.mit.simile.backstage.data.InMemHostedDataLink;
 
-// In the original Backstage, the term "Unhosted" indicated that the data was loaded
+// In the original Backstage, the term "InMemHosted" indicated that the data was loaded
 // just-in-time from an URL. We're removing that capability for Exhibit3 Staged mode
 // and instead requiring data be pre-uploaded to avoid the inherrent security problems
 // with that approach, but are still reusing much of the code.  There is a "Hosted"
 // mode but it uses a global database and the implications of that aren't understood
 // at this time.
 
-public class UnhostedDatabase extends Database {
+public class InMemHostedDatabase extends Database {
     final private ExhibitIdentity                    _identity;
-    final private AccessedDataLink    _dataLink;
+    final private InMemHostedDataLink    _dataLink;
     
     private int _referenceCount;
     
-    public UnhostedDatabase(ExhibitIdentity identity, AccessedDataLink dataLink) {
+    public InMemHostedDatabase(ExhibitIdentity identity, InMemHostedDataLink dataLink) {
         _identity = identity;
         _dataLink = dataLink;
     }
     
     public ExhibitIdentity getIdentity() {
         return _identity;
+    }
+
+    public InMemHostedDataLink getDataLink() {
+        return _dataLink;
     }
     
     public int getReferenceCount() {
@@ -57,7 +61,6 @@ public class UnhostedDatabase extends Database {
             String dbName = dbUrl.substring(dbUrl.lastIndexOf("/")+1);
             File fullDbDir = new File(dbDir,dbName);
             _sail = new MemoryStore(new File(dbDir,dbName));
-            _logger.error("created new MemoryStore for "+dbName+" = "+_sail);
             _repository = new SailRepository(_sail);
             try {
                 _repository.initialize();

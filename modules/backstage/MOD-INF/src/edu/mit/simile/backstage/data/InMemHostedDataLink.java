@@ -5,10 +5,10 @@ package edu.mit.simile.backstage.data;
 
 import java.net.URL;
 
-public class UnhostedDataLink extends DataLink {
+public class InMemHostedDataLink extends DataLink {
     final public URL      url;
     
-    public UnhostedDataLink( URL url2) {
+    public InMemHostedDataLink( URL url2) {
         url = url2;
     }
 }

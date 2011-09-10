@@ -12,10 +12,10 @@ import org.apache.log4j.Logger;
 
 import edu.mit.simile.backstage.BackstageModule;
 import edu.mit.simile.backstage.ExhibitIdentity;
-import edu.mit.simile.backstage.data.UnhostedDataLink;
+import edu.mit.simile.backstage.data.InMemHostedDataLink;
 import edu.mit.simile.backstage.model.data.Collection;
 import edu.mit.simile.backstage.model.data.Database;
-import edu.mit.simile.backstage.model.data.UnhostedDatabase;
+import edu.mit.simile.backstage.model.data.InMemHostedDatabase;
 import edu.mit.simile.backstage.model.ui.Component;
 
 public class Exhibit {
@@ -26,7 +26,7 @@ public class Exhibit {
     final private BackstageModule     	_module;
     final private ExhibitIdentity     	_exhibitIdentity;
     
-    private UnhostedDataLink    	_dataLink = null;
+    private InMemHostedDataLink    	_dataLink = null;
     private Database 					_database;
     
     final private Map<String, Collection> 		_collectionMap = new HashMap<String, Collection>();
@@ -46,7 +46,7 @@ public class Exhibit {
             _logger.info("Disposing interaction session for " + _exhibitIdentity.toString());
             
             if (_dataLink != null) { // unhosted
-            	_module.releaseDatabase((UnhostedDatabase) _database);
+            	_module.releaseDatabase((InMemHostedDatabase) _database);
             }
             _database = null;
         }
@@ -104,7 +104,7 @@ public class Exhibit {
             throw new InternalError("Cannot add more data link after exhibit already initialized");
         }
         
-        UnhostedDataLink dataLink = new UnhostedDataLink(new URL(url));
+        InMemHostedDataLink dataLink = new InMemHostedDataLink(new URL(url));
         
         _dataLink = dataLink;
     }
