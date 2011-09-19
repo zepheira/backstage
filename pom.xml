@@ -30,7 +30,7 @@
   </licenses>
   
   <modules>
-    <module>modules</module>
+    <module>modules/backstage</module>
   </modules>
   
   <issueManagement>
