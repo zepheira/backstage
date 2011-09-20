@@ -18,133 +18,118 @@
     <relativePath>../../</relativePath>
   </parent>
   
-	<repositories>
-	    <repository>
-	        <id>simile.mit.edu</id>
-	        <url>http://simile.mit.edu/maven-proxy</url>
-	    </repository>
-		<repository>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-				<updatePolicy>never</updatePolicy>
-				<checksumPolicy>fail</checksumPolicy>
-			</snapshots>
-			<id>aduna-repo</id>
-			<name>Aduna Repository</name>
-			<url>http://repo.aduna-software.org/maven2/releases</url>
-		</repository>
-        <repository>
-            <releases>
-                <enabled>false</enabled>
-                <updatePolicy>never</updatePolicy>
-                <checksumPolicy>fail</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>daily</updatePolicy>
-                <checksumPolicy>warn</checksumPolicy>
-            </snapshots>
-            <id>aduna-snapshot-repo</id>
-            <name>Aduna Snapshot Repository</name>
-            <url>http://repo.aduna-software.org/maven2/snapshots</url>
-        </repository>
-	</repositories>
-	
+  <build>
+    <sourceDirectory>MOD-INF/src</sourceDirectory>
+    <outputDirectory>MOD-INF/classes</outputDirectory>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.1</version>
+        <configuration>
+          <outputDirectory>MOD-INF/lib</outputDirectory>
+          <includeTypes>jar</includeTypes>
+          <excludeArtifactIds>babel-tsv-converter,babel-xls-converter,butterfly,commons-cli,commons-collections,commons-io,commons-lang,commons-logging,cos,js,junit,lessen,log4j,nekohtml,oro,poi,servlet-api,tracer,slf4j-api,slf4j-log4j12,velocity,xercesImpl,whirlycache</excludeArtifactIds>
+        </configuration>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  
   <dependencies>
-  
     <dependency>
-        <groupId>org.openrdf.sesame</groupId>
-        <artifactId>sesame-model</artifactId>
-        <version>2.4.2</version>
+      <groupId>org.openrdf.sesame</groupId>
+      <artifactId>sesame-model</artifactId>
+      <version>2.5.0</version>
     </dependency>
     <dependency>
-        <groupId>org.openrdf.sesame</groupId>
-        <artifactId>sesame-repository-api</artifactId>
-        <version>2.4.2</version>
+      <groupId>org.openrdf.sesame</groupId>
+      <artifactId>sesame-repository-api</artifactId>
+      <version>2.5.0</version>
     </dependency>
     <dependency>
-        <groupId>org.openrdf.sesame</groupId>
-        <artifactId>sesame-sail-api</artifactId>
-        <version>2.4.2</version>
+      <groupId>org.openrdf.sesame</groupId>
+      <artifactId>sesame-sail-api</artifactId>
+      <version>2.5.0</version>
     </dependency>
     <dependency>
-        <groupId>org.openrdf.sesame</groupId>
-        <artifactId>sesame-repository-sail</artifactId>
-        <version>2.4.2</version>
+      <groupId>org.openrdf.sesame</groupId>
+      <artifactId>sesame-repository-sail</artifactId>
+      <version>2.5.0</version>
     </dependency>
     <dependency>
-        <groupId>org.openrdf.sesame</groupId>
-        <artifactId>sesame-sail-memory</artifactId>
-        <version>2.4.2</version>
+      <groupId>org.openrdf.sesame</groupId>
+      <artifactId>sesame-sail-memory</artifactId>
+      <version>2.5.0</version>
     </dependency>
     <dependency>
-        <groupId>org.openrdf.sesame</groupId>
-        <artifactId>sesame-sail-nativerdf</artifactId>
-        <version>2.4.2</version>
-    </dependency>
-    
-    <dependency>
-        <groupId>org.openrdf.sesame</groupId>
-        <artifactId>sesame-rio-api</artifactId>
-        <version>2.4.2</version>
+      <groupId>org.openrdf.sesame</groupId>
+      <artifactId>sesame-sail-nativerdf</artifactId>
+      <version>2.5.0</version>
     </dependency>
     <dependency>
-        <groupId>org.openrdf.sesame</groupId>
-        <artifactId>sesame-rio-n3</artifactId>
-        <version>2.4.2</version>
+      <groupId>org.openrdf.sesame</groupId>
+      <artifactId>sesame-rio-api</artifactId>
+      <version>2.5.0</version>
     </dependency>
     <dependency>
-        <groupId>org.openrdf.sesame</groupId>
-        <artifactId>sesame-rio-turtle</artifactId>
-        <version>2.4.2</version>
+      <groupId>org.openrdf.sesame</groupId>
+      <artifactId>sesame-rio-n3</artifactId>
+      <version>2.5.0</version>
     </dependency>
     <dependency>
-        <groupId>org.openrdf.sesame</groupId>
-        <artifactId>sesame-rio-ntriples</artifactId>
-        <version>2.4.2</version>
+      <groupId>org.openrdf.sesame</groupId>
+      <artifactId>sesame-rio-turtle</artifactId>
+      <version>2.5.0</version>
     </dependency>
     <dependency>
-        <groupId>org.openrdf.sesame</groupId>
-        <artifactId>sesame-rio-rdfxml</artifactId>
-        <version>2.4.2</version>
+      <groupId>org.openrdf.sesame</groupId>
+      <artifactId>sesame-rio-ntriples</artifactId>
+      <version>2.5.0</version>
     </dependency>
     <dependency>
-        <groupId>org.openrdf.sesame</groupId>
-        <artifactId>sesame-rio-trix</artifactId>
-        <version>2.4.2</version>
+      <groupId>org.openrdf.sesame</groupId>
+      <artifactId>sesame-rio-rdfxml</artifactId>
+      <version>2.5.0</version>
     </dependency>
-  
+    <dependency>
+      <groupId>org.openrdf.sesame</groupId>
+      <artifactId>sesame-rio-trix</artifactId>
+      <version>2.5.0</version>
+    </dependency>
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
       <version>1.5</version>
     </dependency>
-
     <dependency>
-      <groupId>whirlycache</groupId>
+      <groupId>com.whirlycott</groupId>
       <artifactId>whirlycache</artifactId>
       <version>1.0.1</version>
     </dependency>
     <dependency>
       <groupId>edu.mit.simile</groupId>
       <artifactId>butterfly</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0</version>
     </dependency>
     <dependency>
-     <groupId>edu.mit.simile</groupId>
-     <artifactId>babel-engine</artifactId>
-     <version>1.0</version>    
+      <groupId>edu.mit.simile</groupId>
+      <artifactId>babel-engine</artifactId>
+      <version>1.0-SNAPSHOT</version>    
     </dependency>
     <dependency>
-     <groupId>edu.mit.simile</groupId>
-     <artifactId>babel-exhibit-converter</artifactId>
-     <version>1.0</version>    
+      <groupId>edu.mit.simile</groupId>
+      <artifactId>babel-exhibit-converter</artifactId>
+      <version>1.0-SNAPSHOT</version>    
     </dependency>
   </dependencies>
-    
+  
 </project>
