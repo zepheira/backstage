@@ -29,7 +29,7 @@ Run `mvn install` for Babel to install the dependencies Backstage
 needs.  Babel is currently in the process of transitioning to Maven
 Central and is not reliably available in other Maven repositories.
 
-Do the same for Butterfly.
+Run `ant build` for Butterfly.
 
 Setting up Backstage
 --------------------
