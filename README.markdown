@@ -20,64 +20,24 @@ src/
 ```
 
 Butterfly can be checked out from Google Code repository with SVN.  The
-Google Code version supercedes the SIMILE repository version, but the
-GC version does not currently utilize Maven.  In order to run Backstage
-with the GC Butterfly, you must copy all of its direct dependency JARs
-out of the Maven repository into its own MOD-INF/lib/ directory.
+Google Code version supercedes the SIMILE repository version
 
-Butterfly will be augmented in the near future so this rather annoying
-step can be obviated.  For now, you can copy them into place with a
-one-line UNIX command:
-
-```
-% mvn dependency:build-classpath | egrep -v '\[(INFO|WARNING)\]' | tr ':' '\n' | xargs -I% cp % modules/backstage/MOD-INF/lib/
-
-```
-
-Not every one copied over is a direct dependency; the indirect ones may
-produce conflicts with Butterfly's classloading and should be removed.
-The list of vital Backstage module JARs (anything not in Babel, Aduna, or
-Sesame, other than commons-codec, should be removed):
-
-```
-aduna-commons-collections-2.8.0.jar
-aduna-commons-concurrent-2.7.0.jar
-aduna-commons-i18n-1.4.0.jar
-aduna-commons-io-2.10.0.jar
-aduna-commons-iteration-2.10.0.jar
-aduna-commons-lang-2.9.0.jar
-aduna-commons-net-2.7.0.jar
-aduna-commons-text-2.7.0.jar
-aduna-commons-xml-2.7.0.jar
-babel-bibtex-converter-1.0.jar
-babel-engine-1.0.jar
-babel-exhibit-converter-1.0.jar
-babel-interfaces-1.0.jar
-commons-codec-1.5.jar
-sesame-model-2.4.2.jar
-sesame-query-2.4.2.jar
-sesame-queryalgebra-evaluation-2.4.2.jar
-sesame-queryalgebra-model-2.4.2.jar
-sesame-queryparser-api-2.4.2.jar
-sesame-queryparser-serql-2.4.2.jar
-sesame-repository-api-2.4.2.jar
-sesame-repository-sail-2.4.2.jar
-sesame-rio-api-2.4.2.jar
-sesame-rio-n3-2.4.2.jar
-sesame-rio-ntriples-2.4.2.jar
-sesame-rio-rdfxml-2.4.2.jar
-sesame-rio-trix-2.4.2.jar
-sesame-rio-turtle-2.4.2.jar
-sesame-sail-api-2.4.2.jar
-sesame-sail-inferencer-2.4.2.jar
-sesame-sail-memory-2.4.2.jar
-sesame-sail-nativerdf-2.4.2.jar
-whirlycache-1.0.1.jar
-```
+Installing Maven dependencies
+-----------------------------
 
 Run `mvn install` for Babel to install the dependencies Backstage
 needs.  Babel is currently in the process of transitioning to Maven
 Central and is not reliably available in other Maven repositories.
+
+Do the same for Butterfly.
+
+Setting up Backstage
+--------------------
+
+Run `mvn package` for Backstage to compile its classes to the correct
+location and copy its Maven dependencies into place within the module.
+Butterfly is no longer Maven-run software, so its classloader must be
+able to find classes within the Backstage module.
 
 [1]: http://simile.mit.edu/repository/backstage/trunk/
 [2]: https://github.com/zepheira/exhibit3/
