@@ -1,17 +1,11 @@
 package edu.mit.simile.backstage.model.data;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.io.File;
-import java.net.URLEncoder;
 
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.sail.memory.MemoryStore;
-
-import org.openrdf.sail.SailException;
-import org.openrdf.sail.SailConnection;
 
 import edu.mit.simile.backstage.ExhibitIdentity;
 import edu.mit.simile.backstage.data.InMemHostedDataLink;
@@ -59,7 +53,6 @@ public class InMemHostedDatabase extends Database {
             String dbDir = System.getProperty("backstage.databaseDir","databases");
             String dbUrl = _dataLink.url.toString();
             String dbName = dbUrl.substring(dbUrl.lastIndexOf("/")+1);
-            File fullDbDir = new File(dbDir,dbName);
             _sail = new MemoryStore(new File(dbDir,dbName));
             _repository = new SailRepository(_sail);
             try {

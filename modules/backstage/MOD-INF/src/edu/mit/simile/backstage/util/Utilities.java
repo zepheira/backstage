@@ -23,7 +23,7 @@ abstract public class Utilities {
         }
     }
     
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     static public void getScriptableArrayElements(Scriptable o, Collection c) {
         int length = ((Number) o.get("length", o)).intValue();
         for (int i = 0; i < length; i++) {

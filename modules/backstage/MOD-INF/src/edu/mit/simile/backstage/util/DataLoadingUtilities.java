@@ -197,7 +197,7 @@ public class DataLoadingUtilities {
         	
             InputStream fis = getStreamForFile(file);
             try {
-                loadDataFromStream(fis, file.toURL().toExternalForm(), lang, sail);
+                loadDataFromStream(fis, file.toURI().toURL().toExternalForm(), lang, sail);
             } catch (Exception e) {
                 throw new RuntimeException("Error loading data from file: " + file + " " + e.getMessage());
             } finally {

@@ -1,8 +1,9 @@
 package edu.mit.simile.backstage.model.data;
 
 public class ExpressionException extends Exception {
+	private static final long serialVersionUID = -8050546522358493927L;
 
-    public ExpressionException() {
+	public ExpressionException() {
         // TODO Auto-generated constructor stub
     }
 

@@ -4,7 +4,6 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletConfig;
@@ -24,7 +23,6 @@ public class BackstageModule extends ButterflyModuleImpl {
     static Map<URL, InMemHostedDatabase> s_linkDatabaseMap;
     static HostedDatabase						 s_hostedDatabase;
     
-    @SuppressWarnings("unchecked")
     @Override
     public void init(ServletConfig config) throws Exception {
         super.init(config);

@@ -4,7 +4,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +20,8 @@ import edu.mit.simile.backstage.model.ui.Component;
 public class Exhibit {
     private static Logger _logger = Logger.getLogger(Exhibit.class);
 
-    private static final long serialVersionUID = -1105545561204629924L;
+    @SuppressWarnings("unused")
+	private static final long serialVersionUID = -1105545561204629924L;
     
     final private BackstageModule     	_module;
     final private ExhibitIdentity     	_exhibitIdentity;
