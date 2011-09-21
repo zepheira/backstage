@@ -39,8 +39,16 @@ location and copy its Maven dependencies into place within the module.
 Butterfly is no longer Maven-run software, so its classloader must be
 able to find classes within the Backstage module.
 
+Working in Eclipse
+------------------
+
+You can work with Backstage in [Eclipse][6] by running `mvn eclipse:eclipse`
+in the `modules/backstage/` directory, then importing just the module
+into Eclipse as a project.
+
 [1]: http://simile.mit.edu/repository/backstage/trunk/
 [2]: https://github.com/zepheira/exhibit3/
 [3]: https://code.google.com/p/simile-butterfly/
 [4]: http://maven.apache.org/
 [5]: https://github.com/zepheira/babel/
+[6]: http://www.eclipse.org/
