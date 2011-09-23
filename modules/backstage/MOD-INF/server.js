@@ -266,6 +266,9 @@ function uploadExhibitData(request) {
 
     // populate from request body
     var lang = DataLoadingUtilities.contentTypeToLang(request.getContentType());
+    if (!lang) {
+        return {"status":500, "out":"Unsupported content type"};
+    }
     DataLoadingUtilities.loadDataFromStream( request.getInputStream(),
                                              request.getRequestURL(),
                                              lang, sail );
