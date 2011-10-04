@@ -46,9 +46,17 @@ You can work with Backstage in [Eclipse][6] by running `mvn eclipse:eclipse`
 in the `modules/backstage/` directory, then importing just the module
 into Eclipse as a project.
 
+JSLint
+------
+
+Backstage also provides a client-side set of scripts that can be checked
+against [JSLint][7] by invoking `mvn jslint4java:lint` in the
+`modules/backstage` directory.
+
 [1]: http://simile.mit.edu/repository/backstage/trunk/
 [2]: https://github.com/zepheira/exhibit3/
 [3]: https://code.google.com/p/simile-butterfly/
 [4]: http://maven.apache.org/
 [5]: https://github.com/zepheira/babel/
 [6]: http://www.eclipse.org/
+[7]: http://www.jslint.com/
