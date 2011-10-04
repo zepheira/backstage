@@ -57,7 +57,10 @@
           <options>
             <sub>true</sub>
             <evil>true</evil>
-            <predef>jQuery, $$</predef>
+            <vars>false</vars>
+            <sloppy>true</sloppy>
+            <white>true</white>
+            <predef>window, jQuery, $$</predef>
           </options>
         </configuration>
       </plugin>
