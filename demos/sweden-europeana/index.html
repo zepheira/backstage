@@ -1,0 +1,80 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+ 
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"> 
+<head> 
+    <title>Sweden Europeana - Exhibit3 Staged Demo</title> 
+ 
+    <link href="http://localhost:8181/data/europeana-swe" rel="exhibit/data" /> 
+ 
+    <script src="http://backstage.zepheira.com:8181/backstage/exhibit/api/exhibit-api.js?autoCreate=false&postLoad=true&js=http://backstage.zepheira.com:8181/backstage/api/backstage-api.js"></script> 
+    <script type="text/javascript"> 
+        //Backstage.JsonpTransport.removeScripts = false;
+        
+        function mouseOver(elmt) {
+            elmt.style.background = "#eee";
+        }
+        function mouseOut(elmt) {
+            elmt.style.background = "none";
+        }
+    </script> 
+    <style> 
+        body {
+            font-family:    Tahoma, Arial, sans serif;
+            font-size:      10pt;
+            margin:         3em;
+            padding:        0;
+        }
+        table { font-size: 100%; }
+        tr { vertical-align: top; }
+        
+        .a-lens {
+            border:         1px solid #ccc;
+            margin-bottom:  2em;
+        }
+    </style> 
+</head> 
+<body> 
+<div id="content"> 
+    <div ex:role="lens" class="a-lens" onmouseover="mouseOver(this);" onmouseout="mouseOut(this);"> 
+        <a ex:href-content=".isShownAt" target="_blank">
+        <table cellspacing="10"><tr>
+            <td><img ex:src-content=".object" /></td>
+            <td> 
+                <div><b ex:content=".label"></b></div>
+                <div>Creator: <span ex:content=".creator"></span></div>
+                <div>Created: <span ex:content=".created"></span></div>
+            </td>
+        </tr></table>
+        </a>
+    </div> 
+    
+    <table width="100%" cellspacing="20"><tr valign="top"> 
+        <td> 
+            <div id="title-panel"> 
+                <h1>Sweden Europeana - Exhibit3 Staged Demo</h1> 
+                <p>The following interface is based on the initial Exhibit3-staged code base. Exhibit3-staged is a web service that that takes over heavy computations from the browser-based components to speed up the faceted navigation of large data sets. This work builds upon David Huynh's original "Backstage" work and reflects some of the capabilities we expect to achieve in the <a href = "http://simile-widgets.org/exhibit3/">Exhibit 3</a> project.
+                </p> 
+            </div> 
+            <div ex:role="view"> 
+            </div> 
+        </td> 
+        <td width="15%"> 
+            <div ex:role="facet"
+                ex:expression=".creator"
+                ex:facetLabel="Creator"
+                ex:height="35em"
+                ></div> 
+        </td> 
+        <td width="15%"> 
+            <div ex:role="facet"
+                ex:expression=".created"
+                ex:facetLabel="Created"
+                ex:height="35em"
+                ></div> 
+        </td> 
+    </tr></table> 
+</div> 
+</body> 
+</html>
