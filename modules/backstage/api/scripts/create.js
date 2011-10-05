@@ -5,16 +5,19 @@
  *======================================================================
  */
 $(document).ready(function() { 
-    var loadDataLinks = function() {
-        window.backstage.loadDataLinks(configureFromDOM);
-    };
-    var configureFromDOM = function() {
+    var configureFromDOM, loadDataLinks;
+
+    configureFromDOM = function() {
         window.backstage.configureFromDOM(
             document.body, 
             function() { Exhibit.UI.hideBusyIndicator(); }
         );
     };
     
+    loadDataLinks = function() {
+        window.backstage.loadDataLinks(configureFromDOM);
+    };
+
     Exhibit.UI.showBusyIndicator();
     window.backstage = Backstage.create(loadDataLinks);
 });
