@@ -50,7 +50,7 @@ Backstage._Impl.prototype.dispose = function() {
 
 Backstage._Impl.prototype.getCollection = function(id) {
     var collection = this._collectionMap[id];
-    if (collection == null && id == "default") {
+    if ((typeof collection === "undefined" || collection === null) && id === "default") {
         collection = Backstage.Collection.createAllItemsCollection(id, this);
         
         this._collectionMap[id] = collection;
@@ -72,8 +72,9 @@ Backstage._Impl.prototype.asyncCall = function(method, url, params, onSuccess, o
     // flag to cause initialization data to flow back in case we're not initialized
     params._system = { initialized: this._initialized };
     
-    var self = this;
-    var f = function() {
+    var self, f;
+    self = this;
+    f = function() {
         $.ajax({
             "url": url,
             "type": method,
@@ -128,34 +129,34 @@ Backstage._Impl.prototype.clearJobs = function() {
 };
 
 Backstage._Impl.prototype.loadDataLinks = function(onSuccess, onError) {
-    var links = [];
-    var heads = document.documentElement.getElementsByTagName("head");
-    for (var h = 0; h < heads.length; h++) {
-        var linkElmts = heads[h].getElementsByTagName("link");
-        for (var l = 0; l < linkElmts.length; l++) {
-            var link = linkElmts[l];
-            if (link.rel.match(/\bexhibit\/data\b/) || link.rel.match(/\bexhibit-data\b/)) {
-                this._domConfiguration.link = { "url": link.href }; // only one per exhibit now. last one wins
+    $("head").each(function(idx, el) {
+        $("link", this).each(function(sidx, sel) {
+            var rel = $(this).attr("rel");
+            if (typeof rel !== "undefined" && (rel.match(/\bexhibit\/data\b/) || rel.match(/\bexhibit-data\b/))) {
+                // only one per Exhibit now; the last one wins
+                this._domConfiguration.link = { "url": $(this).attr("href") };
             }
-        }
-    }
+        });
+    });
     
-    this._dataLinks = this._dataLinks.concat(links);
-
-    if (typeof onSuccess == "function") {
+    if (typeof onSuccess === "function") {
         onSuccess();
     }
 };
 
 Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) {
-    var collectionElmts = [];
-    var coderElmts = [];
-    var coordinatorElmts = [];
-    var lensElmts = [];
-    var facetElmts = [];
-    var otherElmts = [];
-    var f = function(elmt) {
-        var role = Exhibit.getRoleAttribute(elmt);
+    var collectionElmts, coderElmts, coordinatorElmts, lensElmts, facetElmts, otherElmts, f, uiContext, i, elmt, id, collection, serverSideConfig, self, processElmts;
+
+    collectionElmts = [];
+    coderElmts = [];
+    coordinatorElmts = [];
+    lensElmts = [];
+    facetElmts = [];
+    otherElmts = [];
+
+    f = function(elmt) {
+        var role, node;
+        role = Exhibit.getRoleAttribute(elmt);
         if (role.length > 0) {
             switch (role) {
             case "collection":  collectionElmts.push(elmt); break;
@@ -167,35 +168,35 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
                 otherElmts.push(elmt);
             }
         } else {
-            var node = elmt.firstChild;
-            while (node != null) {
-                if (node.nodeType == 1) {
+            node = elmt.firstChild;
+            while (node !== null) {
+                if (node.nodeType === 1) {
                     f(node);
                 }
-                node=node.nextSibling;
+                node = node.nextSibling;
             }
         }
     };
     f(root || document.body);
     
-    var uiContext = this._uiContext;
-    for (var i = 0; i < collectionElmts.length; i++) {
-        var elmt = collectionElmts[i];
-        var id = elmt.id;
-        if (id==null || id.length == 0) {
+    uiContext = this._uiContext;
+    for (i = 0; i < collectionElmts.length; i++) {
+        elmt = collectionElmts[i];
+        id = elmt.id;
+        if (typeof id === "undefined" || id === null || id.length === 0) {
             id = "default";
         }
         
-        var collection = Backstage.Collection.createFromDOM2(id, elmt, uiContext);
-        var serverSideConfig = collection.getServerSideConfiguration();
+        collection = Backstage.Collection.createFromDOM2(id, elmt, uiContext);
+        serverSideConfig = collection.getServerSideConfiguration();
         serverSideConfig.id = id;
         
         this._collectionMap[id] = collection;
         this._domConfiguration.collections.push(serverSideConfig);
     }
     
-    for (var i = 0; i < lensElmts.length; i++) {
-        var elmt = lensElmts[i];
+    for (i = 0; i < lensElmts.length; i++) {
+        elmt = lensElmts[i];
         try {
             this._uiContext.registerLensFromDOM(elmt);
         } catch (e) {
@@ -203,19 +204,20 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
         }
     }
     
-    var self = this;
-    var processElmts = function(elmts) {
-        for (var i = 0; i < elmts.length; i++) {
-            var elmt = elmts[i];
+    self = this;
+    processElmts = function(elmts) {
+        var i, elmt, id, component, serverSideConfig;
+        for (i = 0; i < elmts.length; i++) {
+            elmt = elmts[i];
             try {
-                var id = elmt.id;
-                if (id == null || id.length == 0) {
-                    id = "component" + Math.floor(Math.random() * 1000000);
+                id = elmt.id;
+                if (typeof id === "undefined" || id === null || id.length === 0) {
+                    id = "component" + String(Math.floor(Math.random() * 1000000));
                 }
                 
-                var component = Backstage.UI.createFromDOM(elmt, uiContext, id);
-                if (component != null) {
-                    var serverSideConfig = component.getServerSideConfiguration();
+                component = Backstage.UI.createFromDOM(elmt, uiContext, id);
+                if (component !== null) {
+                    serverSideConfig = component.getServerSideConfiguration();
                     serverSideConfig.id = id;
                     
                     self._componentMap[id] = component;
@@ -226,6 +228,7 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
             }
         }
     };
+
     processElmts(coordinatorElmts);
     processElmts(coderElmts);
     processElmts(facetElmts);
@@ -243,15 +246,15 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
                 exporter = eval(expr);
             } catch (e) {}
             
-            if (exporter == null) {
+            if (exporter === null) {
                 try { exporter = eval(expr + "Exporter"); } catch (e) {}
             }
             
-            if (exporter == null) {
+            if (exporter === null) {
                 try { exporter = eval("Exhibit." + expr + "Exporter"); } catch (e) {}
             }
             
-            if (typeof exporter == "object") {
+            if (typeof exporter === "object") {
                 Exhibit.addExporter(exporter);
             }
         }
@@ -266,8 +269,8 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
     }
     */
     
-    if (!("default" in this._collectionMap)) {
-        var collection = Backstage.Collection.createAllItemsCollection("default", this);
+    if (typeof this._collectionMap["default"] === "undefined") {
+        collection = Backstage.Collection.createAllItemsCollection("default", this);
         this._collectionMap[id] = collection;
         this._domConfiguration.collections.push(collection.getServerSideConfiguration());
     }
@@ -294,7 +297,7 @@ Backstage._Impl.prototype._configureFromDOM = function(onSuccess, onError) {
         },
         onError
     );
-}
+};
 
 Backstage._Impl.prototype._processSystemData = function(o) {
     this._properties = o.properties;
@@ -303,10 +306,11 @@ Backstage._Impl.prototype._processSystemData = function(o) {
 };
 
 Backstage._Impl.prototype._processComponentStates = function(states) {
-    for (var i = 0; i < states.length; i++) {
+    var i, state, component;
+    for (i = 0; i < states.length; i++) {
         try {
-            var state = states[i];
-            var component = this._componentMap[state.id];
+            state = states[i];
+            component = this._componentMap[state.id];
             component.onNewState(state);
         } catch (e) {
             Exhibit.Debug.exception(e);
@@ -315,10 +319,11 @@ Backstage._Impl.prototype._processComponentStates = function(states) {
 };
 
 Backstage._Impl.prototype._processComponentUpdates = function(updates) {
-    for (var i = 0; i < updates.length; i++) {
+    var i, update, component;
+    for (i = 0; i < updates.length; i++) {
         try {
-            var update = updates[i];
-            var component = this._componentMap[update.id];
+            update = updates[i];
+            component = this._componentMap[update.id];
             component.onUpdate(update);
         } catch (e) {
             Exhibit.Debug.exception(e);
