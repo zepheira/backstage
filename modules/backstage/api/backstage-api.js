@@ -5,7 +5,8 @@
 
 (function() {
     var loadMe = function() {
-        if (typeof window.Backstage != "undefined") {
+        if (typeof window.Backstage !== "undefined" &&
+            window.Backstage !== null) {
             return;
         }
         
@@ -15,8 +16,10 @@
             namespace:  "http://simile.mit.edu/2006/11/backstage#",
             locales:    [ "en" ]
         };
+
+        var javascriptFiles, cssFiles, paramTypes, url, scriptURLs, cssURLs, i;
         
-        var javascriptFiles = [
+        javascriptFiles = [
             "backstage.js",
             "util/sha1.js",
             "util/json.js",
@@ -30,8 +33,8 @@
             "ui/views/tile-view.js",
             "ui/facets/list-facet.js"
         ];
-        var cssFiles = [
-            "backstage.css",
+        cssFiles = [
+            "backstage.css"
         ];
         
         /**
@@ -50,32 +53,35 @@
         }
         */
 
-        var paramTypes = { bundle:Boolean, autoCreate:Boolean };
-        if (typeof Backstage_urlPrefix == "string") {
-            Backstage.urlPrefix = Backstage_urlPrefix;
-            if ("Backstage_parameters" in window) {
-                Exhibit.parseURLParameters(Backstage_parameters,
+        paramTypes = { bundle:Boolean, autoCreate:Boolean };
+        if (typeof window.Backstage_urlPrefix === "string") {
+            Backstage.urlPrefix = window.Backstage_urlPrefix;
+            if (typeof window.Backstage_parameters !== "undefined" &&
+                window.Backstage_parameters !== null) {
+                Exhibit.parseURLParameters(window.Backstage_parameters,
                                            Backstage.params,
                                            paramTypes);
             }
         } else {
-            var url = null;
-            var scripts = document.getElementsByTagName("script");
-            for (var i = 0; i < scripts.length; i++) {
-                var script = scripts[i];
-                if (script.hasAttribute("src")) {
-                    var url = script.getAttribute("src");
-                    if (url.indexOf("/backstage-api.js") >= 0 && url.indexOf("/exhibit-api.js") === -1) {
-                        Backstage.urlPrefix = url.substr(0, url.indexOf("backstage-api.js"));
-                        break;
+            url = null;
+            $("script").each(
+                function(idx, el) {
+                    if (typeof $(this).attr("src") !== "undefined") {
+                        url = $(this).attr("src");
+                        if (url.indexOf("/backstage-api.js") >= 0 &&
+                            url.indexOf("/exhibit-api.js") === -1) {
+                            Backstage.urlPrefix = url.substr(0, url.indexOf("backstage-api.js"));
+                            return false;
+                        }
                     }
                 }
-            }
-            if (url == null) {
+            );
+
+            if (url === null) {
                 Backstage.error = new Error("Failed to derive URL prefix for Simile Backstage API code files");
                 return;
             }
-            Backstage.urlPrefix = url.substr(0, url.indexOf("backstage-api.js"));
+
             Exhibit.parseURLParameters(url, Backstage.params, paramTypes);
         }
 
@@ -94,8 +100,8 @@
         }
         */
 
-        var scriptURLs = Backstage.params.js || [].concat(javascriptFiles);
-        var cssURLs = Backstage.params.css || [].concat(cssFiles);
+        scriptURLs = Backstage.params.js || [].concat(javascriptFiles);
+        cssURLs = Backstage.params.css || [].concat(cssFiles);
 
         /**
          * no bundling
@@ -126,10 +132,10 @@
             scriptURLs.push("create.js");
         }
 
-        for (var i = 0; i < cssURLs.length; i++) {
+        for (i = 0; i < cssURLs.length; i++) {
             $("head:eq(0)").append("<link rel=\"stylesheet\" type=\"text/css\" href=\"" + Backstage.urlPrefix + "styles/" + cssURLs[i] + "\" />");
         }
-        for (var i = 0; i < scriptURLs.length; i++) {
+        for (i = 0; i < scriptURLs.length; i++) {
             $LAB.script(Backstage.urlPrefix + "scripts/" + scriptURLs[i]);
         }
         Backstage.loaded = true;
