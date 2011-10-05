@@ -55,12 +55,17 @@
           </excludes>
           <failOnError>false</failOnError>
           <options>
-            <sub>true</sub>
-            <evil>true</evil>
+            <!-- Force single var declaration -->
+            <!-- Tolerate eval, non-standard whitespace, no 'use strict',  -->
+            <!-- post increment, use of leading _, and pretend browser env -->
             <vars>false</vars>
+            <evil>true</evil>
             <sloppy>true</sloppy>
             <white>true</white>
-            <predef>window, jQuery, $$</predef>
+            <plusplus>true</plusplus>
+            <browser>true</browser>
+            <nomen>true</nomen>
+            <predef>Backstage, jQuery, $$, $$LAB, Exhibit</predef>
           </options>
         </configuration>
       </plugin>
