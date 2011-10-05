@@ -26,7 +26,7 @@ Backstage.Collection = function(id, database) {
 Backstage.Collection.create = function(id, configuration, backstage) {
     var collection = new Backstage.Collection(id, backstage);
     
-    if ("itemTypes" in configuration) {
+    if (typeof configuration.itemTypes !== "undefined") {
         collection._type = "types-based";
         collection._itemTypes = configuration.itemTypes;
         collection._update = Backstage.Collection._typeBasedCollection_update;
@@ -41,13 +41,14 @@ Backstage.Collection.create = function(id, configuration, backstage) {
 };
 
 Backstage.Collection.create2 = function(id, configuration, uiContext) {
-    var backstage = uiContext.getBackstage();
+    var backstage, collection;
+    backstage = uiContext.getBackstage();
     
-    if ("expression" in configuration) {
-        var collection = new Backstage.Collection(id, backstage);
+    if (typeof configuration.expression !== "undefined") {
+        collection = new Backstage.Collection(id, backstage);
         
         collection._expression = Exhibit.ExpressionParser.parse(configuration.expression);
-        collection._baseCollection = ("baseCollectionID" in configuration) ? 
+        collection._baseCollection = (typeof configuration.baseCollectionID !== "undefined") ? 
             uiContext.getExhibit().getCollection(configuration.baseCollectionID) : 
             uiContext.getCollection();
         
@@ -58,10 +59,11 @@ Backstage.Collection.create2 = function(id, configuration, uiContext) {
 };
 
 Backstage.Collection.createFromDOM = function(id, elmt, backstage) {
-    var collection = new Backstage.Collection(id, backstage);
+    var collection, itemTypes;
+    collection = new Backstage.Collection(id, backstage);
     
-    var itemTypes = Exhibit.getAttribute(elmt, "itemTypes", ",");
-    if (itemTypes != null && itemTypes.length > 0) {
+    itemTypes = Exhibit.getAttribute(elmt, "itemTypes", ",");
+    if (itemTypes !== null && itemTypes.length > 0) {
         collection._type = "types-based";
         collection._itemTypes = itemTypes;
         collection._update = Backstage.Collection._typeBasedCollection_update;
@@ -76,16 +78,17 @@ Backstage.Collection.createFromDOM = function(id, elmt, backstage) {
 };
 
 Backstage.Collection.createFromDOM2 = function(id, elmt, uiContext) {
-    var backstage = uiContext.getBackstage();
+    var backstage, expressionString, collection, baseCollectionID;
+    backstage = uiContext.getBackstage();
     
-    var expressionString = Exhibit.getAttribute(elmt, "expression");
-    if (expressionString != null && expressionString.length > 0) {
-        var collection = new Backstage.Collection(id, backstage);
+    expressionString = Exhibit.getAttribute(elmt, "expression");
+    if (expressionString !== null && expressionString.length > 0) {
+        collection = new Backstage.Collection(id, backstage);
     
         collection._expression = Exhibit.ExpressionParser.parse(expressionString);
         
-        var baseCollectionID = Exhibit.getAttribute(elmt, "baseCollectionID");
-        collection._baseCollection = (baseCollectionID != null && baseCollectionID.length > 0) ? 
+        baseCollectionID = Exhibit.getAttribute(elmt, "baseCollectionID");
+        collection._baseCollection = (baseCollectionID !== null && baseCollectionID.length > 0) ? 
             uiContext.getExhibit().getCollection(baseCollectionID) : 
             uiContext.getCollection();
             
@@ -121,8 +124,9 @@ Backstage.Collection._allItemsCollection_getServerSideConfiguration = function()
 };
 
 Backstage.Collection._typeBasedCollection_update = function() {
-    var newItems = new Exhibit.Set();
-    for (var i = 0; i < this._itemTypes.length; i++) {
+    var newItems, i;
+    newItems = new Exhibit.Set();
+    for (i = 0; i < this._itemTypes.length; i++) {
         this._database.getSubjects(this._itemTypes[i], "type", newItems);
     }
     
@@ -154,11 +158,11 @@ Backstage.Collection.prototype.getID = function() {
 };
 
 Backstage.Collection.prototype.dispose = function() {
-    if ("_baseCollection" in this) {
+    if (typeof this._baseCollection !== "undefined") {
         //this._baseCollection.removeListener(this._listener);
         this._baseCollection = null;
         this._expression = null;
-    } else {
+    //} else {
         //this._database.removeListener(this._listener);
     }
     this._database = null;
@@ -190,8 +194,9 @@ Backstage.Collection.prototype.addFacet = function(facet) {
 };
 
 Backstage.Collection.prototype.removeFacet = function(facet) {
-    for (var i = 0; i < this._facets.length; i++) {
-        if (facet == this._facets[i]) {
+    var i;
+    for (i = 0; i < this._facets.length; i++) {
+        if (facet === this._facets[i]) {
             this._facets.splice(i, 1);
             if (facet.hasRestrictions()) {
                 this._computeRestrictedItems();
@@ -204,10 +209,11 @@ Backstage.Collection.prototype.removeFacet = function(facet) {
 };
 
 Backstage.Collection.prototype.clearAllRestrictions = function() {
-    var restrictions = [];
+    var restrictions, i;
+    restrictions = [];
     
     this._updating = true;
-    for (var i = 0; i < this._facets.length; i++) {
+    for (i = 0; i < this._facets.length; i++) {
         restrictions.push(this._facets[i].clearAllRestrictions());
     }
     this._updating = false;
@@ -218,8 +224,9 @@ Backstage.Collection.prototype.clearAllRestrictions = function() {
 };
 
 Backstage.Collection.prototype.applyRestrictions = function(restrictions) {
+    var i;
     this._updating = true;
-    for (var i = 0; i < this._facets.length; i++) {
+    for (i = 0; i < this._facets.length; i++) {
         this._facets[i].applyRestrictions(restrictions[i]);
     }
     this._updating = false;
@@ -249,7 +256,7 @@ Backstage.Collection.prototype.onFacetUpdated = function(facetChanged) {
         this._updateFacets(facetChanged);
         //this._listeners.fire("onItemsChanged", []);
     }
-}
+};
 
 Backstage.Collection.prototype._onRootItemsChanged = function() {
     //this._listeners.fire("onRootItemsChanged", []);

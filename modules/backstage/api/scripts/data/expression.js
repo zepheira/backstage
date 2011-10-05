@@ -26,8 +26,9 @@ Exhibit.Expression._Constant.prototype.getServerSideConfiguration = function() {
 };
 
 Exhibit.Expression._Operator.prototype.getServerSideConfiguration = function() {
-    var args = [];
-    for (var i = 0; i < this._args.length; i++) {
+    var args, i;
+    args = [];
+    for (i = 0; i < this._args.length; i++) {
         args.push(this._args[i].getServerSideConfiguration());
     }
     return {
@@ -38,8 +39,9 @@ Exhibit.Expression._Operator.prototype.getServerSideConfiguration = function() {
 };
 
 Exhibit.Expression._FunctionCall.prototype.getServerSideConfiguration = function() {
-    var args = [];
-    for (var i = 0; i < this._args.length; i++) {
+    var args, i;
+    args = [];
+    for (i = 0; i < this._args.length; i++) {
         args.push(this._args[i].getServerSideConfiguration());
     }
     return {
@@ -50,8 +52,9 @@ Exhibit.Expression._FunctionCall.prototype.getServerSideConfiguration = function
 };
 
 Exhibit.Expression._ControlCall.prototype.getServerSideConfiguration = function() {
-    var args = [];
-    for (var i = 0; i < this._args.length; i++) {
+    var args, i;
+    args = [];
+    for (i = 0; i < this._args.length; i++) {
         args.push(this._args[i].getServerSideConfiguration());
     }
     return {
