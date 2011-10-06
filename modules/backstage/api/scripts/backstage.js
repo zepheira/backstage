@@ -155,7 +155,7 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
     otherElmts = [];
 
     f = function(elmt) {
-        var role, node;
+        var role;
         role = Exhibit.getRoleAttribute(elmt);
         if (role.length > 0) {
             switch (role) {
@@ -168,13 +168,9 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
                 otherElmts.push(elmt);
             }
         } else {
-            node = elmt.firstChild;
-            while (node !== null) {
-                if (node.nodeType === 1) {
-                    f(node);
-                }
-                node = node.nextSibling;
-            }
+            $(elmt).children().each(function(idx, el) {
+                f(el);
+            });
         }
     };
     f(root || document.body);
