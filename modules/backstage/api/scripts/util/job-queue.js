@@ -15,7 +15,7 @@ Backstage.JobQueue.prototype.clear = function() {
 
 Backstage.JobQueue.prototype.queue = function(job) {
     this._pendingJobs.push(job);
-    if (this._currentJob == null) {
+    if (this._currentJob === null) {
         this._startJob();
     }
 };

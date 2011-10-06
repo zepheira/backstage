@@ -4,16 +4,18 @@
  */
 
 Backstage.JsonpTransport = function(entryURL) {
+    var id, self;
+
     this._entryURL = entryURL;
     this._pendingCalls = [];
     this._currentCall = null;
     
-    var id = Math.floor(1000000 * Math.random());
+    id = Math.floor(1000000 * Math.random());
     
-    this._successCallback = "__success" + id;
-    this._errorCallback = "__error" + id;
+    this._successCallback = "__success" + String(id);
+    this._errorCallback = "__error" + String(id);
     
-    var self = this;
+    self = this;
     window[this._successCallback] = function(o) {
         self._onSuccessCallback(o);
     };
@@ -33,14 +35,14 @@ Backstage.JsonpTransport.prototype.asyncCall = function(method, params, onSucces
     var call = {
         method:         method,
         paramsAsString: Backstage.JSON.toJSONString(params),
-        onSuccess:      (onSuccess == undefined) ? function() {} : onSuccess,
-        onError:        (onError == undefined) ? function(e) { Exhibit.Debug.log(e); } : onError,
-        id:             "call-" + new Date().getTime() + "-" + Math.floor(1000 * Math.random()),
+        onSuccess:      (typeof onSuccess === "undefined") ? function() {} : onSuccess,
+        onError:        (typeof onError === "undefined") ? function(e) { Exhibit.Debug.log(e); } : onError,
+        id:             "call-" + String(new Date().getTime()) + "-" + String(Math.floor(1000 * Math.random())),
         complete:       false
     };
     this._pendingCalls.push(call);
     
-    if (this._currentCall == null) {
+    if (this._currentCall === null) {
         this._makeNextCall();
     }
 };
@@ -53,10 +55,10 @@ Backstage.JsonpTransport.prototype._makeNextCall = function() {
 };
 
 Backstage.JsonpTransport.prototype._processCurrentCall = function() {
-    var call = this._currentCall;
+    var call, stringToSend, limit, script, errorCallback;
+    call = this._currentCall;
     
-    var stringToSend;
-    var limit = Backstage.JsonpTransport.payloadLimit;
+    limit = Backstage.JsonpTransport.payloadLimit;
     if (call.paramsAsString.length > limit) {
         stringToSend = call.paramsAsString.substr(0, limit);
         call.paramsAsString = call.paramsAsString.substr(limit);
@@ -65,8 +67,8 @@ Backstage.JsonpTransport.prototype._processCurrentCall = function() {
         call.complete = true;
     }
     
-    var script = document.createElement("script");
-    var errorCallback = this._errorCallback + "();";
+    script = document.createElement("script");
+    errorCallback = this._errorCallback + "();";
     try { script.innerHTML = errorCallback; } catch(e) {}
     script.setAttribute("onerror", errorCallback);
     script.type = "text/javascript";
@@ -76,7 +78,7 @@ Backstage.JsonpTransport.prototype._processCurrentCall = function() {
         "id=" + encodeURIComponent(call.id),
         "method=" + encodeURIComponent(call.method),
         "params=" + encodeURIComponent(stringToSend),
-        "complete=" + call.complete,
+        "complete=" + String(call.complete),
         "callback=" + this._successCallback,
         "error=" + this._errorCallback
     ].join("&");
@@ -103,14 +105,18 @@ Backstage.JsonpTransport.prototype._onSuccessCallback = function(o) {
 Backstage.JsonpTransport.prototype._onErrorCallback = function(e) {
     this._removeCurrentCallScript();
     
-    e = (e == undefined) ? { code: 500, message: "Unknown error" } : e;
+    e = (typeof e === "undefined") ?
+        { code: 500, message: "Unknown error" } :
+        e;
     
-    Exhibit.Debug.log("error calling " + this._currentCall.method + ": " + e.code + " " + e.message); 
+    Exhibit.Debug.log("error calling " + this._currentCall.method + ": " + String(e.code) + " " + e.message); 
+
     try {
         this._currentCall.onError(e);
     } catch (e2) {
         Exhibit.Debug.log(e2);
     }
+
     this._currentCall = null;
     this._makeNextCall();
 };
