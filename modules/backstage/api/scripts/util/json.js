@@ -22,7 +22,7 @@ Backstage.JSON = {};
                     f = s[typeof v];
                     if (f) {
                         v = f(v);
-                        if (typeof v == 'string') {
+                        if (typeof v === 'string') {
                             if (b) {
                                 a[a.length] = ',';
                             }
@@ -54,7 +54,7 @@ Backstage.JSON = {};
                         f = s[typeof v];
                         if (f) {
                             v = f(v);
-                            if (typeof v == 'string') {
+                            if (typeof v === 'string') {
                                 if (b) {
                                     a[a.length] = ',';
                                 }
@@ -92,4 +92,4 @@ Backstage.JSON = {};
             return s.object(o);
         }
     };
-})();
+}());
