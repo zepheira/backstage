@@ -17,7 +17,7 @@ Backstage.UI.createViewFromDOM = function(elmt, container, uiContext, id) {
 };
 
 Backstage.UI.viewClassNameToViewClass = function(name) {
-    if (name != null && name.length > 0) {
+    if (typeof name !== "undefined" && name !== null && name.length > 0) {
         try {
             return Backstage.UI._stringToObject(name, "View");
         } catch (e) {
@@ -33,7 +33,7 @@ Backstage.UI.createFacetFromDOM = function(elmt, container, uiContext, id) {
 };
 
 Backstage.UI.facetClassNameToFacetClass = function(name) {
-    if (name != null && name.length > 0) {
+    if (typeof name !== "undefined" && name !== null && name.length > 0) {
         try {
             return Backstage.UI._stringToObject(name, "Facet");
         } catch (e) {
@@ -48,14 +48,14 @@ Backstage.UI._stringToObject = function(name, suffix) {
         if (!name.endsWith(suffix)) {
             try {
                 return eval("Backstage." + name + suffix);
-            } catch (e) {
+            } catch (e1) {
                 // ignore
             }
         }
         
         try {
             return eval("Backstage." + name);
-        } catch (e) {
+        } catch (e2) {
             // ignore
         }
     }
@@ -63,14 +63,14 @@ Backstage.UI._stringToObject = function(name, suffix) {
     if (!name.endsWith(suffix)) {
         try {
             return eval(name + suffix);
-        } catch (e) {
+        } catch (e3) {
             // ignore
         }
     }
     
     try {
         return eval(name);
-    } catch (e) {
+    } catch (e4) {
         // ignore
     }
     
