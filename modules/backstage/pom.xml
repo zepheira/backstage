@@ -45,6 +45,7 @@
         <groupId>com.googlecode.jslint4java</groupId>
         <artifactId>jslint4java-maven-plugin</artifactId>
         <version>2.0.0</version>
+        <!-- integrate into test phase after initial lint cleanup -->
         <configuration>
           <sourceFolders>
             <sourceFolder>${basedir}/api/</sourceFolder>
@@ -52,6 +53,7 @@
           <excludes>
             <exclude>styles/**</exclude>
             <exclude>scripts/util/sha1.js</exclude>
+            <exclude>scripts/util/json.js</exclude>
           </excludes>
           <failOnError>false</failOnError>
           <options>
@@ -65,7 +67,7 @@
             <plusplus>true</plusplus>
             <browser>true</browser>
             <nomen>true</nomen>
-            <predef>Backstage, jQuery, $$, $$LAB, Exhibit</predef>
+            <predef>Backstage, backstage, jQuery, $$, $$LAB, Exhibit</predef>
           </options>
         </configuration>
       </plugin>
