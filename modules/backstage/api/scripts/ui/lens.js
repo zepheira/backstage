@@ -3,19 +3,22 @@
  *======================================================================
  */
 Exhibit.LensRegistry.prototype.getServerSideConfiguration = function(uiContext) {
-    var r = {
+    var r, t;
+    r = {
         defaultLens: null,
         typeToLens: {}
     };
     
-    if (this._defaultLens != null) {
+    if (this._defaultLens !== null) {
         r.defaultLens = Exhibit.LensRegistry._getTemplateNodeServerSideConfiguration(
             Exhibit.LensRegistry._getCompiledLens(this._defaultLens, uiContext));
     }
     
-    for (var t in this._typeToLens) {
-        r.typeToLens[t] = Exhibit.LensRegistry._getTemplateNodeServerSideConfiguration(
-            Exhibit.LensRegistry._getCompiledLens(this._typeToLens[t], uiContext));
+    for (t in this._typeToLens) {
+        if (this._typeToLens.hasOwnProperty(t)) {
+            r.typeToLens[t] = Exhibit.LensRegistry._getTemplateNodeServerSideConfiguration(
+                Exhibit.LensRegistry._getCompiledLens(this._typeToLens[t], uiContext));
+        }
     }
     
     return r;
@@ -23,10 +26,10 @@ Exhibit.LensRegistry.prototype.getServerSideConfiguration = function(uiContext) 
 
 Exhibit.LensRegistry.prototype.getLensFromServerNode = function(serverNode) {
     var type = serverNode.itemType;
-    if (type in this._typeToLens) {
+    if (typeof this._typeToLens[type] !== "undefined") {
         return this._typeToLens[type];
     }
-    if (this._defaultLens != null) {
+    if (this._defaultLens !== null) {
         return this._defaultLens;
     }
     if (this._parentRegistry) {
@@ -36,9 +39,10 @@ Exhibit.LensRegistry.prototype.getLensFromServerNode = function(serverNode) {
 };
 
 Exhibit.LensRegistry.prototype.createLensFromBackstage = function(serverNode, div, uiContext) {
-    var lens = new Exhibit.Lens();
-    var lensTemplate = this.getLensFromServerNode(serverNode);
-    if (lensTemplate == null) {
+    var lens, lensTemplate;
+    lens = new Exhibit.Lens();
+    lensTemplate = this.getLensFromServerNode(serverNode);
+    if (lensTemplate === null) {
         Exhibit.Lens.constructDefaultFromBackstage(serverNode, div, uiContext);
     } else {
         Exhibit.Lens.constructFromBackstage(
@@ -48,14 +52,15 @@ Exhibit.LensRegistry.prototype.createLensFromBackstage = function(serverNode, di
 };
 
 Exhibit.LensRegistry._getCompiledLens = function(lensTemplateNode, uiContext) {
-    var id = lensTemplateNode.id;
-    if (id == null || id.length == 0) {
-        id = "exhibitLensTemplate" + Math.floor(Math.random() * 10000);
-        lensTemplateNode.id = id;
+    var id, compiledTemplate;
+    id = $(lensTemplateNode).attr("id");
+    if (typeof id === "undefined" || id === null || id.length === 0) {
+        id = "exhibitLensTemplate" + String(Math.floor(Math.random() * 10000));
+        $(lensTemplateNode).attr("id", id);
     }
     
-    var compiledTemplate = Exhibit.Lens._compiledTemplates[id];
-    if (compiledTemplate == null) {
+    compiledTemplate = Exhibit.Lens._compiledTemplates[id];
+    if (compiledTemplate === null) {
         compiledTemplate = {
             url:        id,
             template:   Exhibit.Lens.compileTemplate(lensTemplateNode, false, uiContext),
@@ -69,27 +74,29 @@ Exhibit.LensRegistry._getCompiledLens = function(lensTemplateNode, uiContext) {
 };
 
 Exhibit.LensRegistry._getTemplateNodeServerSideConfiguration = function(node) {
-    if (typeof node == "string") {
+    var r, i, e, a, f, j;
+
+    if (typeof node === "string") {
         return node;
     }
     
-    var r = {
+    r = {
         uiContext:              node.uiContext.getID(),
         control:                node.control,
-        condition:              (node.condition == null) ? null : { 
+        condition:              (typeof node.condition === "undefined" || node.condition === null) ? null : { 
                                     test: node.condition.test, 
                                     expression: node.condition.expression.getServerSideConfiguration() 
                                 },
-        content:                (node.content == null) ? null : node.content.getServerSideConfiguration(),
+        content:                (typeof node.content === "undefined" || node.content === null) ? null : node.content.getServerSideConfiguration(),
         contentAttributes:      null,
         subcontentAttributes:   null,
         children:               null
     };
     
-    if (node.contentAttributes != null) {
+    if (typeof node.contentAttributes !== "undefined" && node.contentAttributes !== null) {
         r.contentAttributes = [];
-        for (var i = 0; i < node.contentAttributes.length; i++) {
-            var e = node.contentAttributes[i];
+        for (i = 0; i < node.contentAttributes.length; i++) {
+            e = node.contentAttributes[i];
             r.contentAttributes.push({
                 name:       e.name,
                 expression: e.expression.getServerSideConfiguration()
@@ -97,18 +104,18 @@ Exhibit.LensRegistry._getTemplateNodeServerSideConfiguration = function(node) {
         }
     }
     
-    if (node.subcontentAttributes != null) {
+    if (typeof node.subcontentAttributes !== "undefined" && node.subcontentAttributes !== null) {
         r.subcontentAttributes = [];
-        for (var i = 0; i < node.subcontentAttributes.length; i++) {
-            var e = node.subcontentAttributes[i];
-            var a = {
+        for (i = 0; i < node.subcontentAttributes.length; i++) {
+            e = node.subcontentAttributes[i];
+            a = {
                 name:       e.name,
                 fragments:  []
             };
             
-            for (var j = 0; j < e.fragments.length; j++) {
-                var f = e.fragments[j];
-                if (typeof f == "string") {
+            for (j = 0; j < e.fragments.length; j++) {
+                f = e.fragments[j];
+                if (typeof f === "string") {
                     a.fragments.push(f);
                 } else {
                     a.fragments.push(f.getServerSideConfiguration());
@@ -119,9 +126,9 @@ Exhibit.LensRegistry._getTemplateNodeServerSideConfiguration = function(node) {
         }
     }
     
-    if (node.children != null) {
+    if (node.children !== null) {
         r.children = [];
-        for (var i = 0; i < node.children.length; i++) {
+        for (i = 0; i < node.children.length; i++) {
             r.children.push(Exhibit.LensRegistry._getTemplateNodeServerSideConfiguration(node.children[i]));
         }
     }
@@ -130,12 +137,13 @@ Exhibit.LensRegistry._getTemplateNodeServerSideConfiguration = function(node) {
 };
 
 Exhibit.Lens.constructDefaultFromBackstage = function(serverNode, div, uiContext) {
-    var template = {
+    var template, dom, j, propertyValues, propertyID, pair, tr, tdName, tdValues, m, value;
+    template = {
         elmt:       div,
-        className:  "exhibit-lens",
+        "class":    "exhibit-lens",
         children: [
             {   tag:        "div",
-                className:  "exhibit-lens-title",
+                "class":    "exhibit-lens-title",
                 title:      serverNode.label,
                 children:   [ 
                     serverNode.label + " (",
@@ -148,51 +156,53 @@ Exhibit.Lens.constructDefaultFromBackstage = function(serverNode, div, uiContext
                 ]
             },
             {   tag:        "div",
-                className:  "exhibit-lens-body",
+                "class":    "exhibit-lens-body",
                 children: [
                     {   tag:        "table",
-                        className:  "exhibit-lens-properties",
+                        "class":    "exhibit-lens-properties",
                         field:      "propertiesTable"
                     }
                 ]
             }
         ]
     };
-    var dom = $.simileDOM("template", template);
-    div.setAttribute("ex:itemID", serverNode.itemID);
+    dom = $.simileDOM("template", template);
+    $(div).attr("ex:itemID", serverNode.itemID);
     
-    if ("propertyValues" in serverNode) {
-        var propertyValues = serverNode.propertyValues;
-        var j = 0;
+    if (typeof serverNode.propertyValues !== "undefined") {
+        propertyValues = serverNode.propertyValues;
+        j = 0;
         
-        for (var propertyID in propertyValues) {
-            var pair = propertyValues[propertyID];
+        for (propertyID in propertyValues) {
+            if (propertyValues.hasOwnProperty(propertyID)) {
+                pair = propertyValues[propertyID];
             
-            var tr = dom.propertiesTable.insertRow(j++);
-            tr.className = "exhibit-lens-property";
+                tr = dom.propertiesTable.insertRow(j++);
+                $(tr).attr("class", "exhibit-lens-property");
             
-            var tdName = tr.insertCell(0);
-            tdName.className = "exhibit-lens-property-name";
-            tdName.innerHTML = pair.propertyLabel + ": ";
+                tdName = tr.insertCell(0);
+                $(tdName).attr("class", "exhibit-lens-property-name");
+                $(tdName).html(pair.propertyLabel + ": ");
             
-            var tdValues = tr.insertCell(1);
-            tdValues.className = "exhibit-lens-property-values";
+                tdValues = tr.insertCell(1);
+                $(tdValues).attr("class", "exhibit-lens-property-values");
             
-            if (pair.valueType == "item") {
-                for (var m = 0; m < pair.values.length; m++) {
-                    if (m > 0) {
-                        tdValues.appendChild(document.createTextNode(", "));
-                    }
-                    var value = pair.values[m];
+                if (pair.valueType === "item") {
+                    for (m = 0; m < pair.values.length; m++) {
+                        if (m > 0) {
+                            $(tdValues).append(document.createTextNode(", "));
+                        }
+                        value = pair.values[m];
                     
-                    tdValues.appendChild(Exhibit.UI.makeItemSpan(value.id, value.label, uiContext));
-                }
-            } else {
-                for (var m = 0; m < pair.values.length; m++) {
-                    if (m > 0) {
-                        tdValues.appendChild(document.createTextNode(", "));
+                        $(tdValues).append(Exhibit.UI.makeItemSpan(value.id, value.label, uiContext));
                     }
-                    tdValues.appendChild(Exhibit.UI.makeValueSpan(pair.values[m], pair.valueType));
+                } else {
+                    for (m = 0; m < pair.values.length; m++) {
+                        if (m > 0) {
+                            $(tdValues).append(document.createTextNode(", "));
+                        }
+                        $(tdValues).append(Exhibit.UI.makeValueSpan(pair.values[m], pair.valueType));
+                    }
                 }
             }
         }
@@ -206,83 +216,86 @@ Exhibit.Lens.constructFromBackstage = function(clientNode, serverNode, parentElm
 };
 
 Exhibit.Lens._constructFromBackstage = function(clientNode, serverNode, parentElmt) {
-    if (typeof clientNode == "string") {
-        parentElmt.append(document.createTextNode(clientNode));
+    var children, elmt, contentAttributes, i, attribute, value, subcontentAttributes, handlers, h, handler, a, results, x, n, r;
+
+    if (typeof clientNode === "string") {
+        $(parentElmt).append(document.createTextNode(clientNode));
         return;
     }
     
-    var children = clientNode.children;
-    if (clientNode.condition != null) {
-        if (templateNode.condition.test == "if-exists") {
+    children = clientNode.children;
+    if (clientNode.condition !== null) {
+        if (clientNode.condition["test"] === "if-exists") {
             if (!serverNode.condition) {
                 return;
             }
-        } else if (templateNode.condition.test == "if") {
+        } else if (clientNode.condition["test"] === "if") {
             // NOT IMPLEMENTED YET
             return;
-        } else if (templateNode.condition.test == "select") {
+        } else if (clientNode.condition["test"] === "select") {
             // NOT IMPLEMENTED YET
             return;
         }
     }
     
-    var elmt = Exhibit.Lens._constructElmtWithAttributes(clientNode, parentElmt, {/*database*/});
-    if (clientNode.contentAttributes != null) {
-        var contentAttributes = clientNode.contentAttributes;
-        for (var i = 0; i < contentAttributes.length; i++) {
-            var attribute = contentAttributes[i];
-            var value = serverNode.contentAttributes[i].value;
+    elmt = Exhibit.Lens._constructElmtWithAttributes(clientNode, parentElmt, {/*database*/});
+    if (typeof clientNode.contentAttributes !== "undefined" && clientNode.contentAttributes !== null) {
+        contentAttributes = clientNode.contentAttributes;
+        for (i = 0; i < contentAttributes.length; i++) {
+            attribute = contentAttributes[i];
+            value = serverNode.contentAttributes[i].value;
             if (attribute.isStyle) {
-                elmt.css(attribute.name, value);
+                $(elmt).css(attribute.name, value);
             } else if (Exhibit.Lens._attributeValueIsSafe(attribute.name, value)) {
-                elmt.attr(attribute.name, value);
+                $(elmt).attr(attribute.name, value);
             }
         }
     }
-    if (clientNode.subcontentAttributes != null) {
-        var subcontentAttributes = clientNode.subcontentAttributes;
-        for (var i = 0; i < subcontentAttributes.length; i++) {
-            var attribute = subcontentAttributes[i];
-            var value = serverNode.subcontentAttributes[i].value;
+    if (typeof clientNode.subcontentAttributes !== "undefined" && clientNode.subcontentAttributes !== null) {
+        subcontentAttributes = clientNode.subcontentAttributes;
+        for (i = 0; i < subcontentAttributes.length; i++) {
+            attribute = subcontentAttributes[i];
+            value = serverNode.subcontentAttributes[i].value;
             
             if (attribute.isStyle) {
-                elmt.css(attribute.name, value);
+                $(elmt).css(attribute.name, value);
             } else if (Exhibit.Lens._attributeValueIsSafe(attribute.name, value)) {
-                elmt.attr(attribute.name, value);
+                $(elmt).attr(attribute.name, value);
             }
         }
     }
     
     if (!Exhibit.params.safe) {
-        var handlers = clientNode.handlers;
-        for (var h = 0; h < handlers.length; h++) {
-            var handler = handlers[h];
+        handlers = clientNode.handlers;
+        for (h = 0; h < handlers.length; h++) {
+            handler = handlers[h];
             elmt[handler.name] = handler.code;
         }
     }
     
-    if (clientNode.control != null) {
+    if (clientNode.control !== null) {
         switch (clientNode.control) {
         case "item-link":
-            var a = document.createElement("a");
-            a.innerHTML = Exhibit.l10n.itemLinkLabel;
-            a.href = Exhibit.Persistence.getItemLink(roots["value"]);
-            a.target = "_blank";
-            elmt.appendChild(a);
+            a = $("<a>")
+                .html(Exhibit.l10n.itemLinkLabel)
+                .attr("href", clientNode.itemID)
+                .attr("target", "_blank");
+            $(elmt).append(a);
+            break;
         }
-    } else if (clientNode.content != null) {
-        var results = serverNode.content;
-        if (children != null) {
-            for (var x = 0; x < results.length; x++) {
-                var a = results[x];
-                for (var i = 0; i < children.length; i++) {
-                    Exhibit.Lens._constructFromBackstage(children[i], a[i], elmt);
+    } else if (typeof clientNode.content !== "undefined" && clientNode.content !== null) {
+        results = serverNode.content;
+        if (children !== null) {
+            for (x = 0; x < results.length; x++) {
+                n = results[x];
+                for (i = 0; i < children.length; i++) {
+                    Exhibit.Lens._constructFromBackstage(children[i], n[i], elmt);
                 }
             }
-        } else if (results.valueType == "item") {
+        } else if (results.valueType === "item") {
             // NOT YET IMPLEMENTED
-            for (var i = 0; i < results.values; i++) {
-                var r = results.values[i];
+            for (i = 0; i < results.values.length; i++) {
+                r = results.values[i];
                 
             }
         } else {
@@ -290,12 +303,11 @@ Exhibit.Lens._constructFromBackstage = function(clientNode, serverNode, parentEl
                 new Exhibit.Set(results.values), results.valueType, elmt, clientNode.uiContext
             );
         }
-    } else if (children != null) {
-        for (var i = 0; i < children.length; i++) {
+    } else if (children !== null) {
+        for (i = 0; i < children.length; i++) {
             Exhibit.Lens._constructFromBackstage(children[i], serverNode.children[i], elmt);
         }
     }
     
     return elmt;
 };
-
