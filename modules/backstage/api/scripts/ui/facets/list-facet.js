@@ -9,6 +9,7 @@ Backstage.ListFacet = function(containerElmt, uiContext, id) {
     this._div = containerElmt;
     this._uiContext = uiContext;
     this._expressionString = null;
+    this._expression = null;
     this._settings = {};
     
     this._valueSet = new Exhibit.Set();
@@ -33,33 +34,36 @@ Backstage.ListFacet._settingSpecs = {
 };
 
 Backstage.ListFacet.createFromDOM = function(configElmt, containerElmt, uiContext, id) {
-    var configuration = Exhibit.getConfigurationFromDOM(configElmt);
-    var uiContext = Backstage.UIContext.createFromDOM(configElmt, uiContext);
-    var facet = new Backstage.ListFacet(
-        containerElmt != null ? containerElmt : configElmt, 
-        uiContext,
+    var configuration, thisUIContext, facet, expressionString, selection, i, selectMissing;
+    configuration = Exhibit.getConfigurationFromDOM(configElmt);
+    thisUIContext = Backstage.UIContext.createFromDOM(configElmt, uiContext);
+    facet = new Backstage.ListFacet(
+        (typeof containerElmt !== "undefined" && containerElmt !== null) ?
+            containerElmt :
+            configElmt, 
+        thisUIContext,
         id
     );
     
     Exhibit.SettingsUtilities.collectSettingsFromDOM(configElmt, Exhibit.ListFacet._settingSpecs, facet._settings);
     
     try {
-        var expressionString = Exhibit.getAttribute(configElmt, "expression");
-        if (expressionString != null && expressionString.length > 0) {
+        expressionString = Exhibit.getAttribute(configElmt, "expression");
+        if (expressionString !== null && expressionString.length > 0) {
             facet._expressionString = expressionString;
             facet._expression = Exhibit.ExpressionParser.parse(expressionString);
         }
         
-        var selection = Exhibit.getAttribute(configElmt, "selection", ";");
-        if (selection != null && selection.length > 0) {
-            for (var i = 0, s; s = selection[i]; i++) {
-                facet._valueSet.add(s);
+        selection = Exhibit.getAttribute(configElmt, "selection", ";");
+        if (selection !== null && selection.length > 0) {
+            for (i = 0; i < selection.length; i++) {
+                facet._valueSet.add(selection[i]);
             }
         }
         
-        var selectMissing = Exhibit.getAttribute(configElmt, "selectMissing");
-        if (selectMissing != null && selectMissing.length > 0) {
-            facet._selectMissing = (selectMissing == "true");
+        selectMissing = Exhibit.getAttribute(configElmt, "selectMissing");
+        if (selectMissing !== null && selectMissing.length > 0) {
+            facet._selectMissing = (selectMissing === "true");
         }
     } catch (e) {
         Exhibit.Debug.exception(e, "ListFacet: Error processing configuration of list facet");
@@ -67,53 +71,55 @@ Backstage.ListFacet.createFromDOM = function(configElmt, containerElmt, uiContex
     Backstage.ListFacet._configure(facet, configuration);
     
     facet._initializeUI();
-    //uiContext.getCollection().addFacet(facet);
+    //thisUIContext.getCollection().addFacet(facet);
     
     return facet;
 };
 
 Backstage.ListFacet._configure = function(facet, configuration) {
+    var selection, i, values, orderMap, segment;
+
     Exhibit.SettingsUtilities.collectSettings(configuration, Backstage.ListFacet._settingSpecs, facet._settings);
     
-    if ("expression" in configuration) {
+    if (typeof configuration.expression !== "undefined") {
         facet._expressionString = configuration.expression;
         facet._expression = Exhibit.ExpressionParser.parse(configuration.expression);
     }
-    if ("selection" in configuration) {
-        var selection = configuration.selection;
-        for (var i = 0; i < selection.length; i++) {
+    if (typeof configuration.selection !== "undefined") {
+        selection = configuration.selection;
+        for (i = 0; i < selection.length; i++) {
             facet._valueSet.add(selection[i]);
         }
     }
-    if ("selectMissing" in configuration) {
+    if (typeof configuration.selectMissing !== "undefined") {
         facet._selectMissing = configuration.selectMissing;
     }
     
-    if (!("facetLabel" in facet._settings)) {
+    if (typeof facet._settings.facetLabel === "undefined") {
         facet._settings.facetLabel = "missing ex:facetLabel";
-        if (facet._expression != null && facet._expression.isPath()) {
-            var segment = facet._expression.getPath().getLastSegment();
+        if (facet._expression !== null && facet._expression.isPath()) {
+            segment = facet._expression.getPath().getLastSegment();
             /*
             var property = facet._uiContext.getDatabase().getProperty(segment.property);
-            if (property != null) {
+            if (property !== null) {
                 facet._settings.facetLabel = segment.forward ? property.getLabel() : property.getReverseLabel();
             }
             */
         }
     }
-    if ("fixedOrder" in facet._settings) {
-        var values = facet._settings.fixedOrder.split(";");
-        var orderMap = {};
-        for (var i = 0; i < values.length; i++) {
+    if (typeof facet._settings.fixedOrder !== "undefined") {
+        values = facet._settings.fixedOrder.split(";");
+        orderMap = {};
+        for (i = 0; i < values.length; i++) {
             orderMap[values[i].trim()] = i;
         }
         
         facet._orderMap = orderMap;
     }
     
-    if ("colorCoder" in facet._settings) {
+    //if (typeof facet._settings.colorCoder !== "undefined") {
         //facet._colorCoder = facet._uiContext.getExhibit().getComponent(facet._settings.colorCoder);
-    }
+    //}
 
     facet._setLocalID();
     facet._register();
@@ -129,7 +135,7 @@ Backstage.ListFacet.prototype._unregister = function() {
 
 Backstage.ListFacet.prototype.dispose = function() {
     this._unregister();
-    this._div.innerHTML = "";
+    $(this._div).empty();
 
     this._dom = null;
 
@@ -141,7 +147,7 @@ Backstage.ListFacet.prototype._setLocalID = function() {
     this._localID = $(this._div).attr("id");
 
     // @@@ not very unique
-    if (typeof localID === "undefined" || localID === null) {
+    if (typeof this._localID === "undefined" || this._localID === null) {
         this._localID = "facet"
             + "-"
             + this._expressionString
@@ -168,8 +174,8 @@ Backstage.ListFacet.prototype._initializeUI = function() {
         this._uiContext
     );
     
-    if ("height" in this._settings && this._settings.scroll) {
-        this._dom.valuesContainer.style.height = this._settings.height;
+    if (typeof this._settings.height !== "undefined" && this._settings.scroll) {
+        $(this._dom.valuesContainer).css("height", this._settings.height);
     }
 };
 
@@ -200,32 +206,33 @@ Backstage.ListFacet.prototype.onUpdate = function(update) {
 };
 
 Backstage.ListFacet.prototype.clearAllRestrictions = function() {
-    var restrictions = { selection: [], selectMissing: false };
+    var restrictions, self, onSuccess, url;
+    restrictions = { selection: [], selectMissing: false };
     if (this.hasRestrictions()) {
         this._valueSet.visit(function(v) {
             restrictions.selection.push(v);
         });
         restrictions.selectMissing = this._selectMissing;
         
-        var self = this;
-        var onSuccess = function() {
+        self = this;
+        onSuccess = function() {
             self._valueSet = new Exhibit.Set();
             self._selectMissing = false;
         };
         
-        var url = Backstage.urlPrefix+".."+backstage._exhibitSession+"/component/"+this._id;
-        console.log("clear PUTting to url: "+url);
+        url = Backstage.urlPrefix + ".." + backstage._exhibitSession + "/component/" + this._id;
         this._uiContext.getBackstage().asyncCall("PUT", url, {}, onSuccess);
     }
     return restrictions;
 };
 
 Backstage.ListFacet.prototype.applyRestrictions = function(restrictions) {
-    var self = this;
+    var self, onSuccess, i, url;
+    self = this;
     
-    var onSuccess = function() {
+    onSuccess = function() {
         self._valueSet = new Exhibit.Set();
-        for (var i = 0; i < restrictions.selection.length; i++) {
+        for (i = 0; i < restrictions.selection.length; i++) {
             self._valueSet.add(restrictions.selection[i]);
         }
         self._selectMissing = restrictions.selectMissing;
@@ -234,8 +241,7 @@ Backstage.ListFacet.prototype.applyRestrictions = function(restrictions) {
     };
     
     Exhibit.UI.showBusyIndicator();
-    var url = Backstage.urlPrefix+".."+backstage._exhibitSession+"/component/"+this._id;
-    console.log("apply PUTting to url: "+url);
+    url = Backstage.urlPrefix + ".." + backstage._exhibitSession + "/component/" + this._id;
     this._uiContext.getBackstage().asyncCall(
         "PUT",
         url,
@@ -245,35 +251,37 @@ Backstage.ListFacet.prototype.applyRestrictions = function(restrictions) {
 };
 
 Backstage.ListFacet.prototype._reconstruct = function() {
-    var entries = this._state.values;
-    var facetHasSelection = this._state.selectionCount > 0;
+    var entries, facetHasSelection, omittedCount, self, containerDiv, constructFacetItemFunction, constructValue, j, omittedDiv;
+    entries = this._state.values;
+    facetHasSelection = this._state.selectionCount > 0;
     
-	var omittedCount = 0;
-    var self = this;
-    var containerDiv = this._dom.valuesContainer;
+	omittedCount = 0;
+    self = this;
+    containerDiv = this._dom.valuesContainer;
     $(containerDiv).hide();
     $(containerDiv).empty();
     
-    var constructFacetItemFunction = Exhibit.FacetUtilities[this._settings.scroll ? "constructFacetItem" : "constructFlowingFacetItem"];
-    var constructValue = function(entry) {
-		if (entry.count == 1 && !entry.selected) {
+    constructFacetItemFunction = Exhibit.FacetUtilities[this._settings.scroll ? "constructFacetItem" : "constructFlowingFacetItem"];
+    constructValue = function(entry) {
+        var label, onSelect, onSelectOnly, elmt;
+		if (entry.count === 1 && !entry.selected) {
 			omittedCount++;
 			return;
 		}
 		
-        var label = "label" in entry ? entry.label : entry.value;
+        label = typeof entry.label !== "undefined" ? entry.label : entry.value;
         
-        var onSelect = function(evt) {
+        onSelect = function(evt) {
             self._filter(entry.value, label, false);
             evt.preventDefault();
             evt.stopPropagation();
         };
-        var onSelectOnly = function(evt) {
+        onSelectOnly = function(evt) {
             self._filter(entry.value, label, !(evt.ctrlKey || evt.metaKey));
             evt.preventDefault();
             evt.stopPropagation();
         };
-        var elmt = constructFacetItemFunction(
+        elmt = constructFacetItemFunction(
             label, 
             entry.count, 
             null, // color
@@ -287,13 +295,13 @@ Backstage.ListFacet.prototype._reconstruct = function() {
         $(containerDiv).append(elmt);
     };
     
-    for (var j = 0; j < entries.length; j++) {
+    for (j = 0; j < entries.length; j++) {
         constructValue(entries[j]);
     }
 	
 	if (omittedCount > 0) {
-		var omittedDiv = $("<div>");
-		$(omittedDiv).html("<center>Omitted " + omittedCount + " choices with counts of 1</center>");
+		omittedDiv = $("<div>");
+		$(omittedDiv).html("<center>Omitted " + String(omittedCount) + " choices with counts of 1</center>");
         $(containerDiv).append(omittedDiv);
 	}
 	
@@ -303,25 +311,18 @@ Backstage.ListFacet.prototype._reconstruct = function() {
 };
 
 Backstage.ListFacet.prototype._filter = function(value, label, selectOnly) {
-    var self = this;
-    var selected, select, deselect;
+    var self, selected, select, deselect, oldValues, oldSelectMissing, newValues, newSelectMissing, actionLabel, wasSelected, wasOnlyThingSelected, newRestrictions, oldRestrictions;
     
-    var oldValues = new Exhibit.Set(this._valueSet);
-    var oldSelectMissing = this._selectMissing;
+    self = this;
+    oldValues = new Exhibit.Set(this._valueSet);
+    oldSelectMissing = this._selectMissing;
     
-    var newValues;
-    var newSelectMissing;
-    var actionLabel;
-    
-    var wasSelected;
-    var wasOnlyThingSelected;
-    
-    if (value == null) { // the (missing this field) case
+    if (value === null) { // the (missing this field) case
         wasSelected = oldSelectMissing;
-        wasOnlyThingSelected = wasSelected && (oldValues.size() == 0);
+        wasOnlyThingSelected = wasSelected && (oldValues.size() === 0);
         
         if (selectOnly) {
-            if (oldValues.size() == 0) {
+            if (oldValues.size() === 0) {
                 newSelectMissing = !oldSelectMissing;
             } else {
                 newSelectMissing = true;
@@ -333,7 +334,7 @@ Backstage.ListFacet.prototype._filter = function(value, label, selectOnly) {
         }
     } else {
         wasSelected = oldValues.contains(value);
-        wasOnlyThingSelected = wasSelected && (oldValues.size() == 1) && !oldSelectMissing;
+        wasOnlyThingSelected = wasSelected && (oldValues.size() === 1) && !oldSelectMissing;
         
         if (selectOnly) {
             newSelectMissing = false;
@@ -355,8 +356,8 @@ Backstage.ListFacet.prototype._filter = function(value, label, selectOnly) {
         }
     }
     
-    var newRestrictions = { selection: newValues.toArray(), selectMissing: newSelectMissing };
-    var oldRestrictions = { selection: oldValues.toArray(), selectMissing: oldSelectMissing };
+    newRestrictions = { selection: newValues.toArray(), selectMissing: newSelectMissing };
+    oldRestrictions = { selection: oldValues.toArray(), selectMissing: oldSelectMissing };
 
     Exhibit.History.pushComponentState(
         this,
@@ -364,7 +365,7 @@ Backstage.ListFacet.prototype._filter = function(value, label, selectOnly) {
         newRestrictions,
         (selectOnly && !wasOnlyThingSelected) ?
             String.substitute(
-                Exhibit.FacetUtilities.l10n["facetSelectOnlyActionTitle"],
+                Exhibit.FacetUtilities.l10n.facetSelectOnlyActionTitle,
                 [ label, this._settings.facetLabel ]) :
             String.substitute(
                 Exhibit.FacetUtilities.l10n[wasSelected ? "facetUnselectActionTitle" : "facetSelectActionTitle"],
@@ -374,17 +375,18 @@ Backstage.ListFacet.prototype._filter = function(value, label, selectOnly) {
 };
 
 Backstage.ListFacet.prototype._clearSelections = function() {
-    var state = {
+    var state, self;
+    state = {
         "selection": [],
         "selectMissing": false
     };
-    var self = this;
+    self = this;
     Exhibit.History.pushComponentState(
         this,
         Exhibit.Facet._registryKey,
         state,
         String.substitute(
-            Exhibit.FacetUtilities.l10n["facetClearSelectionsActionTitle"],
+            Exhibit.FacetUtilities.l10n.facetClearSelectionsActionTitle,
             [ this._settings.facetLabel ])
     );
 };
