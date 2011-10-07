@@ -60,7 +60,7 @@ Exhibit.LensRegistry._getCompiledLens = function(lensTemplateNode, uiContext) {
     }
     
     compiledTemplate = Exhibit.Lens._compiledTemplates[id];
-    if (compiledTemplate === null) {
+    if (typeof compiledTemplate === "undefined" || compiledTemplate === null) {
         compiledTemplate = {
             url:        id,
             template:   Exhibit.Lens.compileTemplate(lensTemplateNode, false, uiContext),

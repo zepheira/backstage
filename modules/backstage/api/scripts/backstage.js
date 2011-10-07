@@ -129,12 +129,14 @@ Backstage._Impl.prototype.clearJobs = function() {
 };
 
 Backstage._Impl.prototype.loadDataLinks = function(onSuccess, onError) {
+    var self = this;
+
     $("head").each(function(idx, el) {
         $("link", this).each(function(sidx, sel) {
             var rel = $(this).attr("rel");
             if (typeof rel !== "undefined" && (rel.match(/\bexhibit\/data\b/) || rel.match(/\bexhibit-data\b/))) {
                 // only one per Exhibit now; the last one wins
-                this._domConfiguration.link = { "url": $(this).attr("href") };
+                self._domConfiguration.link = { "url": $(this).attr("href") };
             }
         });
     });
