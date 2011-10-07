@@ -4,7 +4,7 @@
  */
 Backstage.UIContext = function() {
     this._parent = null;
-    this._id = "context" + new Date().getTime() + Math.ceil(Math.random() * 1000);
+    this._id = "context" + String(new Date().getTime()) + String(Math.ceil(Math.random() * 1000));
     
     this._exhibit = null;
     this._collection = null;
@@ -16,16 +16,19 @@ Backstage.UIContext = function() {
 };
 
 Backstage.UIContext.createRootContext = function(configuration, backstage) {
-    var context = new Backstage.UIContext();
+    var context, settings, n, formats;
+    context = new Backstage.UIContext();
     context._backstage = backstage;
     
-    var settings = Exhibit.UIContext.l10n.initialSettings;
-    for (var n in settings) {
-        context._settings[n] = settings[n];
+    settings = Exhibit.UIContext.l10n.initialSettings;
+    for (n in settings) {
+        if (settings.hasOwnProperty(n)) {
+            context._settings[n] = settings[n];
+        }
     }
     
-    var formats = Exhibit.getAttribute(document.body, "formats");
-    if (formats != null && formats.length > 0) {
+    formats = Exhibit.getAttribute(document.body, "formats");
+    if (formats !== null && formats.length > 0) {
         Exhibit.FormatParser.parseSeveral(context, formats, 0, {});
     }
     
@@ -45,19 +48,20 @@ Backstage.UIContext.create = function(configuration, parentUIContext, ignoreLens
 };
 
 Backstage.UIContext.createFromDOM = function(configElmt, parentUIContext, ignoreLenses) {
-    var context = Backstage.UIContext._createWithParent(parentUIContext);
+    var context, id, formats;
+    context = Backstage.UIContext._createWithParent(parentUIContext);
     
     if (!(ignoreLenses)) {
         Backstage.UIContext.registerLensesFromDOM(configElmt, context.getLensRegistry());
     }
     
-    var id = Exhibit.getAttribute(configElmt, "collectionID");
-    if (id != null && id.length > 0) {
+    id = Exhibit.getAttribute(configElmt, "collectionID");
+    if (id !== null && id.length > 0) {
         context._collection = context._exhibit.getCollection(id);
     }
     
-    var formats = Exhibit.getAttribute(configElmt, "formats");
-    if (formats != null && formats.length > 0) {
+    formats = Exhibit.getAttribute(configElmt, "formats");
+    if (formats !== null && formats.length > 0) {
         Exhibit.FormatParser.parseSeveral(context, formats, 0, {});
     }
     
@@ -96,8 +100,8 @@ Backstage.UIContext.prototype.getBackstage = function() {
 };
 
 Backstage.UIContext.prototype.getCollection = function() {
-    if (this._collection == null) {
-        if (this._parent != null) {
+    if (this._collection === null) {
+        if (this._parent !== null) {
             this._collection = this._parent.getCollection();
         } else {
             this._collection = this._backstage.getDefaultCollection();
@@ -111,14 +115,14 @@ Backstage.UIContext.prototype.getLensRegistry = function() {
 };
 
 Backstage.UIContext.prototype.getSetting = function(name) {
-    return name in this._settings ? 
+    return typeof this._settings[name] !== "undefined" ? 
         this._settings[name] : 
-        (this._parent != null ? this._parent.getSetting(name) : undefined);
+        (this._parent !== null ? this._parent.getSetting(name) : undefined);
 };
 
 Backstage.UIContext.prototype.getBooleanSetting = function(name, defaultValue) {
     var v = this.getSetting(name);
-    return v == undefined || v == null ? defaultValue : v;
+    return (typeof v === "undefined" || v === null) ? defaultValue : v;
 };
 
 Backstage.UIContext.prototype.putSetting = function(name, value) {
@@ -127,7 +131,7 @@ Backstage.UIContext.prototype.putSetting = function(name, value) {
 
 Backstage.UIContext.prototype.format = function(value, valueType, appender) {
     var f;
-    if (valueType in this._formatters) {
+    if (typeof this._formatters[valueType] !== "undefined") {
         f = this._formatters[valueType];
     } else {
         f = this._formatters[valueType] = 
@@ -137,7 +141,7 @@ Backstage.UIContext.prototype.format = function(value, valueType, appender) {
 };
 
 Backstage.UIContext.prototype.formatList = function(iterator, count, valueType, appender) {
-    if (this._listFormatter == null) {
+    if (this._listFormatter === null) {
         this._listFormatter = new Exhibit.Formatter._ListFormatter(this);
     }
     this._listFormatter.formatList(iterator, count, valueType, appender);
@@ -170,11 +174,11 @@ Backstage.UIContext._settingSpecs = {
 Backstage.UIContext._configure = function(context, configuration, ignoreLenses) {
     Backstage.UIContext.registerLenses(configuration, context.getLensRegistry());
     
-    if ("collectionID" in configuration) {
-        context._collection = context._exhibit.getCollection(configuration["collectionID"]);
+    if (typeof configuration.collectionID !== "undefined") {
+        context._collection = context._exhibit.getCollection(configuration.collectionID);
     }
     
-    if ("formats" in configuration) {
+    if (typeof configuration.formats !== "undefined") {
         Exhibit.FormatParser.parseSeveral(context, configuration.formats, 0, {});
     }
     
@@ -189,10 +193,11 @@ Backstage.UIContext._configure = function(context, configuration, ignoreLenses) 
  *----------------------------------------------------------------------
  */
 Backstage.UIContext.registerLens = function(configuration, lensRegistry) {
-    var template = configuration.templateFile;
-    if (template != null) {
-        if ("itemTypes" in configuration) {
-            for (var i = 0; i < configuration.itemTypes.length; i++) {
+    var template, i;
+    template = configuration.templateFile;
+    if (typeof template !== "undefined" && template !== null) {
+        if (typeof configuration.itemTypes !== "undefined") {
+            for (i = 0; i < configuration.itemTypes.length; i++) {
                 lensRegistry.registerLensForType(template, configuration.itemTypes[i]);
             }
         } else {
@@ -202,17 +207,19 @@ Backstage.UIContext.registerLens = function(configuration, lensRegistry) {
 };
 
 Backstage.UIContext.registerLensFromDOM = function(elmt, lensRegistry) {
-    elmt.style.display = "none";
+    var itemTypes, template, url, id, elmt2, i;
+
+    $(elmt).hide();
     
-    var itemTypes = Exhibit.getAttribute(elmt, "itemTypes", ",");
-    var template = null;
+    itemTypes = Exhibit.getAttribute(elmt, "itemTypes", ",");
+    template = null;
     
-    var url = Exhibit.getAttribute(elmt, "templateFile");
-    if (url != null && url.length > 0) {
+    url = Exhibit.getAttribute(elmt, "templateFile");
+    if (url !== null && url.length > 0) {
         template = url;
     } else {
-        var id = Exhibit.getAttribute(elmt, "template");
-        var elmt2 = $("#" + id);
+        id = Exhibit.getAttribute(elmt, "template");
+        elmt2 = $("#" + id);
         if (elmt2.length > 0) {
             template = elmt2.get(0);
         } else {
@@ -220,11 +227,11 @@ Backstage.UIContext.registerLensFromDOM = function(elmt, lensRegistry) {
         }
     }
     
-    if (template != null) {
-        if (itemTypes == null || itemTypes.length == 0 || (itemTypes.length == 1 && itemTypes[0] == "")) {
+    if (template !== null) {
+        if (itemTypes === null || itemTypes.length === 0 || (itemTypes.length === 1 && itemTypes[0] === "")) {
             lensRegistry.registerDefaultLens(template);
         } else {
-            for (var i = 0; i < itemTypes.length; i++) {
+            for (i = 0; i < itemTypes.length; i++) {
                 lensRegistry.registerLensForType(template, itemTypes[i]);
             }
         }
@@ -232,14 +239,15 @@ Backstage.UIContext.registerLensFromDOM = function(elmt, lensRegistry) {
 };
 
 Backstage.UIContext.registerLenses = function(configuration, lensRegistry) {
-    if ("lenses" in configuration) {
-        for (var i = 0; i < configuration.lenses.length; i++) {
+    var i, lensSelector;
+    if (typeof configuration.lenses !== "undefined") {
+        for (i = 0; i < configuration.lenses.length; i++) {
             Backstage.UIContext.registerLens(configuration.lenses[i], lensRegistry);
         }
     }
-    if ("lensSelector" in configuration) {
-        var lensSelector = configuration.lensSelector;
-        if (typeof lensSelector == "function") {
+    if (typeof configuration.lensSelector !== "undefined") {
+        lensSelector = configuration.lensSelector;
+        if (typeof lensSelector === "function") {
             lensRegistry.addLensSelector(lensSelector);
         } else {
             Exhibit.Debug.log("lensSelector is not a function");
@@ -248,22 +256,19 @@ Backstage.UIContext.registerLenses = function(configuration, lensRegistry) {
 };
 
 Backstage.UIContext.registerLensesFromDOM = function(parentNode, lensRegistry) {
-    var node = parentNode.firstChild;
-    while (node != null) {
-        if (node.nodeType == 1) {
-            var role = Exhibit.getRoleAttribute(node);
-            if (role == "lens") {
-                Backstage.UIContext.registerLensFromDOM(node, lensRegistry);
-            }
+    var role, lensSelectorString, lensSelector;
+    $(parentNode).children().each(function(idx, el) {
+        role = Exhibit.getRoleAttribute(el);
+        if (role === "lens") {
+            Backstage.UIContext.registerLensFromDOM(el, lensRegistry);
         }
-        node = node.nextSibling;
-    }
+    });
     
-    var lensSelectorString = Exhibit.getAttribute(parentNode, "lensSelector");
-    if (lensSelectorString != null && lensSelectorString.length > 0) {
+    lensSelectorString = Exhibit.getAttribute(parentNode, "lensSelector");
+    if (lensSelectorString !== null && lensSelectorString.length > 0) {
         try {
-            var lensSelector = eval(lensSelectorString);
-            if (typeof lensSelector == "function") {
+            lensSelector = eval(lensSelectorString);
+            if (typeof lensSelector === "function") {
                 lensRegistry.addLensSelector(lensSelector);
             } else {
                 Exhibit.Debug.log("lensSelector expression " + lensSelectorString + " is not a function");
