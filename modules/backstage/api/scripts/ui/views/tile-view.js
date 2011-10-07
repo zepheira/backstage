@@ -20,9 +20,12 @@ Backstage.TileView._settingSpecs = {
 };
 
 Backstage.TileView.createFromDOM = function(configElmt, containerElmt, uiContext, id) {
-    var configuration = Exhibit.getConfigurationFromDOM(configElmt);
-    var view = new Backstage.TileView(
-        containerElmt != null ? containerElmt : configElmt,
+    var configuration, view;
+    configuration = Exhibit.getConfigurationFromDOM(configElmt);
+    view = new Backstage.TileView(
+        (typeof containerElmt !== "undefined" && containerElmt !== null) ?
+            containerElmt :
+            configElmt,
         Backstage.UIContext.createFromDOM(configElmt, uiContext),
         id
     );
@@ -37,7 +40,7 @@ Backstage.TileView.createFromDOM = function(configElmt, containerElmt, uiContext
 };
 
 Backstage.TileView.prototype.dispose = function() {
-    this._div.innerHTML = "";
+    $(this._div).empty();
 
     this._dom = null;
 
@@ -46,17 +49,19 @@ Backstage.TileView.prototype.dispose = function() {
 };
 
 Backstage.TileView.prototype._initializeUI = function() {
-    var self = this;
+    var self, template;
+
+    self = this;
     
-    this._div.innerHTML = "";
-    var template = {
+    $(this._div).empty();
+    template = {
         elmt: this._div,
         children: [
             {   tag: "div",
                 field: "headerDiv"
             },
             {   tag: "div",
-                className: "exhibit-collectionView-body",
+                "class": "exhibit-collectionView-body",
                 field: "bodyDiv"
             },
             {   tag: "div",
@@ -87,27 +92,28 @@ Backstage.TileView.prototype.onUpdate = function(update) {
 };
 
 Backstage.TileView.prototype._reconstruct = function() {
-    var view = this;
-    var uiContext = this._uiContext;
-    var lensRegistry = uiContext.getLensRegistry();
+    var view, uiContext, lensRegistry, ul, i, itemID, li;
+    view = this;
+    uiContext = this._uiContext;
+    lensRegistry = uiContext.getLensRegistry();
     
-    this._div.style.display = "none";
-    this._dom.bodyDiv.innerHTML = 
+    $(this._div).hide();
+    $(this._dom.bodyDiv).html(
         "<p>" + 
-            this._state.count + " results in total" +
+            String(this._state.count) + " results in total" +
             ((this._state.count <= 20) ? "" : " (showing first 20 only)") +
-        "</p>";
+            "</p>");
     
-    var ul = document.createElement("ul");
-    for (var i = 0; i < this._state.items.length; i++) {
-        var itemID = this._state.items[i];
-        var li = document.createElement("li");
+    ul = $("<ul>");
+    for (i = 0; i < this._state.items.length; i++) {
+        itemID = this._state.items[i];
+        li = $("<li>").get(0);
         
         lensRegistry.createLensFromBackstage(this._state.lenses[i], li, uiContext);
         
-        ul.appendChild(li);
+        $(ul).append(li);
     }
-    this._dom.bodyDiv.appendChild(ul);
+    $(this._dom.bodyDiv).append(ul);
 
-    this._div.style.display = "block";
+    $(this._div).show();
 };
