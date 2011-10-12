@@ -1,6 +1,14 @@
-/*======================================================================
- *  Collection
- *======================================================================
+/**
+ * @fileOverview Backstage server aware data collections.
+ * @author David Huynh
+ * @author <a href="mailto:ryanlee@zepheira.com">Ryan Lee</a>
+ */
+
+/**
+ * @@@ A number of the methods referred to below do not exist, probably
+ *     because the intent was to replace Exhibit.Collection with
+ *     Backstage.Collection on load, which is commented out.  What
+ *     should be done with these calls to nowhere?
  */
 
 /**
@@ -11,6 +19,12 @@
  * back, look to replace the listener-related material with jQuery events.
  */
 
+/**
+ * @class
+ * @constructor
+ * @param {String} id
+ * @param {Exhibit.Database} database
+ */ 
 Backstage.Collection = function(id, database) {
     this._id = id;
     this._database = database;
@@ -23,6 +37,13 @@ Backstage.Collection = function(id, database) {
     this._restrictedItems = null;
 };
 
+/**
+ * @static
+ * @param {String} id
+ * @param {Object} configuration
+ * @param {Backstage._Impl} backstage
+ * @returns {Backstage.Collection}
+ */
 Backstage.Collection.create = function(id, configuration, backstage) {
     var collection = new Backstage.Collection(id, backstage);
     
@@ -40,6 +61,13 @@ Backstage.Collection.create = function(id, configuration, backstage) {
     return collection;
 };
 
+/**
+ * @static
+ * @param {String} id
+ * @param {Object} configuration
+ * @param {Backstage.UIContext} uiContext
+ * @returns {Backstage.Collection}
+ */
 Backstage.Collection.create2 = function(id, configuration, uiContext) {
     var backstage, collection;
     backstage = uiContext.getBackstage();
@@ -58,6 +86,13 @@ Backstage.Collection.create2 = function(id, configuration, uiContext) {
     }
 };
 
+/**
+ * @static
+ * @param {String} id
+ * @param {Element} elmt
+ * @param {Backstage._Impl} backstage
+ * @returns {Backstage.Collection}
+ */
 Backstage.Collection.createFromDOM = function(id, elmt, backstage) {
     var collection, itemTypes;
     collection = new Backstage.Collection(id, backstage);
@@ -77,6 +112,13 @@ Backstage.Collection.createFromDOM = function(id, elmt, backstage) {
     return collection;
 };
 
+/**
+ * @static
+ * @param {String} id
+ * @param {Element} elmt
+ * @param {Backstage.UIContext} uiContext
+ * @returns {Backstage.Collection}
+ */
 Backstage.Collection.createFromDOM2 = function(id, elmt, uiContext) {
     var backstage, expressionString, collection, baseCollectionID;
     backstage = uiContext.getBackstage();
@@ -98,6 +140,12 @@ Backstage.Collection.createFromDOM2 = function(id, elmt, uiContext) {
     }
 };
 
+/**
+ * @static
+ * @param {String} id
+ * @param {Backstage._Impl} backstage
+ * @returns {Backstage.Collection}
+ */
 Backstage.Collection.createAllItemsCollection = function(id, backstage) {
     var collection = new Backstage.Collection(id, backstage);
     collection._type = "all-items";
@@ -111,11 +159,18 @@ Backstage.Collection.createAllItemsCollection = function(id, backstage) {
  *  Implementation
  *======================================================================
  */
+
+/**
+ * 
+ */
 Backstage.Collection._allItemsCollection_update = function() {
     this._items = this._database.getAllItems();
     this._onRootItemsChanged();
 };
 
+/**
+ * @returns {Object}
+ */
 Backstage.Collection._allItemsCollection_getServerSideConfiguration = function() {
     return {
         id:     this._id,
@@ -123,6 +178,9 @@ Backstage.Collection._allItemsCollection_getServerSideConfiguration = function()
     };
 };
 
+/**
+ *
+ */
 Backstage.Collection._typeBasedCollection_update = function() {
     var newItems, i;
     newItems = new Exhibit.Set();
@@ -134,6 +192,9 @@ Backstage.Collection._typeBasedCollection_update = function() {
     this._onRootItemsChanged();
 };
 
+/**
+ * @returns {Object}
+ */
 Backstage.Collection._typeBasedCollection_getServerSideConfiguration = function() {
     return {
         id:         this._id,
@@ -142,6 +203,9 @@ Backstage.Collection._typeBasedCollection_getServerSideConfiguration = function(
     };
 };
 
+/**
+ *
+ */
 Backstage.Collection._basedCollection_update = function() {
     this._items = this._expression.evaluate(
         { "value" : this._baseCollection.getRestrictedItems() }, 
@@ -153,10 +217,16 @@ Backstage.Collection._basedCollection_update = function() {
     this._onRootItemsChanged();
 };
 
+/**
+ * @returns {String}
+ */
 Backstage.Collection.prototype.getID = function() {
     return this._id;
 };
 
+/**
+ *
+ */
 Backstage.Collection.prototype.dispose = function() {
     if (typeof this._baseCollection !== "undefined") {
         //this._baseCollection.removeListener(this._listener);
@@ -173,14 +243,23 @@ Backstage.Collection.prototype.dispose = function() {
     this._restrictedItems = null;
 };
 
+/**
+ * 
+ */
 Backstage.Collection.prototype.addListener = function(listener) {
     //this._listeners.add(listener);
 };
 
+/**
+ *
+ */
 Backstage.Collection.prototype.removeListener = function(listener) {
     //this._listeners.remove(listener);
 };
 
+/**
+ * @param {Backstage.Facet} facet
+ */
 Backstage.Collection.prototype.addFacet = function(facet) {
     this._facets.push(facet);
     
@@ -193,6 +272,9 @@ Backstage.Collection.prototype.addFacet = function(facet) {
     }
 };
 
+/**
+ * @param {Backstage.Facet} facet
+ */
 Backstage.Collection.prototype.removeFacet = function(facet) {
     var i;
     for (i = 0; i < this._facets.length; i++) {
@@ -208,6 +290,9 @@ Backstage.Collection.prototype.removeFacet = function(facet) {
     }
 };
 
+/**
+ *
+ */
 Backstage.Collection.prototype.clearAllRestrictions = function() {
     var restrictions, i;
     restrictions = [];
@@ -223,6 +308,9 @@ Backstage.Collection.prototype.clearAllRestrictions = function() {
     return restrictions;
 };
 
+/**
+ * @param {Array} restrictions
+ */
 Backstage.Collection.prototype.applyRestrictions = function(restrictions) {
     var i;
     this._updating = true;
@@ -234,22 +322,37 @@ Backstage.Collection.prototype.applyRestrictions = function(restrictions) {
     this.onFacetUpdated(null);
 };
 
+/**
+ * @returns {Exhibit.Set}
+ */
 Backstage.Collection.prototype.getAllItems = function() {
     return new Exhibit.Set(this._items);
 };
 
+/**
+ * @returns {Number}
+ */
 Backstage.Collection.prototype.countAllItems = function() {
     return this._items.size();
 };
 
+/**
+ * @returns {Exhibit.Set}
+ */
 Backstage.Collection.prototype.getRestrictedItems = function() {
     return new Exhibit.Set(this._restrictedItems);
 };
 
+/**
+ * @returns {Number}
+ */
 Backstage.Collection.prototype.countRestrictedItems = function() {
     return this._restrictedItems.size();
 };
 
+/**
+ * @param {Backstage.Facet} facetChanged
+ */
 Backstage.Collection.prototype.onFacetUpdated = function(facetChanged) {
     if (!this._updating) {
         this._computeRestrictedItems();
@@ -258,6 +361,9 @@ Backstage.Collection.prototype.onFacetUpdated = function(facetChanged) {
     }
 };
 
+/**
+ *
+ */
 Backstage.Collection.prototype._onRootItemsChanged = function() {
     //this._listeners.fire("onRootItemsChanged", []);
     

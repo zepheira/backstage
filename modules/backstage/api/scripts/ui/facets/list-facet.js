@@ -1,8 +1,16 @@
-/*==================================================
- *  Backstage.ListFacet
- *==================================================
+/**
+ * @fileOverview
+ * @author David Huynh
+ * @author <a href="mailto:ryanlee@zepheira.com">Ryan Lee</a>
  */
 
+/**
+ * @constructor
+ * @class
+ * @param {Element} containerElmt
+ * @param {Backstage.UIContext} uiContext
+ * @param {String} id
+ */
 Backstage.ListFacet = function(containerElmt, uiContext, id) {
     this._id = id;
     this._localID = null;
@@ -21,6 +29,9 @@ Backstage.ListFacet = function(containerElmt, uiContext, id) {
     };
 };
 
+/**
+ * @constant
+ */
 Backstage.ListFacet._settingSpecs = {
     "facetLabel":       { type: "text" },
     "fixedOrder":       { type: "text" },
@@ -33,6 +44,14 @@ Backstage.ListFacet._settingSpecs = {
     "colorCoder":       { type: "text", defaultValue: null }
 };
 
+/**
+ * @static
+ * @param {Element} configElmt
+ * @param {Element} containerElmt
+ * @param {Backstage.UIContext} uiContext
+ * @param {String} id
+ * @returns {Backstage.ListFacet}
+ */
 Backstage.ListFacet.createFromDOM = function(configElmt, containerElmt, uiContext, id) {
     var configuration, thisUIContext, facet, expressionString, selection, i, selectMissing;
     configuration = Exhibit.getConfigurationFromDOM(configElmt);
@@ -76,6 +95,12 @@ Backstage.ListFacet.createFromDOM = function(configElmt, containerElmt, uiContex
     return facet;
 };
 
+/**
+ * @private
+ * @static
+ * @param {Backstage.ListFacet} facet
+ * @param {Object} configuration 
+ */
 Backstage.ListFacet._configure = function(facet, configuration) {
     var selection, i, values, orderMap, segment;
 
@@ -125,14 +150,23 @@ Backstage.ListFacet._configure = function(facet, configuration) {
     facet._register();
 };
 
+/**
+ * @private
+ */
 Backstage.ListFacet.prototype._register = function() {
     Exhibit.Registry.register(Exhibit.Facet._registryKey, this.getID(), this);
 };
 
+/**
+ * @private
+ */
 Backstage.ListFacet.prototype._unregister = function() {
     Exhibit.Registry.unregister(Exhibit.Facet._registryKey, this.getID());
 };
 
+/**
+ * @private
+ */
 Backstage.ListFacet.prototype.dispose = function() {
     this._unregister();
     $(this._div).empty();
@@ -143,6 +177,9 @@ Backstage.ListFacet.prototype.dispose = function() {
     this._uiContext = null;
 };
 
+/**
+ * @private
+ */
 Backstage.ListFacet.prototype._setLocalID = function() {
     this._localID = $(this._div).attr("id");
 
@@ -156,14 +193,23 @@ Backstage.ListFacet.prototype._setLocalID = function() {
     }
 };
 
+/**
+ * @returns {String}
+ */
 Backstage.ListFacet.prototype.getServerID = function() {
     return this._id;
 };
 
+/**
+ * @returns {String}
+ */
 Backstage.ListFacet.prototype.getID = function() {
     return this._localID;
 };
 
+/**
+ * @private
+ */
 Backstage.ListFacet.prototype._initializeUI = function() {
     var self = this;
     this._dom = Exhibit.FacetUtilities[this._settings.scroll ? "constructFacetFrame" : "constructFlowingFacetFrame"](
@@ -179,10 +225,16 @@ Backstage.ListFacet.prototype._initializeUI = function() {
     }
 };
 
+/**
+ * @returns {Boolean}
+ */
 Backstage.ListFacet.prototype.hasRestrictions = function() {
     return this._valueSet.size() > 0 || this._selectMissing;
 };
 
+/**
+ * @returns {Object}
+ */
 Backstage.ListFacet.prototype.getServerSideConfiguration = function() {
     return {
         role:           "facet",
@@ -196,15 +248,23 @@ Backstage.ListFacet.prototype.getServerSideConfiguration = function() {
     };
 };
 
+/**
+ * @param {Object} state
+ */
 Backstage.ListFacet.prototype.onNewState = function(state) {
     this._state = state;
     this._reconstruct();
 };
 
+/**
+ */
 Backstage.ListFacet.prototype.onUpdate = function(update) {
     //this._reconstruct();
 };
 
+/**
+ *
+ */
 Backstage.ListFacet.prototype.clearAllRestrictions = function() {
     var restrictions, self, onSuccess, url;
     restrictions = { selection: [], selectMissing: false };
@@ -226,6 +286,9 @@ Backstage.ListFacet.prototype.clearAllRestrictions = function() {
     return restrictions;
 };
 
+/**
+ * @param {Array} restrictions
+ */
 Backstage.ListFacet.prototype.applyRestrictions = function(restrictions) {
     var self, onSuccess, i, url;
     self = this;
@@ -250,6 +313,9 @@ Backstage.ListFacet.prototype.applyRestrictions = function(restrictions) {
     );
 };
 
+/**
+ * @private
+ */
 Backstage.ListFacet.prototype._reconstruct = function() {
     var entries, facetHasSelection, omittedCount, self, containerDiv, constructFacetItemFunction, constructValue, j, omittedDiv;
     entries = this._state.values;
@@ -310,6 +376,12 @@ Backstage.ListFacet.prototype._reconstruct = function() {
     this._dom.setSelectionCount(this._state.selectionCount);
 };
 
+/**
+ * @private
+ * @param {String|Number} value
+ * @param {String} label
+ * @param {Boolean} selectOnly
+ */
 Backstage.ListFacet.prototype._filter = function(value, label, selectOnly) {
     var self, selected, select, deselect, oldValues, oldSelectMissing, newValues, newSelectMissing, actionLabel, wasSelected, wasOnlyThingSelected, newRestrictions, oldRestrictions;
     
@@ -374,6 +446,9 @@ Backstage.ListFacet.prototype._filter = function(value, label, selectOnly) {
     );
 };
 
+/**
+ * @private
+ */
 Backstage.ListFacet.prototype._clearSelections = function() {
     var state, self;
     state = {
@@ -391,6 +466,9 @@ Backstage.ListFacet.prototype._clearSelections = function() {
     );
 };
 
+/**
+ * @returns {Object}
+ */
 Backstage.ListFacet.prototype.exportState = function() {
     var s = this._valueSet.toArray();
     return {
@@ -399,6 +477,11 @@ Backstage.ListFacet.prototype.exportState = function() {
     };
 };
 
+/**
+ * @param {Object} state
+ * @param {Array} state.selection
+ * @param {Boolean} state.selectMissing
+ */
 Backstage.ListFacet.prototype.importState = function(state) {
     if (state.selection.length === 0 && !state.selectMissing) {
         this.clearAllRestrictions();

@@ -1,16 +1,22 @@
-/*======================================================================
- *  Backstage
- *  http://simile.mit.edu/wiki/Backstage/API/Backstage
- *======================================================================
+/**
+ * @fileOverview Base Backstage implementation.  Adds window.backstage
+ *     as the interaction point.
+ * @author David Huynh
+ * @author <a href="mailto:ryanlee@zepheira.com">Ryan Lee</a>
  */
  
+/**
+ * @param {Function} cont
+ * @returns {Backstage._Impl}
+ */
 Backstage.create = function(cont) {
     return new Backstage._Impl(cont);
 };
 
-/*==================================================
- *  Backstage._Impl
- *==================================================
+/**
+ * @class
+ * @constructor
+ * @param {Function} cont
  */
 Backstage._Impl = function(cont) {
     this._initialized = false;
@@ -45,9 +51,16 @@ Backstage._Impl = function(cont) {
     window.setTimeout(cont, 0);
 };
 
+/**
+ *
+ */
 Backstage._Impl.prototype.dispose = function() {
 };
 
+/**
+ * @param {String} id
+ * @returns {Backstage.Collection}
+ */
 Backstage._Impl.prototype.getCollection = function(id) {
     var collection = this._collectionMap[id];
     if ((typeof collection === "undefined" || collection === null) && id === "default") {
@@ -59,14 +72,23 @@ Backstage._Impl.prototype.getCollection = function(id) {
     return collection;
 };
 
+/**
+ * @returns {Backstage.Collection}
+ */
 Backstage._Impl.prototype.getDefaultCollection = function() {
     return this.getCollection("default");
 };
 
-/*
- *  All async calls should go through this method, which is responsible for
- *  reconstructing the server's state should the connection got closed, and
- *  for handling system data that piggybacks on normal calls.
+/**
+ * All async calls should go through this method, which is responsible for
+ * reconstructing the server's state should the connection got closed, and
+ * for handling system data that piggybacks on normal calls.
+ *
+ * @param {String} method
+ * @param {String} url
+ * @param {Object} params
+ * @param {Function} onSuccess
+ * @param {Function} onError
  */
 Backstage._Impl.prototype.asyncCall = function(method, url, params, onSuccess, onError) {
     // flag to cause initialization data to flow back in case we're not initialized
@@ -116,18 +138,32 @@ Backstage._Impl.prototype.asyncCall = function(method, url, params, onSuccess, o
     f();
 };
 
+/**
+ *
+ */
 Backstage._Impl.prototype.clearAsyncCalls = function() {
     //this._jsonpTransport.clear();
 };
 
+/**
+ * @param {Object} job
+ * @param {Function} job.run
+ */
 Backstage._Impl.prototype.queueJob = function(job) {
     this._jobQueue.queue(job);
 };
 
+/**
+ * 
+ */
 Backstage._Impl.prototype.clearJobs = function() {
     this._jobQueue.clear();
 };
 
+/**
+ * @param {Function} onSuccess
+ * @param {Function} onError
+ */
 Backstage._Impl.prototype.loadDataLinks = function(onSuccess, onError) {
     var self = this;
 
@@ -146,6 +182,11 @@ Backstage._Impl.prototype.loadDataLinks = function(onSuccess, onError) {
     }
 };
 
+/**
+ * @param {Element} root
+ * @param {Function} onSuccess
+ * @param {Function} onError
+ */
 Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) {
     var collectionElmts, coderElmts, coordinatorElmts, lensElmts, facetElmts, otherElmts, f, uiContext, i, elmt, id, collection, serverSideConfig, self, processElmts;
 
@@ -278,6 +319,11 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
     this._configureFromDOM(onSuccess,onError);
 };
 
+/**
+ * @private
+ * @param {Function} onSuccess
+ * @param {Function} onError
+ */
 Backstage._Impl.prototype._configureFromDOM = function(onSuccess, onError) {
     var self = this;
     this.asyncCall(
@@ -297,12 +343,22 @@ Backstage._Impl.prototype._configureFromDOM = function(onSuccess, onError) {
     );
 };
 
+/**
+ * @private
+ * @param {Object} o
+ * @param {Object} o.properties
+ * @param {Object} o.types
+ */
 Backstage._Impl.prototype._processSystemData = function(o) {
     this._properties = o.properties;
     this._types = o.types;
     this._initialized = true;
 };
 
+/**
+ * @private
+ * @param {Array} states
+ */
 Backstage._Impl.prototype._processComponentStates = function(states) {
     var i, state, component;
     for (i = 0; i < states.length; i++) {
@@ -316,6 +372,10 @@ Backstage._Impl.prototype._processComponentStates = function(states) {
     }
 };
 
+/**
+ * @private
+ * @param {Array} updates
+ */
 Backstage._Impl.prototype._processComponentUpdates = function(updates) {
     var i, update, component;
     for (i = 0; i < updates.length; i++) {

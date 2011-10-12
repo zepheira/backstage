@@ -1,6 +1,11 @@
-/*==================================================
- *  Simile Backstage API
- *==================================================
+/**
+ * @fileOverview Backstage loading scripts; loads after scriptsLoaded.exhibit
+ *     event is fired in Exhibit loading.
+ * @author David Huynh
+ * @author <a href="mailto:ryanlee@zepheira.com">Ryan Lee</a>
+ * @depends jQuery
+ * @depends LABjs
+ * @depends Exhibit
  */
 
 (function() {

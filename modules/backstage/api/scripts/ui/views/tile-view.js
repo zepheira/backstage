@@ -1,8 +1,16 @@
-/*==================================================
- *  Backstage.TileView
- *==================================================
+/**
+ * @fileOverview Default tiled view for displaying query results.
+ * @author David Huynh
+ * @author <a href="mailto:ryanlee@zepheira.com">Ryan Lee</a>
  */
 
+/**
+ * @constructor
+ * @class
+ * @param {Element} containerElmt
+ * @param {Backstage.UIContext} uiContext
+ * @param {String} id
+ */
 Backstage.TileView = function(containerElmt, uiContext, id) {
     this._id = id;
     this._div = containerElmt;
@@ -15,10 +23,21 @@ Backstage.TileView = function(containerElmt, uiContext, id) {
     };
 };
 
+/**
+ * @constant
+ */ 
 Backstage.TileView._settingSpecs = {
     "showToolbox":          { type: "boolean", defaultValue: true }
 };
 
+/**
+ * @static
+ * @param {Element} configElmt
+ * @param {Element} containerElmt
+ * @param {Backstage.UIContext} uiContext
+ * @param {String} id
+ * @returns {Backstage.TileView}
+ */
 Backstage.TileView.createFromDOM = function(configElmt, containerElmt, uiContext, id) {
     var configuration, view;
     configuration = Exhibit.getConfigurationFromDOM(configElmt);
@@ -39,6 +58,9 @@ Backstage.TileView.createFromDOM = function(configElmt, containerElmt, uiContext
     return view;
 };
 
+/**
+ *
+ */
 Backstage.TileView.prototype.dispose = function() {
     $(this._div).empty();
 
@@ -48,6 +70,9 @@ Backstage.TileView.prototype.dispose = function() {
     this._uiContext = null;
 };
 
+/**
+ *
+ */
 Backstage.TileView.prototype._initializeUI = function() {
     var self, template;
 
@@ -74,6 +99,9 @@ Backstage.TileView.prototype._initializeUI = function() {
     //this._reconstruct();
 };
 
+/**
+ * @returns {Object}
+ */
 Backstage.TileView.prototype.getServerSideConfiguration = function() {
     return {
         role: "view",
@@ -82,15 +110,24 @@ Backstage.TileView.prototype.getServerSideConfiguration = function() {
     };
 };
 
+/**
+ * @param {Object} state
+ */
 Backstage.TileView.prototype.onNewState = function(state) {
     this._state = state;
     this._reconstruct();
 };
 
+/**
+ *
+ */
 Backstage.TileView.prototype.onUpdate = function(update) {
     this._reconstruct();
 };
 
+/**
+ * @private
+ */
 Backstage.TileView.prototype._reconstruct = function() {
     var view, uiContext, lensRegistry, ul, i, itemID, li;
     view = this;

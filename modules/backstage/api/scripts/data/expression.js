@@ -1,6 +1,12 @@
-/*======================================================================
- *  Expression
- *======================================================================
+/**
+ * @fileOverview Adds pieces to Exhibit.Expression to fit Backstage
+ *     architecture.
+ * @author David Huynh
+ * @author <a href="mailto:ryanlee@zepheira.com">Ryan Lee</a>
+ */
+
+/**
+ * @returns {Object}
  */
 Exhibit.Expression._Impl.prototype.getServerSideConfiguration = function() {
     return {
@@ -9,6 +15,9 @@ Exhibit.Expression._Impl.prototype.getServerSideConfiguration = function() {
     };
 };
 
+/**
+ * @returns {Object}
+ */
 Exhibit.Expression.Path.prototype.getServerSideConfiguration = function() {
     return {
         type:       "path",
@@ -17,6 +26,9 @@ Exhibit.Expression.Path.prototype.getServerSideConfiguration = function() {
     };
 };
 
+/**
+ * @returns {Object}
+ */
 Exhibit.Expression._Constant.prototype.getServerSideConfiguration = function() {
     return {
         type:       "constant",
@@ -25,6 +37,9 @@ Exhibit.Expression._Constant.prototype.getServerSideConfiguration = function() {
     };
 };
 
+/**
+ * @returns {Object}
+ */
 Exhibit.Expression._Operator.prototype.getServerSideConfiguration = function() {
     var args, i;
     args = [];
@@ -38,6 +53,9 @@ Exhibit.Expression._Operator.prototype.getServerSideConfiguration = function() {
     };
 };
 
+/**
+ * @returns {Object}
+ */
 Exhibit.Expression._FunctionCall.prototype.getServerSideConfiguration = function() {
     var args, i;
     args = [];
@@ -51,6 +69,9 @@ Exhibit.Expression._FunctionCall.prototype.getServerSideConfiguration = function
     };
 };
 
+/**
+ * @returns {Object}
+ */
 Exhibit.Expression._ControlCall.prototype.getServerSideConfiguration = function() {
     var args, i;
     args = [];

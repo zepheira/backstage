@@ -1,8 +1,15 @@
-/*==================================================
- *  Backstage.JsonpTransport
- *==================================================
+/**
+ * @fileOverview JSONP channel utilities for communicating between client
+ *      and server.
+ * @author David Huynh
+ * @author <a href="mailto:ryanlee@zepheira.com">Ryan Lee</a>
  */
 
+/**
+ * @class
+ * @constructor
+ * @param {String} entryURL
+ */
 Backstage.JsonpTransport = function(entryURL) {
     var id, self;
 
@@ -24,13 +31,28 @@ Backstage.JsonpTransport = function(entryURL) {
     };
 };
 
+/**
+ * @constant
+ */
 Backstage.JsonpTransport.payloadLimit = 256;
+/**
+ * @constant
+ */
 Backstage.JsonpTransport.removeScripts = true;
 
+/**
+ * 
+ */
 Backstage.JsonpTransport.prototype.clear = function() {
     this._pendingCalls = [];
 };
 
+/**
+ * @param {String} method
+ * @param {Object} params
+ * @param {Function} onSuccess
+ * @param {Function} onError
+ */
 Backstage.JsonpTransport.prototype.asyncCall = function(method, params, onSuccess, onError) {
     var call = {
         method:         method,
@@ -47,6 +69,9 @@ Backstage.JsonpTransport.prototype.asyncCall = function(method, params, onSucces
     }
 };
 
+/**
+ * @private
+ */
 Backstage.JsonpTransport.prototype._makeNextCall = function() {
     if (this._pendingCalls.length > 0) {
         this._currentCall = this._pendingCalls.shift();
@@ -54,6 +79,9 @@ Backstage.JsonpTransport.prototype._makeNextCall = function() {
     }
 };
 
+/**
+ * @private
+ */
 Backstage.JsonpTransport.prototype._processCurrentCall = function() {
     var call, stringToSend, limit, script, errorCallback;
     call = this._currentCall;
@@ -86,6 +114,13 @@ Backstage.JsonpTransport.prototype._processCurrentCall = function() {
     document.getElementsByTagName("head")[0].appendChild(script);
 };
 
+/**
+ * @private
+ * @param {Object} o
+ * @param {Object} o._system
+ * @param {Object} o._componentStates
+ * @param {Object} o._componentUpdates
+ */
 Backstage.JsonpTransport.prototype._onSuccessCallback = function(o) {
     this._removeCurrentCallScript();
     
@@ -102,10 +137,16 @@ Backstage.JsonpTransport.prototype._onSuccessCallback = function(o) {
     this._makeNextCall();
 };
 
+/**
+ * @param {Object} e
+ * @param {Number} e.code
+ * @param {String} e.message
+ * @private
+ */
 Backstage.JsonpTransport.prototype._onErrorCallback = function(e) {
     this._removeCurrentCallScript();
     
-    e = (typeof e === "undefined") ?
+    e = (typeof e === "undefined" || e === null) ?
         { code: 500, message: "Unknown error" } :
         e;
     
@@ -121,6 +162,9 @@ Backstage.JsonpTransport.prototype._onErrorCallback = function(e) {
     this._makeNextCall();
 };
 
+/**
+ * @private
+ */
 Backstage.JsonpTransport.prototype._removeCurrentCallScript = function() {
     if (Backstage.JsonpTransport.removeScripts) {
         var script = document.getElementById(this._currentCall.id);

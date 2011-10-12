@@ -1,6 +1,16 @@
-/*======================================================================
- *  Lens
- *======================================================================
+/**
+ * @fileOverview Modifications to Exhibit.Lens and Exhibit.LensRegistry
+ *      to work with Backstage
+ * @author David Huynh
+ * @author <a href="mailto:ryanlee@zepheira.com">Ryan Lee</a>
+ * @requires Exhibit
+ * @requires Exhibit.Lens
+ * @requires Exhibit.LensRegistry
+ */
+
+/**
+ * @param {Backstage.UIContext} uiContext
+ * @returns {Object}
  */
 Exhibit.LensRegistry.prototype.getServerSideConfiguration = function(uiContext) {
     var r, t;
@@ -24,6 +34,11 @@ Exhibit.LensRegistry.prototype.getServerSideConfiguration = function(uiContext) 
     return r;
 };
 
+/**
+ * @param {Object} serverNode
+ * @param {String} serverNode.itemType
+ * @returns {Exhibit.Lens}
+ */
 Exhibit.LensRegistry.prototype.getLensFromServerNode = function(serverNode) {
     var type = serverNode.itemType;
     if (typeof this._typeToLens[type] !== "undefined") {
@@ -38,6 +53,12 @@ Exhibit.LensRegistry.prototype.getLensFromServerNode = function(serverNode) {
     return null;
 };
 
+/**
+ * @param {Object} serverNode
+ * @param {Element} div
+ * @param {Backstage.UIContext} uiContext
+ * @returns {Exhibit.Lens}
+ */
 Exhibit.LensRegistry.prototype.createLensFromBackstage = function(serverNode, div, uiContext) {
     var lens, lensTemplate;
     lens = new Exhibit.Lens();
@@ -51,6 +72,12 @@ Exhibit.LensRegistry.prototype.createLensFromBackstage = function(serverNode, di
     return lens;
 };
 
+/**
+ * @static
+ * @param {Element} lensTemplateNode
+ * @param {Backstage.UIContext} uiContext
+ * @returns {Object}
+ */
 Exhibit.LensRegistry._getCompiledLens = function(lensTemplateNode, uiContext) {
     var id, compiledTemplate;
     id = $(lensTemplateNode).attr("id");
@@ -73,6 +100,11 @@ Exhibit.LensRegistry._getCompiledLens = function(lensTemplateNode, uiContext) {
     return compiledTemplate.template;
 };
 
+/**
+ * @static
+ * @param {String|Object} node
+ * @returns {Object}
+ */
 Exhibit.LensRegistry._getTemplateNodeServerSideConfiguration = function(node) {
     var r, i, e, a, f, j;
 
@@ -136,6 +168,12 @@ Exhibit.LensRegistry._getTemplateNodeServerSideConfiguration = function(node) {
     return r;
 };
 
+/**
+ * @static
+ * @param {Object} serverNode
+ * @param {Element} div
+ * @param {Backstage.UIContext} uiContext
+ */
 Exhibit.Lens.constructDefaultFromBackstage = function(serverNode, div, uiContext) {
     var template, dom, j, propertyValues, propertyID, pair, tr, tdName, tdValues, m, value;
     template = {
@@ -209,12 +247,27 @@ Exhibit.Lens.constructDefaultFromBackstage = function(serverNode, div, uiContext
     }
 };
 
+/**
+ * @static
+ * @param {Object} clientNode
+ * @param {Object} serverNode
+ * @param {Element} parentElmt
+ * @returns {Element}
+ */
 Exhibit.Lens.constructFromBackstage = function(clientNode, serverNode, parentElmt) {
     var elmt = Exhibit.Lens._constructFromBackstage(clientNode, serverNode, parentElmt);
     $(elmt).show();
     return elmt;
 };
 
+/**
+ * @private
+ * @static
+ * @param {Object} clientNode
+ * @param {Object} serverNode
+ * @param {Element} parentElmt
+ * @returns {Element}
+ */
 Exhibit.Lens._constructFromBackstage = function(clientNode, serverNode, parentElmt) {
     var children, elmt, contentAttributes, i, attribute, value, subcontentAttributes, handlers, h, handler, a, results, x, n, r;
 
