@@ -1,6 +1,5 @@
 package edu.mit.simile.backstage.model.ui.views;
 
-import org.apache.log4j.Logger;
 import org.mozilla.javascript.Scriptable;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
@@ -9,6 +8,8 @@ import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
 import org.openrdf.query.algebra.Var;
 import org.openrdf.repository.sail.SailRepositoryConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.mit.simile.backstage.model.Context;
 import edu.mit.simile.backstage.model.TupleQueryBuilder;
@@ -18,7 +19,7 @@ import edu.mit.simile.backstage.util.DefaultScriptableObject;
 import edu.mit.simile.backstage.util.ScriptableArrayBuilder;
 
 public class TileView extends View {
-    private static Logger _logger = Logger.getLogger(TileView.class);
+    protected static Logger _logger = LoggerFactory.getLogger("backstage.views.tile-view");
 
     public TileView(Context context, String id) {
         super(context, id);

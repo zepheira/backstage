@@ -2,13 +2,14 @@ package edu.mit.simile.backstage.model;
 
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
 import org.mozilla.javascript.Scriptable;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.repository.sail.SailRepositoryConnection;
 import org.openrdf.sail.SailConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.mit.simile.backstage.model.data.CacheableQuery;
 import edu.mit.simile.backstage.model.data.Database;
@@ -20,7 +21,7 @@ import edu.mit.simile.backstage.util.Utilities;
 
 
 public class Context {
-    private static Logger _logger = Logger.getLogger(Context.class);
+    protected static Logger _logger = LoggerFactory.getLogger("backstage.context");
 	
     protected Context _parent;
     protected Exhibit _exhibit;
@@ -72,6 +73,7 @@ public class Context {
     }
     
     public void configure(Scriptable config, BackChannel backChannel) {
+        _logger.debug("> configure");
     	String id = Utilities.getString(config, "id");
     	if (id != null) {
     		_exhibit.setContext(id, this);
@@ -80,7 +82,9 @@ public class Context {
     	Object o = config.get("lensRegistry", config);
     	if (o != null) {
     		_lensRegistry.configure((Scriptable) o, backChannel);
+            _logger.debug("configuring lens registry: " + _lensRegistry);
     	}
+        _logger.debug("< configure");
     }
     
     public Scriptable generateLens(String itemID) {

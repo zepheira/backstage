@@ -9,7 +9,8 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionBindingEvent;
 import javax.servlet.http.HttpSessionBindingListener;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.mit.simile.backstage.model.Exhibit;
 
@@ -17,7 +18,7 @@ public class ScriptableBackstage extends BackstageScriptableObject {
     private static final long serialVersionUID = -6840851588510351185L;
     
     @SuppressWarnings("unused")
-	private static Logger _logger = Logger.getLogger(ScriptableBackstage.class);
+	protected static Logger _logger = LoggerFactory.getLogger("backstage.scriptable");
     
     public static String getName() {
         return "Backstage";

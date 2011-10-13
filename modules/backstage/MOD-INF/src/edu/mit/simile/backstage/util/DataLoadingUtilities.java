@@ -14,7 +14,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.openrdf.model.BNode;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
@@ -42,7 +43,7 @@ import edu.mit.simile.babel.BabelReader;
 import edu.mit.simile.babel.exhibit.ExhibitJsonReader;
 
 public class DataLoadingUtilities {
-    private static Logger _logger = Logger.getLogger(DataLoadingUtilities.class);
+    protected static Logger _logger = LoggerFactory.getLogger("backstage.data-loading");
     
     final static public String s_bnodePrefix = "urn:bnode:";
     
@@ -52,7 +53,7 @@ public class DataLoadingUtilities {
             r.initialize();
             return r;
         } catch (Exception e) {
-            _logger.error(e);
+            _logger.error("Exception caught while creating memory repository", e);
             return null;
         }
     }
@@ -66,7 +67,7 @@ public class DataLoadingUtilities {
             r.initialize();
             return r;
         } catch (Exception e) {
-            _logger.error(e);
+            _logger.error("Exception caught while creating Sesame repository", e);
             return null;
         }
     }
@@ -359,7 +360,7 @@ public class DataLoadingUtilities {
                 m_connection.addStatement(s, p, o);
                 m_count++;
             } catch (SailException e) {
-                _logger.error(e);
+                _logger.error("Exception caught while handling statement", e);
 			}
         }
 

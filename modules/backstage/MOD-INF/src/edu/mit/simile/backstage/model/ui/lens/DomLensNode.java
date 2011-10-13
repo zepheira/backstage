@@ -5,7 +5,6 @@ package edu.mit.simile.backstage.model.ui.lens;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.mozilla.javascript.Scriptable;
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
@@ -15,6 +14,8 @@ import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.sail.SailRepositoryConnection;
 import org.openrdf.sail.SailConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.mit.simile.backstage.model.data.Database;
 import edu.mit.simile.backstage.model.data.Expression;
@@ -27,7 +28,7 @@ import edu.mit.simile.backstage.util.SailUtilities;
 import edu.mit.simile.backstage.util.ScriptableArrayBuilder;
 
 class DomLensNode extends LensNode {
-    protected static Logger _logger = Logger.getLogger(DomLensNode.class);
+    protected static Logger _logger = LoggerFactory.getLogger("backstage.lens.dom-lens-node");
     
 	protected String		_control;
 	
@@ -278,7 +279,7 @@ class DomLensNode extends LensNode {
 				        	sb.append(renderInnerValueToText(value, database, connection));
 				        }
 					} catch (Exception e) {
-						_logger.error(e);
+						_logger.error("", e);
 					}
         		}
         	}

@@ -7,7 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.mit.simile.backstage.BackstageModule;
 import edu.mit.simile.backstage.ExhibitIdentity;
@@ -18,7 +19,7 @@ import edu.mit.simile.backstage.model.data.InMemHostedDatabase;
 import edu.mit.simile.backstage.model.ui.Component;
 
 public class Exhibit {
-    private static Logger _logger = Logger.getLogger(Exhibit.class);
+    protected static Logger _logger = LoggerFactory.getLogger("backstage.exhibit");
 
     @SuppressWarnings("unused")
 	private static final long serialVersionUID = -1105545561204629924L;

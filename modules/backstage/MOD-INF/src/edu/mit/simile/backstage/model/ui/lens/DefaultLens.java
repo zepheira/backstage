@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
 import org.mozilla.javascript.Scriptable;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
@@ -13,6 +12,8 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.repository.RepositoryResult;
 import org.openrdf.repository.sail.SailRepositoryConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.mit.simile.backstage.model.data.Database;
 import edu.mit.simile.backstage.model.data.Database.PropertyRecord;
@@ -22,7 +23,7 @@ import edu.mit.simile.backstage.util.ScriptableArrayBuilder;
 import edu.mit.simile.backstage.util.Utilities;
 
 public class DefaultLens extends Lens {
-    private static Logger _logger = Logger.getLogger(DefaultLens.class);
+    protected static Logger _logger = LoggerFactory.getLogger("backstage.lens.default-lens");
 
 	@Override
 	public void render(URI item, Scriptable result, Database database, SailRepositoryConnection connection) {

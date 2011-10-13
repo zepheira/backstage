@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
@@ -22,6 +21,8 @@ import org.openrdf.repository.Repository;
 import org.openrdf.sail.Sail;
 import org.openrdf.sail.SailConnection;
 import org.openrdf.sail.SailException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.mit.simile.babel.exhibit.ExhibitOntology;
 import edu.mit.simile.backstage.util.SailUtilities;
@@ -30,7 +31,7 @@ import edu.mit.simile.backstage.util.Utilities;
 
 abstract public class Database {
     protected static final long serialVersionUID = -8804204966521106254L;
-    protected static Logger _logger = Logger.getLogger(Database.class);
+    protected static Logger _logger = LoggerFactory.getLogger("backstage.database");
     
     protected Sail        _sail;
     protected Repository  _repository;

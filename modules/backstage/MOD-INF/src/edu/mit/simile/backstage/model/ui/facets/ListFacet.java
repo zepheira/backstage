@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
 import org.mozilla.javascript.Scriptable;
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
@@ -30,6 +29,8 @@ import org.openrdf.query.algebra.Var;
 import org.openrdf.query.algebra.Compare.CompareOp;
 import org.openrdf.query.parser.ParsedTupleQuery;
 import org.openrdf.repository.sail.SailRepositoryConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.mit.simile.backstage.model.BackChannel;
 import edu.mit.simile.backstage.model.Context;
@@ -46,7 +47,7 @@ import edu.mit.simile.backstage.util.ScriptableArrayBuilder;
 import edu.mit.simile.backstage.util.Utilities;
 
 public class ListFacet extends Facet {
-    private static Logger _logger = Logger.getLogger(ListFacet.class);
+    protected static Logger _logger = LoggerFactory.getLogger("backstage.facets.list-facet");
     
     protected Expression    _expression;
     protected String        _sortMode = "value";

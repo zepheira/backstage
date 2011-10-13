@@ -4,9 +4,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.log4j.Logger;
 import org.mozilla.javascript.Scriptable;
 import org.openrdf.query.algebra.Var;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.mit.simile.backstage.model.BackChannel;
 import edu.mit.simile.backstage.model.Exhibit;
@@ -14,7 +15,7 @@ import edu.mit.simile.backstage.model.TupleQueryBuilder;
 import edu.mit.simile.backstage.model.ui.facets.Facet;
 
 abstract public class Collection {
-    private static Logger _logger = Logger.getLogger(Collection.class);
+    protected static Logger _logger = LoggerFactory.getLogger("backstage.collection");
 
     final protected Exhibit _exhibit;
     final protected String _id;
