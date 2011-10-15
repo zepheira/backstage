@@ -98,12 +98,15 @@ abstract public class Database {
     }
     
     public Object cacheAndRun(String key, CacheableQuery cq) {
+        _logger.debug("> cacheAndRun");
     	if (_cacheableQueries.containsKey(key)) {
+            _logger.debug("cached: " + key);
     		cq = _cacheableQueries.get(key); // use the old one
     	} else {
+            _logger.debug("not cached");
     		_cacheableQueries.put(key, cq);
     	}
-    	
+    	_logger.debug("< cacheAndRun");
     	return cq.run();
     }
     

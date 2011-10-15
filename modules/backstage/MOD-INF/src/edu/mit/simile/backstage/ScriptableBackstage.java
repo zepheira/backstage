@@ -17,7 +17,6 @@ import edu.mit.simile.backstage.model.Exhibit;
 public class ScriptableBackstage extends BackstageScriptableObject {
     private static final long serialVersionUID = -6840851588510351185L;
     
-    @SuppressWarnings("unused")
 	protected static Logger _logger = LoggerFactory.getLogger("backstage.scriptable");
     
     public static String getName() {

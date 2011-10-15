@@ -27,13 +27,16 @@ public class TileView extends View {
 
     @Override
     public Scriptable getComponentState() {
+        _logger.debug("> getComponentState");
         TupleQueryBuilder builder = new TupleQueryBuilder();
         Var itemVar = getCollection().getRestrictedItems(builder, null);
 
         String key = "tile-view-rendering:" + builder.getStringSerialization();
+        _logger.debug("component: " + key);
         Scriptable result = (Scriptable)
         	_context.getDatabase().cacheAndRun(key, new ViewRenderingCacheableQuery(builder, itemVar));
         
+        _logger.debug("< getComponentState");
         return result;
     }
     
@@ -48,6 +51,7 @@ public class TileView extends View {
     	
 		@Override
 		protected Object internalRun() {
+            _logger.debug("> internalRun");
 	        Database database = _context.getDatabase();
 	        
 	        DefaultScriptableObject result = new DefaultScriptableObject();
@@ -90,6 +94,7 @@ public class TileView extends View {
 	        result.put("items", result, itemIDs.toArray());
 	        result.put("lenses", result, lenses.toArray());
 	    
+            _logger.debug("< internalRun");
 	        return result;
 		}
     }

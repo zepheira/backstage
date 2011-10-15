@@ -88,10 +88,13 @@ public class Context {
     }
     
     public Scriptable generateLens(String itemID) {
+        _logger.debug("> generateLens");
     	String key = "lens-rendering:" + itemID;
+        _logger.debug("itemID: " + key);
         Scriptable result = (Scriptable)
         	getDatabase().cacheAndRun(key, new LensRenderingCacheableQuery(itemID));
         
+        _logger.debug("< generateLens");
         return result;
     }
     
