@@ -96,7 +96,11 @@ abstract public class Database {
     public void discardCacheableQuery(String key) {
     	_cacheableQueries.remove(key);
     }
-    
+
+    public void discardQueryCache() {
+        _cacheableQueries.clear();
+    }
+
     public Object cacheAndRun(String key, CacheableQuery cq) {
         _logger.debug("> cacheAndRun");
     	if (_cacheableQueries.containsKey(key)) {
