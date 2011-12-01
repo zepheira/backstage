@@ -7,6 +7,7 @@ function process(path, request, response) {
     // /exhibit-session - where configurations of lenses and facets are POSTed, returning 201 to...
     // /exhibit-session/<slug>/ - which is where the facet queries are performed
     // /exhibit-session/<slug>/component/<compid> - components of the exhibit, where you can POST state
+    // /exhibit-session/<slug>/lens-cache - query cache for this data. DELETE it when you modify an exhibit
     //
 
     // Backstage is stateful so we need sessions to hold on to our Exhibit objects
@@ -118,7 +119,31 @@ function process(path, request, response) {
             }
         }
         return;
-    } else if (method == "OPTIONS") { // CORS-only
+    } else if (method == "OPTIONS") {
+        CORSify(request,response);
+        butterfly.sendString(request, response, "", "utf-8", "text/plain");
+        return;
+    } else if (method == "DELETE") {
+        // flushes the lens cache for the database associated with the given session.
+        // no UI is provided so don't forget the session cookie
+        if (pathSegs[0] == "exhibit-session") {
+            if (pathSegs.length >= 2) {
+                var exhibit = backstage.getExhibit(request, pathSegs[1])
+                if (exhibit == null) {
+                    butterfly.sendError(request, response, 404, "Exhibit session not found");
+                    return;
+                }
+
+                if (pathSegs[2] == "lens-cache") {
+                  exhibit.getDatabase().discardQueryCache()
+                  butterfly.sendString(request, response, "Lens cache cleared", "utf-8", "text/plain");
+                  return;
+                }
+
+                butterfly.sendError(request, response, 404, "Page not found");
+                return;
+            }
+        }
         CORSify(request,response);
         butterfly.sendString(request, response, "", "utf-8", "text/plain");
         return;
