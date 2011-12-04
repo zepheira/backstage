@@ -3,11 +3,12 @@
 CWD="`pwd`"
 WIRINGS=$CWD/modules.properties
 PORT=8181
+HOST=localhost
 
-export JAVA_OPTIONS="-Xms16M -Xmx64M -Dbutterfly.log4j=$CWD/log4j.properties"
+export JAVA_OPTIONS="-Xms512M -Xmx1024M -Dbutterfly.log4j=$CWD/log4j.properties"
 export BUTTERFLY_WIRINGS="$WIRINGS"
 export BUTTERFLY_MODULES_PATH="$CWD/modules/"
 export BUTTERFLY_PROPERTIES="$CWD/butterfly.properties"
 export BUTTERFLY_DEFAULT_ZONE="main"
 
-eval ../butterfly/butterfly -p $PORT run
+eval ../butterfly/butterfly -p $PORT -i $HOST run
