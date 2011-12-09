@@ -326,7 +326,7 @@ Backstage.ListFacet.prototype.applyRestrictions = function(restrictions) {
  * @private
  */
 Backstage.ListFacet.prototype._reconstruct = function() {
-    var entries, facetHasSelection, omittedCount, self, containerDiv, constructFacetItemFunction, constructValue, j, omittedDiv;
+    var entries, facetHasSelection, omittedCount, self, containerDiv, constructFacetItemFunction, constructValue, j;
     entries = this._state.values;
     facetHasSelection = this._state.selectionCount > 0;
     
@@ -373,14 +373,18 @@ Backstage.ListFacet.prototype._reconstruct = function() {
     for (j = 0; j < entries.length; j++) {
         constructValue(entries[j]);
     }
-	
-	if (omittedCount > 0) {
-		omittedDiv = $("<div>");
-		$(omittedDiv).html("<center>Omitted " + String(omittedCount) + " choices with counts of 1</center>");
-        $(containerDiv).append(omittedDiv);
-	}
+
+    if (omittedCount > 0) {
+        $("<div>")
+            .html("<center>Omitted " + String(omittedCount) + " choices with counts of 1</center>")
+            .appendTo(containerDiv);
+    }
 	
     $(containerDiv).show();
+    // @@@ odd bug seems to set facet values to display as zero-dimension
+    //     and thus be hidden, though asking for the height jars the right
+    //     dimensions into place, displaying them anew
+    $(".exhibit-facet-value").height();
     
     this._dom.setSelectionCount(this._state.selectionCount);
 };
