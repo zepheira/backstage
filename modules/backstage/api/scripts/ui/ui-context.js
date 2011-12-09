@@ -12,7 +12,6 @@ Backstage.UIContext = function() {
     this._parent = null;
     this._id = "context" + String(new Date().getTime()) + String(Math.ceil(Math.random() * 1000));
     
-    this._exhibit = null;
     this._collection = null;
     this._lensRegistry = new Exhibit.LensRegistry();
     this._settings = {};
@@ -30,7 +29,7 @@ Backstage.UIContext.createRootContext = function(configuration, backstage) {
     var context, settings, n, formats;
     context = new Backstage.UIContext();
     context._backstage = backstage;
-    
+
     settings = Exhibit.UIContext.l10n.initialSettings;
     for (n in settings) {
         if (settings.hasOwnProperty(n)) {
@@ -80,7 +79,7 @@ Backstage.UIContext.createFromDOM = function(configElmt, parentUIContext, ignore
     
     id = Exhibit.getAttribute(configElmt, "collectionID");
     if (id !== null && id.length > 0) {
-        context._collection = context._exhibit.getCollection(id);
+        context._collection = context._backstage.getCollection(id);
     }
     
     formats = Exhibit.getAttribute(configElmt, "formats");
@@ -237,7 +236,6 @@ Backstage.UIContext._createWithParent = function(parent) {
     var context = new Backstage.UIContext();
     
     context._parent = parent;
-    context._exhibit = parent._exhibit;
     context._backstage = parent._backstage;
     context._lensRegistry = new Exhibit.LensRegistry(parent.getLensRegistry());
     
@@ -264,7 +262,7 @@ Backstage.UIContext._configure = function(context, configuration, ignoreLenses) 
     Backstage.UIContext.registerLenses(configuration, context.getLensRegistry());
     
     if (typeof configuration.collectionID !== "undefined") {
-        context._collection = context._exhibit.getCollection(configuration.collectionID);
+        context._collection = context._backstage.getCollection(configuration.collectionID);
     }
     
     if (typeof configuration.formats !== "undefined") {

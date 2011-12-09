@@ -40,7 +40,8 @@ Backstage._Impl = function(cont) {
         components:     []
     };
     this._collectionMap = {};
-    this._componentMap= {};
+    this._registry = new Exhibit.Registry();
+    $(document).trigger("registerComponents.exhibit", this._registry);
 
     /*
      *  We use window.setTimeout because otherwise, on Opera 9, cont gets
@@ -77,6 +78,13 @@ Backstage._Impl.prototype.getCollection = function(id) {
  */
 Backstage._Impl.prototype.getDefaultCollection = function() {
     return this.getCollection("default");
+};
+
+/**
+ * @returns {Exhibit.Registry}
+ */
+Backstage._Impl.prototype.getRegistry = function() {
+    return this._registry;
 };
 
 /**
@@ -249,17 +257,11 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
         for (i = 0; i < elmts.length; i++) {
             elmt = elmts[i];
             try {
-                id = elmt.id;
-                if (typeof id === "undefined" || id === null || id.length === 0) {
-                    id = "component" + String(Math.floor(Math.random() * 1000000));
-                }
-                
-                component = Backstage.UI.createFromDOM(elmt, uiContext, id);
+                component = Backstage.UI.createFromDOM(elmt, uiContext);
                 if (component !== null) {
                     serverSideConfig = component.getServerSideConfiguration();
-                    serverSideConfig.id = id;
+                    serverSideConfig.id = component.getID();
                     
-                    self._componentMap[id] = component;
                     self._domConfiguration.components.push(serverSideConfig);
                 }
             } catch (e) {
@@ -364,7 +366,7 @@ Backstage._Impl.prototype._processComponentStates = function(states) {
     for (i = 0; i < states.length; i++) {
         try {
             state = states[i];
-            component = this._componentMap[state.id];
+            component = this.getRegistry().getID(state.id);
             component.onNewState(state);
         } catch (e) {
             Exhibit.Debug.exception(e);
@@ -381,7 +383,7 @@ Backstage._Impl.prototype._processComponentUpdates = function(updates) {
     for (i = 0; i < updates.length; i++) {
         try {
             update = updates[i];
-            component = this._componentMap[update.id];
+            component = this.getRegistry().getID(update.id);
             component.onUpdate(update);
         } catch (e) {
             Exhibit.Debug.exception(e);

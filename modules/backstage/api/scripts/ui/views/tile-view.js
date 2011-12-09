@@ -11,8 +11,9 @@
  * @param {Backstage.UIContext} uiContext
  * @param {String} id
  */
-Backstage.TileView = function(containerElmt, uiContext, id) {
-    this._id = id;
+Backstage.TileView = function(containerElmt, uiContext) {
+    this._id = null;
+    this._registered = false;
     this._div = containerElmt;
     this._uiContext = uiContext;
     this._settings = {};
@@ -35,18 +36,16 @@ Backstage.TileView._settingSpecs = {
  * @param {Element} configElmt
  * @param {Element} containerElmt
  * @param {Backstage.UIContext} uiContext
- * @param {String} id
  * @returns {Backstage.TileView}
  */
-Backstage.TileView.createFromDOM = function(configElmt, containerElmt, uiContext, id) {
+Backstage.TileView.createFromDOM = function(configElmt, containerElmt, uiContext) {
     var configuration, view;
     configuration = Exhibit.getConfigurationFromDOM(configElmt);
     view = new Backstage.TileView(
         (typeof containerElmt !== "undefined" && containerElmt !== null) ?
             containerElmt :
             configElmt,
-        Backstage.UIContext.createFromDOM(configElmt, uiContext),
-        id
+        Backstage.UIContext.createFromDOM(configElmt, uiContext)
     );
     
     Exhibit.SettingsUtilities.collectSettingsFromDOM(
@@ -54,14 +53,66 @@ Backstage.TileView.createFromDOM = function(configElmt, containerElmt, uiContext
     Exhibit.SettingsUtilities.collectSettings(
         configuration, Backstage.TileView._settingSpecs, view._settings);
     
+    view._setIdentifier();
+    view.register();
     view._initializeUI();
     return view;
+};
+
+/**
+ * @private
+ */
+Backstage.TileView.prototype._setIdentifier = function() {
+    this._id = $(this._div).attr("id");
+
+    if (typeof this._id === "undefined" || this._id === null) {
+        this._id = Exhibit.View._registryKey
+            + "-"
+            + this._expressionString
+            + "-"
+            + this._uiContext.getCollection().getID()
+            + "-"
+            + this._uiContext.getBackstage().getRegistry().generateIdentifier(
+               Exhibit.View._registryKey
+            );
+    }
+};
+
+/**
+ * @returns {String}
+ */
+Backstage.TileView.prototype.getID = function() {
+    return this._id;
+};
+
+/**
+ *
+ */
+Backstage.TileView.prototype.register = function() {
+    this._uiContext.getBackstage().getRegistry().register(
+        Exhibit.View._registryKey,
+        this.getID(),
+        this
+    );
+    this._registered = true;
+};
+
+/**
+ *
+ */
+Backstage.TileView.prototype.unregister = function() {
+    this._uiContext.getBackstage().getRegistry().unregister(
+        Exhibit.View._registryKey,
+        this.getID()
+    );
+    this._registered = false;
 };
 
 /**
  *
  */
 Backstage.TileView.prototype.dispose = function() {
+    this.unregister();
     $(this._div).empty();
 
     this._dom = null;

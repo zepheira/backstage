@@ -9,16 +9,15 @@
  * @class
  * @param {Element} containerElmt
  * @param {Backstage.UIContext} uiContext
- * @param {String} id
  */
-Backstage.ListFacet = function(containerElmt, uiContext, id) {
-    this._id = id;
-    this._localID = null;
+Backstage.ListFacet = function(containerElmt, uiContext) {
+    this._id = null;
     this._div = containerElmt;
     this._uiContext = uiContext;
     this._expressionString = null;
     this._expression = null;
     this._settings = {};
+    this._registered = false;
     
     this._valueSet = new Exhibit.Set();
     this._selectMissing = false;
@@ -49,10 +48,9 @@ Backstage.ListFacet._settingSpecs = {
  * @param {Element} configElmt
  * @param {Element} containerElmt
  * @param {Backstage.UIContext} uiContext
- * @param {String} id
  * @returns {Backstage.ListFacet}
  */
-Backstage.ListFacet.createFromDOM = function(configElmt, containerElmt, uiContext, id) {
+Backstage.ListFacet.createFromDOM = function(configElmt, containerElmt, uiContext) {
     var configuration, thisUIContext, facet, expressionString, selection, i, selectMissing;
     configuration = Exhibit.getConfigurationFromDOM(configElmt);
     thisUIContext = Backstage.UIContext.createFromDOM(configElmt, uiContext);
@@ -60,8 +58,7 @@ Backstage.ListFacet.createFromDOM = function(configElmt, containerElmt, uiContex
         (typeof containerElmt !== "undefined" && containerElmt !== null) ?
             containerElmt :
             configElmt, 
-        thisUIContext,
-        id
+        thisUIContext
     );
     
     Exhibit.SettingsUtilities.collectSettingsFromDOM(configElmt, Exhibit.ListFacet._settingSpecs, facet._settings);
@@ -146,29 +143,38 @@ Backstage.ListFacet._configure = function(facet, configuration) {
         //facet._colorCoder = facet._uiContext.getExhibit().getComponent(facet._settings.colorCoder);
     //}
 
-    facet._setLocalID();
-    facet._register();
+    facet._setIdentifier();
+    facet.register();
 };
 
 /**
  * @private
  */
-Backstage.ListFacet.prototype._register = function() {
-    Exhibit.Registry.register(Exhibit.Facet._registryKey, this.getID(), this);
+Backstage.ListFacet.prototype.register = function() {
+    this._uiContext.getBackstage().getRegistry().register(
+        Exhibit.Facet._registryKey,
+        this.getID(),
+        this
+    );
+    this._registered = true;
 };
 
 /**
  * @private
  */
-Backstage.ListFacet.prototype._unregister = function() {
-    Exhibit.Registry.unregister(Exhibit.Facet._registryKey, this.getID());
+Backstage.ListFacet.prototype.unregister = function() {
+    this._uiContext.getBackstage().getRegistry().unregister(
+        Exhibit.Facet._registryKey,
+        this.getID()
+    );
+    this._registered = false;
 };
 
 /**
  * @private
  */
 Backstage.ListFacet.prototype.dispose = function() {
-    this._unregister();
+    this.unregister();
     $(this._div).empty();
 
     this._dom = null;
@@ -180,16 +186,19 @@ Backstage.ListFacet.prototype.dispose = function() {
 /**
  * @private
  */
-Backstage.ListFacet.prototype._setLocalID = function() {
-    this._localID = $(this._div).attr("id");
+Backstage.ListFacet.prototype._setIdentifier = function() {
+    this._id = $(this._div).attr("id");
 
-    // @@@ not very unique
-    if (typeof this._localID === "undefined" || this._localID === null) {
-        this._localID = "facet"
+    if (typeof this._id === "undefined" || this._id === null) {
+        this._id = Exhibit.Facet._registryKey
             + "-"
             + this._expressionString
             + "-"
-            + this._uiContext.getCollection().getID();
+            + this._uiContext.getCollection().getID()
+            + "-"
+            + this._uiContext.getBackstage().getRegistry().generateIdentifier(
+               Exhibit.Facet._registryKey
+            );
     }
 };
 
@@ -204,7 +213,7 @@ Backstage.ListFacet.prototype.getServerID = function() {
  * @returns {String}
  */
 Backstage.ListFacet.prototype.getID = function() {
-    return this._localID;
+    return this._id;
 };
 
 /**
