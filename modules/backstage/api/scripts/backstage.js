@@ -337,7 +337,7 @@ Backstage._Impl.prototype._configureFromDOM = function(onSuccess, onError) {
         function(o) {
             self._exhibitSession = o.location;
             if (typeof onSuccess === "function") {
-                $(document).trigger("exhibitConfigured.exhibit");
+                $(document).trigger("exhibitConfigured.exhibit", self);
                 onSuccess();
             }
         },
