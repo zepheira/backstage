@@ -56,7 +56,7 @@ public class Exhibit {
     public Database getDatabase() {
         if (_database == null) {
         	if (_dataLink != null) {
-        		_database = _module.getDatabase(_exhibitIdentity, _dataLink);
+        		_database = _module.getDatabase(_dataLink);
         	} else {
         		_database = _module.getHostedDatabase();
         	}

@@ -1,6 +1,8 @@
 package edu.mit.simile.backstage;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
@@ -12,16 +14,24 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.collections.ExtendedProperties;
 
 import edu.mit.simile.backstage.data.InMemHostedDataLink;
+import edu.mit.simile.backstage.util.DataLoadingUtilities;
 import edu.mit.simile.backstage.model.Exhibit;
 import edu.mit.simile.backstage.model.data.Database;
 import edu.mit.simile.backstage.model.data.HostedDatabase;
 import edu.mit.simile.backstage.model.data.InMemHostedDatabase;
+
 import edu.mit.simile.butterfly.ButterflyModuleImpl;
+
+import org.openrdf.sail.memory.MemoryStore;
+import org.openrdf.repository.sail.SailRepository;
+import org.openrdf.sail.Sail;
+import org.openrdf.repository.RepositoryException;
+import org.openrdf.repository.Repository;
 
 public class BackstageModule extends ButterflyModuleImpl {
     
     static Map<URL, InMemHostedDatabase> s_linkDatabaseMap;
-    static HostedDatabase						 s_hostedDatabase;
+    static HostedDatabase s_hostedDatabase;
     
     @Override
     public void init(ServletConfig config) throws Exception {
@@ -30,11 +40,45 @@ public class BackstageModule extends ButterflyModuleImpl {
             s_linkDatabaseMap = new HashMap<URL, InMemHostedDatabase>();
         }
     }
-    
-    public Database getDatabase(ExhibitIdentity identity, InMemHostedDataLink dataLink) {
+
+    public Database getDatabase(String url) {
+        InMemHostedDataLink link;
+        try {
+            link = new InMemHostedDataLink(new URL(url));
+        } catch (MalformedURLException e) {
+            _logger.error("Invalid data link URL", e);
+            return null;
+        }
+        return this.getDatabase(link);
+    }
+
+    public Repository createRepository(HttpServletRequest request, String slug) throws Exception {
+        ExtendedProperties properties = getProperties();
+        String dbDir = properties.getString("backstage.databaseDir","databases");
+
+        MemoryStore sail = new MemoryStore(new File(dbDir,slug));
+        SailRepository repository = new SailRepository(sail);
+        try {
+            repository.initialize();
+        } catch (RepositoryException e) {
+            return null;
+        }
+
+        String lang = DataLoadingUtilities.contentTypeToLang(request.getContentType());
+        if (lang == null) {
+            throw new Exception("Unsupported content type");
+        }
+
+        DataLoadingUtilities.loadDataFromStream( (InputStream)request.getInputStream(),
+                                                 request.getRequestURL().toString(),
+                                                 lang, (Sail)sail );
+        return repository;
+    }
+
+    public Database getDatabase(InMemHostedDataLink dataLink) {
         InMemHostedDatabase db = s_linkDatabaseMap.get(dataLink.url);
         if (db == null) {
-            db = new InMemHostedDatabase(identity, dataLink);
+            db = new InMemHostedDatabase(dataLink);
             s_linkDatabaseMap.put(dataLink.url, db);
         }
         return db;

@@ -13,6 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.mit.simile.backstage.model.Exhibit;
+import edu.mit.simile.backstage.model.data.Database;
+
+import org.openrdf.repository.RepositoryException;
+import org.openrdf.repository.Repository;
 
 public class ScriptableBackstage extends BackstageScriptableObject {
     private static final long serialVersionUID = -6840851588510351185L;
@@ -45,6 +49,19 @@ public class ScriptableBackstage extends BackstageScriptableObject {
         Exhibit exhibit = ec.getExhibit(id);
         
         return wrap(exhibit, this);
+    }
+
+    public Object jsFunction_createRepository(Object requestO, String slug) throws MalformedURLException, Exception {
+        HttpServletRequest request = (HttpServletRequest) unwrap(requestO);
+        Repository repo = getModule().createRepository(request,slug);
+        
+        return wrap(repo, this);
+    }
+
+    public Object jsFunction_getDatabase(String url) throws MalformedURLException {
+        Database db = getModule().getDatabase(url);
+
+        return wrap(db, this);
     }
     
     static private ExhibitCollection getExhibitCollection(HttpServletRequest request) {

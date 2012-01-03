@@ -1,32 +1,55 @@
+importPackage(Packages.java.lang);
+//  determine and /-terminate server mount URI
+var SERVER_ROOT = String(System.getProperty("backstage.serverRoot","http://localhost:8181/backstage/"));
+if (SERVER_ROOT[SERVER_ROOT.length-1] != "/") {
+    SERVER_ROOT += "/";
+}
+var DATA_SEG = "data";
+var DATA_URL_ROOT = SERVER_ROOT+DATA_SEG+"/";
+
 function process(path, request, response) {
     //
     // Resource URLs;
     //
     // /data/ - POST Exhibit JSON data here. Returns a 201 pointing to ...
-    // /data/<slug>/ - reference URL used in the Exhibit HTML template. POST here to add more data(TBD).
+    // /data/<data-slug>/ - reference URL used in the Exhibit HTML template. POST here to add more data(TBD).
     // /exhibit-session - where configurations of lenses and facets are POSTed, returning 201 to...
-    // /exhibit-session/<slug>/ - which is where the facet queries are performed
-    // /exhibit-session/<slug>/component/<compid> - components of the exhibit, where you can POST state
-    // /exhibit-session/<slug>/lens-cache - query cache for this data. DELETE it when you modify an exhibit
+    // /exhibit-session/<sess-slug>/ - which is where the facet queries are performed
+    // /exhibit-session/<sess-slug>/component/<compid> - components of the exhibit, where you can POST state
+    // /exhibit-session/<sess-slug>/lens-cache - query cache for this data. DELETE it when you modify an exhibit
     //
 
     // Backstage is stateful so we need sessions to hold on to our Exhibit objects
     var session = request.getSession(true);
-    
+
     var method = request.getMethod();
     var pathSegs = path.split("/");
     if ((pathSegs[pathSegs.length-1]).length == 0) {
         pathSegs.pop() // remove trailing empty string due to terminating "/"
     }
     if (method == "GET") {
-        if (pathSegs[0] == "data") {
+        if (pathSegs[0] == DATA_SEG) {
             if (pathSegs.length == 1) {
                 // return HTML form for file upload
                 CORSify(request,response);
                 butterfly.sendString(request, response, "<html><body>Upload form goes here</body></html>", "utf-8", "text/html");
                 return;
             } else if (pathSegs.length == 2) {
-                butterfly.sendError(request, response, 405, "Data export feature unavailable at the moment");
+                importPackage(edu.mit.simile.backstage.util);
+                var db = backstage.getDatabase(DATA_URL_ROOT+pathSegs[1]);
+                if (db == null) {
+                    butterfly.sendError(request, response, 404, "Data not found");
+                    return;
+                }
+              
+                var limit = extractQueryParamValue(request,"limit");
+                if (!limit) limit = 20;
+                var result = db.exportRDFa(limit,pathSegs[1]);
+
+                respond(request,response,{"contentType":"text/html",
+                                          "Cache-Control":"max-age="+String(86400*365),
+                                          "status":200,
+                                          "out":String(result)});
                 return;
             } else {
                 butterfly.sendError(request, response, 404, "Page not found");
@@ -64,8 +87,18 @@ function process(path, request, response) {
             return false;
         }
     } else if (method == "POST") {
-        if (pathSegs[0] == "data") {
+        if (pathSegs[0] == DATA_SEG) {
             if (pathSegs.length == 1) {
+                importPackage(Packages.java.io);
+                importPackage(Packages.java.lang);
+                var dataSlug = getSlug(request);
+                var dbDir = System.getProperty("backstage.databaseDir","databases");
+                var fullDbDir = File(dbDir,dataSlug);
+
+                if (fullDbDir.exists()) {
+                    respond(request,response,{"status":500, "out": "The slug '"+dataSlug+"'is already in use"});
+                }
+
                 var result = uploadExhibitData(request);
                 respond(request,response,result);
                 return;
@@ -164,14 +197,36 @@ function CORSify(request,response,exhibit) {
 
 function respond(request,response,result) {
     // Generic handling between controller functions and Butterfly HTTP response
-    if ( "location" in result ) {
-        response.setHeader("Location",result.location);
-    }
+    var stat = 200;
+    var responseText = "";
+    var contentType = "text/plain";
+    var encoding = "utf-8";
     if ( "status" in result ) {
-        response.setStatus(result.status);
+        stat = result.status;
+        delete result.status;
+    }
+    if ( "out" in result ) {
+        responseText = result.out;
+        delete result.out;
+    }
+    if ( "contentType" in result ) {
+        contentType = result.contentType;
+        delete result.contentType;
+    }
+    if ( "encoding" in result ) {
+        encoding = result.encoding;
+        delete result.encoding;
     }
 
-    butterfly.sendJSON(request, response, result.out);
+    // copy other properties into HTTP response headers
+    for (var header in result) {
+        if (result.hasOwnProperty(header)) response.setHeader(header,result[header]);
+    }
+
+    response.setStatus(stat);
+    responseText = butterfly.toJSONString(responseText);
+
+    butterfly.sendString(request, response, responseText, encoding, contentType);
 }
 
 function getSlug(request) {
@@ -270,43 +325,43 @@ function readBodyAsJSON(request) {
 }
 
 function uploadExhibitData(request) {
-    importPackage(Packages.java.io);
-    importPackage(Packages.java.lang);
     importPackage(Packages.edu.mit.simile.backstage.util);
-    importPackage(Packages.org.openrdf.repository.sail);
-    importPackage(Packages.org.openrdf.sail.memory);
 
     var dataSlug = getSlug(request);
-    var dbDir = System.getProperty("backstage.databaseDir","databases");
-    var fullDbDir = File(dbDir,dataSlug);
 
-    if (fullDbDir.exists()) {
-        return {"status":500, "out": "The slug '"+dataSlug+"'is already in use"};
+    // create repo then assign to database object, as we assume
+    // that the repository from an uploaded dataset will be used
+    // soon. if not, it will be collected when Butterfly's
+    // ServletContext dies
+    var repo = null;
+    try {
+        repo = backstage.createRepository(request,dataSlug);
+    } catch (e) {
+        return {"status":500,"out":"Problem creating repository: "+e};
     }
 
-    // create repo
-    var sail = new MemoryStore(fullDbDir);
-    var repository = new SailRepository(sail);
-    repository.initialize();
+    var db = backstage.getDatabase(DATA_URL_ROOT+dataSlug);
+    db.setRepository(repo);
 
-    // populate from request body
-    var lang = DataLoadingUtilities.contentTypeToLang(request.getContentType());
-    if (!lang) {
-        return {"status":500, "out":"Unsupported content type"};
+    return {"status":201,"location":DATA_URL_ROOT+dataSlug, "out":"Data successfully uploaded"};
+}
+
+function propRecordToObject(props) {
+    // convert a Database$PropertyRecord into a Javascript object
+    var obj = new Object();
+    //obj.id = props.getProperty("id"); // not used
+    obj.label = props.getProperty("label");
+    //obj.valueType = props.get("valueType"); // not used
+    var propNames = props.getPropertyNames();
+    while (propNames.hasMoreElements()) {
+        var name = propNames.nextElement();
+        obj[name] = props.getProperty(name);
     }
-    DataLoadingUtilities.loadDataFromStream( request.getInputStream(),
-                                             request.getRequestURL(),
-                                             lang, sail );
-
-    // these repo objects are garbage now, but then recreated when UnhostedDatabase is
-    // instantiated in the trace. Inefficient, so please FIXME
-
-    return {"status":201,"location":"/data/"+dataSlug, "out":"Data successfully uploaded"};
+    return obj;
 }
 
 function addDataLink(exhibit, link) {
-    var url = link.url;
-    if (url == "http://localhost/hosted-database") {
+    if (link.url == SERVER_ROOT+"hosted-database") {
         //exhibit.addHostedDataLink();  // disable hosted mode for now
     } else {
         exhibit.addDataLink(link.url);
@@ -370,8 +425,9 @@ function configureExhibit(request, params, exhibit) {
         throw "Invalid URL";
     }
     var host = match[1];
-    if ( host.toLowerCase() != "localhost" ) {
-        throw "Cannot exhibit non-localhost URLs";
+    var sr_host = SERVER_ROOT.match(/http:\/\/(\S+?)[\/:]/)[1];
+    if ( host.toLowerCase() != sr_host.toLowerCase()) {
+        throw "Can only exhibit data URLs under "+sr_host;
     }
     addDataLink(exhibit, configuration.link);
 

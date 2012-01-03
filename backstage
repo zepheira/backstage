@@ -5,8 +5,9 @@ WIRINGS=$CWD/modules.properties
 PORT=8181
 HOST=localhost
 MXMEM=1024M
+SERVER_ROOT=http://$HOST:$PORT/backstage/
 
-export JAVA_OPTIONS="-Dbutterfly.log4j=$CWD/log4j.properties"
+export JAVA_OPTIONS="-Dbutterfly.log4j=$CWD/log4j.properties -Dbackstage.serverRoot=$SERVER_ROOT"
 export BUTTERFLY_WIRINGS="$WIRINGS"
 export BUTTERFLY_MODULES_PATH="$CWD/modules/"
 export BUTTERFLY_PROPERTIES="$CWD/butterfly.properties"

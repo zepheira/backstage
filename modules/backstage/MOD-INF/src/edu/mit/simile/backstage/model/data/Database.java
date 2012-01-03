@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Iterator;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
@@ -28,6 +29,14 @@ import edu.mit.simile.babel.exhibit.ExhibitOntology;
 import edu.mit.simile.backstage.util.SailUtilities;
 import edu.mit.simile.backstage.util.Utilities;
 
+import org.openrdf.OpenRDFException;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryResult;
+import org.openrdf.query.TupleQuery;
+import org.openrdf.query.TupleQueryResult;
+import org.openrdf.query.BindingSet;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.model.Value;
 
 abstract public class Database {
     protected static final long serialVersionUID = -8804204966521106254L;
@@ -517,7 +526,139 @@ abstract public class Database {
             }
         }
     }
-    
+
+    public String exportRDFa(int limit, String title) {
+        /**
+         * Export the database in a crude RDFa format.
+         *
+         * Assumes that getStatements returns statements grouped by subject
+         * (though the documentation doesn't state this must be so), so we
+         * use that as a way to count items/subjects.
+         *
+         * Extremely rudimentary RDFa output. Had planned to use schema.org
+         * vocab, but it doesn't appear that much of it can be used without
+         * access to additional out-of-band information (e.g. if the exhibit
+         * data used schema.org types)
+         */
+
+        // consult property records for urls since we'll present those as anchors.
+        // use heuristics (file name extension) to determine whether it's an
+        // image or not.
+        //
+        // FIXME. PropertyRecords don't seem to work as even fields with a
+        // type of "url" in the JSON had valueType="text".
+        // Comment out for now...
+        // HashSet<String> urls = new HashSet<String>();
+        // List<PropertyRecord> records = getPropertyRecords();
+        // Iterator recIt = records.iterator();
+        // while (recIt.hasNext()) {
+        //     PropertyRecord rec = (PropertyRecord)recIt.next();
+        //     if (rec.valueType.equalsIgnoreCase("url")) urls.add(rec.id);
+        // }
+
+        try {
+            RepositoryConnection con = getRepository().getConnection();
+            RepositoryResult<Statement> result = con.getStatements(null,null,null,false);
+
+            String out = "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><style>span {padding:4px}</style><title>"+title+"</title></head><body>";
+            int itemCount = 0;
+            Resource prevS = null; URI prevP = null; Value prevO = null;
+            while (result.hasNext() && itemCount <= limit) {
+                Statement st = result.next();
+
+                String currLabel = null;
+                Resource s = st.getSubject();
+                String sStr = s.toString();
+                // strip "http://127.0.0.1/" prefix from subj/pred
+                if (sStr.startsWith("http://127.0.0.1/")) {
+                    sStr = sStr.substring(17);
+                }
+
+                URI p = st.getPredicate();
+                String pStr = p.toString();
+                if (pStr.startsWith("http://127.0.0.1/")) {
+                    pStr = pStr.substring(17);
+                }
+
+                Value o = st.getObject();
+                String oStr = o.stringValue();
+
+                // Determine if our object and subjects are URI
+                boolean objectIsURI = false;
+                try {
+                    oStr = (new java.net.URL(oStr).toString());
+                    objectIsURI = true;
+
+                } catch (Exception e) {
+                    objectIsURI = false;
+                }
+
+                boolean subjectIsURI = false;
+                try {
+                    sStr = (new java.net.URL(sStr).toString());
+                    subjectIsURI = true;
+
+                } catch (Exception e) {
+                    subjectIsURI = false;
+                }
+
+
+                // FIXME. Use heuristic to determine if property is an image type. See above re fix.
+                boolean objectIsImage = false;
+                if ( oStr.endsWith("png") ||
+                     oStr.endsWith("jpg") ||
+                     oStr.endsWith("gif") ||
+                     oStr.endsWith("svg") ||
+                     oStr.endsWith("jpeg") ) {
+                    objectIsImage = true;
+                }
+
+                // captures rdfs:label which we use when publishing the object. assumes the label
+                // arrives before we need it.
+                if (pStr.equals("http://www.w3.org/2000/01/rdf-schema#label")) {
+                    currLabel = oStr;
+                }
+
+                // group by subject, count as an item
+                if (s != prevS) {
+                    itemCount++;
+                    if (itemCount > limit) break;
+
+                    if (subjectIsURI) {
+                        out += "<p about=\""+sStr+"\""+">\n";
+                    } else {
+                        out += "<p about=\"#"+sStr+"\""+">\n";
+                    }
+                }
+
+                // skip externally irrelevant triples or those we handle elsewhere
+                if ( !pStr.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type") &&
+                     !pStr.equals("http://simile.mit.edu/2006/11/exhibit#id") &&
+                     !pStr.equals("http://www.w3.org/2000/01/rdf-schema#label")) {
+                    if (objectIsURI) {
+                        // if we don't have a label, use subject
+                        if (currLabel == null) {
+                            currLabel = sStr;
+                        }
+                        if (objectIsImage) {
+                            out += "<img property=\""+pStr+"\" src=\""+oStr+"\" alt=\""+currLabel+"\" />";
+                        } else {
+                            out += "<a property=\""+pStr+"\" href=\""+oStr+"\">"+currLabel+"</a>";
+                        }
+                    } else {
+                        out += "<span property=\""+pStr+"\">"+oStr+"</span>\n";
+                    }
+                }
+
+                prevS = s; prevP = p; prevO = o;
+            }
+            return out + "</body></html>";
+        }
+        catch (OpenRDFException e) {
+           return "<html><head><title=\"Error\"></head><body>"+e.toString()+"</body></html>";
+        }
+    }
+
     static public class PropertyRecord {
         final public URI    uri;
         final public String id;

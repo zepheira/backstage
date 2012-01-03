@@ -5,6 +5,7 @@ import java.io.File;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sail.SailRepository;
+import org.openrdf.sail.Sail;
 import org.openrdf.sail.memory.MemoryStore;
 
 import edu.mit.simile.backstage.ExhibitIdentity;
@@ -18,20 +19,14 @@ import edu.mit.simile.backstage.data.InMemHostedDataLink;
 // at this time.
 
 public class InMemHostedDatabase extends Database {
-    final private ExhibitIdentity                    _identity;
     final private InMemHostedDataLink    _dataLink;
     
     private int _referenceCount;
     
-    public InMemHostedDatabase(ExhibitIdentity identity, InMemHostedDataLink dataLink) {
-        _identity = identity;
+    public InMemHostedDatabase(InMemHostedDataLink dataLink) {
         _dataLink = dataLink;
     }
     
-    public ExhibitIdentity getIdentity() {
-        return _identity;
-    }
-
     public InMemHostedDataLink getDataLink() {
         return _dataLink;
     }
@@ -47,13 +42,30 @@ public class InMemHostedDatabase extends Database {
     public void removeReference() {
         _referenceCount--;
     }
-    
+
+    synchronized public void setRepository(Repository repo) {
+        // break encapsulation to simplify data upload integration.
+        // defined here instead of Database since the breakage would
+        // be a lot more serious for a HostedDatabase
+        _repository = repo;
+
+        // all repos should be sail repos, but our Java master must be served
+        try {
+            SailRepository sr = (SailRepository)repo;
+            _sail = sr.getSail();
+        } catch (ClassCastException e) {
+            // pass
+        }
+    }
+
     synchronized public Repository getRepository() {
         if (_repository == null) {
             String dbDir = System.getProperty("backstage.databaseDir","databases");
             String dbUrl = _dataLink.url.toString();
             String dbName = dbUrl.substring(dbUrl.lastIndexOf("/")+1);
-            _sail = new MemoryStore(new File(dbDir,dbName));
+            File dbFile = new File(dbDir,dbName);
+
+            _sail = new MemoryStore(dbFile);
             _repository = new SailRepository(_sail);
             try {
                 _repository.initialize();
