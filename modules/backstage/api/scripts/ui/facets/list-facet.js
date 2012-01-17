@@ -140,7 +140,7 @@ Backstage.ListFacet._configure = function(facet, configuration) {
     }
     
     //if (typeof facet._settings.colorCoder !== "undefined") {
-        //facet._colorCoder = facet._uiContext.getExhibit().getComponent(facet._settings.colorCoder);
+        //facet._colorCoder = facet._uiContext.getMain().getComponent(facet._settings.colorCoder);
     //}
 
     facet._setIdentifier();
@@ -151,7 +151,7 @@ Backstage.ListFacet._configure = function(facet, configuration) {
  * @private
  */
 Backstage.ListFacet.prototype.register = function() {
-    this._uiContext.getBackstage().getRegistry().register(
+    this._uiContext.getMain().getRegistry().register(
         Exhibit.Facet._registryKey,
         this.getID(),
         this
@@ -163,7 +163,7 @@ Backstage.ListFacet.prototype.register = function() {
  * @private
  */
 Backstage.ListFacet.prototype.unregister = function() {
-    this._uiContext.getBackstage().getRegistry().unregister(
+    this._uiContext.getMain().getRegistry().unregister(
         Exhibit.Facet._registryKey,
         this.getID()
     );
@@ -196,7 +196,7 @@ Backstage.ListFacet.prototype._setIdentifier = function() {
             + "-"
             + this._uiContext.getCollection().getID()
             + "-"
-            + this._uiContext.getBackstage().getRegistry().generateIdentifier(
+            + this._uiContext.getMain().getRegistry().generateIdentifier(
                Exhibit.Facet._registryKey
             );
     }
@@ -290,7 +290,7 @@ Backstage.ListFacet.prototype.clearAllRestrictions = function() {
         };
         
         url = Backstage.urlPrefix + ".." + backstage._exhibitSession + "/component/" + this._id;
-        this._uiContext.getBackstage().asyncCall("PUT", url, {}, onSuccess);
+        this._uiContext.getMain().asyncCall("PUT", url, {}, onSuccess);
     }
     return restrictions;
 };
@@ -314,7 +314,7 @@ Backstage.ListFacet.prototype.applyRestrictions = function(restrictions) {
     
     Exhibit.UI.showBusyIndicator();
     url = Backstage.urlPrefix + ".." + backstage._exhibitSession + "/component/" + this._id;
-    this._uiContext.getBackstage().asyncCall(
+    this._uiContext.getMain().asyncCall(
         "PUT",
         url,
         { restrictions: restrictions }, 

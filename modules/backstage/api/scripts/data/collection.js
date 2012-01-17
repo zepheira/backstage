@@ -70,7 +70,7 @@ Backstage.Collection.create = function(id, configuration, backstage) {
  */
 Backstage.Collection.create2 = function(id, configuration, uiContext) {
     var backstage, collection;
-    backstage = uiContext.getBackstage();
+    backstage = uiContext.getMain();
     
     if (typeof configuration.expression !== "undefined") {
         collection = new Backstage.Collection(id, backstage);
@@ -121,7 +121,7 @@ Backstage.Collection.createFromDOM = function(id, elmt, backstage) {
  */
 Backstage.Collection.createFromDOM2 = function(id, elmt, uiContext) {
     var backstage, expressionString, collection, baseCollectionID;
-    backstage = uiContext.getBackstage();
+    backstage = uiContext.getMain();
     
     expressionString = Exhibit.getAttribute(elmt, "expression");
     if (expressionString !== null && expressionString.length > 0) {

@@ -132,7 +132,7 @@ Backstage.UIContext.prototype.getParentUIContext = function() {
 /**
  * @returns {Backstage._Impl}
  */
-Backstage.UIContext.prototype.getBackstage = function() {
+Backstage.UIContext.prototype.getMain = function() {
     return this._backstage;
 };
 
