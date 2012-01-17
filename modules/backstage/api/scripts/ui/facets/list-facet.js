@@ -11,14 +11,14 @@
  * @param {Backstage.UIContext} uiContext
  */
 Backstage.ListFacet = function(containerElmt, uiContext) {
-    this._id = null;
-    this._div = containerElmt;
-    this._uiContext = uiContext;
-    this._expressionString = null;
-    this._expression = null;
-    this._settings = {};
-    this._registered = false;
-    
+    $.extend(this, new Exhibit.Facet(
+        "backstagelist",
+        containerElmt,
+        uiContext
+    ));
+    this.addSettingSpecs(Backstage.ListFacet._settingSpecs);
+
+    this._dom = null;
     this._valueSet = new Exhibit.Set();
     this._selectMissing = false;
     
@@ -32,7 +32,6 @@ Backstage.ListFacet = function(containerElmt, uiContext) {
  * @constant
  */
 Backstage.ListFacet._settingSpecs = {
-    "facetLabel":       { type: "text" },
     "fixedOrder":       { type: "text" },
     "sortMode":         { type: "text", defaultValue: "value" },
     "sortDirection":    { type: "text", defaultValue: "forward" },
@@ -61,13 +60,13 @@ Backstage.ListFacet.createFromDOM = function(configElmt, containerElmt, uiContex
         thisUIContext
     );
     
-    Exhibit.SettingsUtilities.collectSettingsFromDOM(configElmt, Exhibit.ListFacet._settingSpecs, facet._settings);
+    Exhibit.SettingsUtilities.collectSettingsFromDOM(configElmt, facet.getSettingSpecs(), facet._settings);
     
     try {
         expressionString = Exhibit.getAttribute(configElmt, "expression");
         if (expressionString !== null && expressionString.length > 0) {
-            facet._expressionString = expressionString;
-            facet._expression = Exhibit.ExpressionParser.parse(expressionString);
+            facet.setExpressionString(expressionString);
+            facet.setExpression(Exhibit.ExpressionParser.parse(expressionString));
         }
         
         selection = Exhibit.getAttribute(configElmt, "selection", ";");
@@ -88,7 +87,8 @@ Backstage.ListFacet.createFromDOM = function(configElmt, containerElmt, uiContex
     
     facet._initializeUI();
     //thisUIContext.getCollection().addFacet(facet);
-    
+    facet.register();
+
     return facet;
 };
 
@@ -101,11 +101,11 @@ Backstage.ListFacet.createFromDOM = function(configElmt, containerElmt, uiContex
 Backstage.ListFacet._configure = function(facet, configuration) {
     var selection, i, values, orderMap, segment;
 
-    Exhibit.SettingsUtilities.collectSettings(configuration, Backstage.ListFacet._settingSpecs, facet._settings);
+    Exhibit.SettingsUtilities.collectSettings(configuration, facet.getSettingSpecs(), facet._settings);
     
     if (typeof configuration.expression !== "undefined") {
-        facet._expressionString = configuration.expression;
-        facet._expression = Exhibit.ExpressionParser.parse(configuration.expression);
+        facet.setExpressionString(configuration.expression);
+        facet.setExpression(Exhibit.ExpressionParser.parse(configuration.expression));
     }
     if (typeof configuration.selection !== "undefined") {
         selection = configuration.selection;
@@ -118,9 +118,8 @@ Backstage.ListFacet._configure = function(facet, configuration) {
     }
     
     if (typeof facet._settings.facetLabel === "undefined") {
-        facet._settings.facetLabel = "missing ex:facetLabel";
-        if (facet._expression !== null && facet._expression.isPath()) {
-            segment = facet._expression.getPath().getLastSegment();
+        if (facet.getExpression() !== null && facet.getExpression().isPath()) {
+            segment = facet.getExpression().getPath().getLastSegment();
             /*
             var property = facet._uiContext.getDatabase().getProperty(segment.property);
             if (property !== null) {
@@ -142,32 +141,6 @@ Backstage.ListFacet._configure = function(facet, configuration) {
     //if (typeof facet._settings.colorCoder !== "undefined") {
         //facet._colorCoder = facet._uiContext.getMain().getComponent(facet._settings.colorCoder);
     //}
-
-    facet._setIdentifier();
-    facet.register();
-};
-
-/**
- * @private
- */
-Backstage.ListFacet.prototype.register = function() {
-    this._uiContext.getMain().getRegistry().register(
-        Exhibit.Facet._registryKey,
-        this.getID(),
-        this
-    );
-    this._registered = true;
-};
-
-/**
- * @private
- */
-Backstage.ListFacet.prototype.unregister = function() {
-    this._uiContext.getMain().getRegistry().unregister(
-        Exhibit.Facet._registryKey,
-        this.getID()
-    );
-    this._registered = false;
 };
 
 /**
@@ -175,45 +148,16 @@ Backstage.ListFacet.prototype.unregister = function() {
  */
 Backstage.ListFacet.prototype.dispose = function() {
     this.unregister();
-    $(this._div).empty();
-
     this._dom = null;
-
-    this._div = null;
-    this._uiContext = null;
-};
-
-/**
- * @private
- */
-Backstage.ListFacet.prototype._setIdentifier = function() {
-    this._id = $(this._div).attr("id");
-
-    if (typeof this._id === "undefined" || this._id === null) {
-        this._id = Exhibit.Facet._registryKey
-            + "-"
-            + this._expressionString
-            + "-"
-            + this._uiContext.getCollection().getID()
-            + "-"
-            + this._uiContext.getMain().getRegistry().generateIdentifier(
-               Exhibit.Facet._registryKey
-            );
-    }
+    this._valueSet = null;
+    this._dispose();
 };
 
 /**
  * @returns {String}
  */
 Backstage.ListFacet.prototype.getServerID = function() {
-    return this._id;
-};
-
-/**
- * @returns {String}
- */
-Backstage.ListFacet.prototype.getID = function() {
-    return this._id;
+    return this.getID();
 };
 
 /**
@@ -223,10 +167,10 @@ Backstage.ListFacet.prototype._initializeUI = function() {
     var self = this;
     this._dom = Exhibit.FacetUtilities[this._settings.scroll ? "constructFacetFrame" : "constructFlowingFacetFrame"](
         this,
-        this._div,
-        this._settings.facetLabel,
+        this.getContainer(),
+        this.getLabel(),
         function(evt) { self._clearSelections(); },
-        this._uiContext
+        this.getUIContext()
     );
     
     if (typeof this._settings.height !== "undefined" && this._settings.scroll) {
@@ -248,8 +192,8 @@ Backstage.ListFacet.prototype.getServerSideConfiguration = function() {
     return {
         role:           "facet",
         facetClass:     "List",
-        collectionID:   this._uiContext.getCollection().getID(),
-        expression:     this._expression.getServerSideConfiguration(),
+        collectionID:   this.getUIContext().getCollection().getID(),
+        expression:     this.getExpression().getServerSideConfiguration(),
         selection:      this._valueSet.toArray(),
         selectMissing:  this._selectMissing,
         sortMode:       this._settings.sortMode,
@@ -289,8 +233,8 @@ Backstage.ListFacet.prototype.clearAllRestrictions = function() {
             self._selectMissing = false;
         };
         
-        url = Backstage.urlPrefix + ".." + backstage._exhibitSession + "/component/" + this._id;
-        this._uiContext.getMain().asyncCall("PUT", url, {}, onSuccess);
+        url = backstage.makeComponentURL(this.getServerID());
+        this.getUIContext().getMain().asyncCall("PUT", url, {}, onSuccess);
     }
     return restrictions;
 };
@@ -313,8 +257,8 @@ Backstage.ListFacet.prototype.applyRestrictions = function(restrictions) {
     };
     
     Exhibit.UI.showBusyIndicator();
-    url = Backstage.urlPrefix + ".." + backstage._exhibitSession + "/component/" + this._id;
-    this._uiContext.getMain().asyncCall(
+    url = backstage.makeComponentURL(this.getServerID());
+    this.getUIContext().getMain().asyncCall(
         "PUT",
         url,
         { restrictions: restrictions }, 
@@ -364,7 +308,7 @@ Backstage.ListFacet.prototype._reconstruct = function() {
             facetHasSelection,
             onSelect,
             onSelectOnly,
-            self._uiContext
+            self.getUIContext()
         );
 
         $(containerDiv).append(elmt);
@@ -446,15 +390,15 @@ Backstage.ListFacet.prototype._filter = function(value, label, selectOnly) {
 
     Exhibit.History.pushComponentState(
         this,
-        Exhibit.Facet._registryKey,
+        Exhibit.Facet.getRegistryKey(),
         newRestrictions,
         (selectOnly && !wasOnlyThingSelected) ?
             String.substitute(
                 Exhibit.FacetUtilities.l10n.facetSelectOnlyActionTitle,
-                [ label, this._settings.facetLabel ]) :
+                [ label, this.getLabel() ]) :
             String.substitute(
                 Exhibit.FacetUtilities.l10n[wasSelected ? "facetUnselectActionTitle" : "facetSelectActionTitle"],
-                [ label, this._settings.facetLabel ]),
+                [ label, this.getLabel() ]),
         true
     );
 };
@@ -471,11 +415,11 @@ Backstage.ListFacet.prototype._clearSelections = function() {
     self = this;
     Exhibit.History.pushComponentState(
         this,
-        Exhibit.Facet._registryKey,
+        Exhibit.Facet.getRegistryKey(),
         state,
         String.substitute(
             Exhibit.FacetUtilities.l10n.facetClearSelectionsActionTitle,
-            [ this._settings.facetLabel ])
+            [ this.getLabel() ])
     );
 };
 
