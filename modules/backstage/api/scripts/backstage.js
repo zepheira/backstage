@@ -56,6 +56,29 @@ Backstage._Impl = function(cont) {
  *
  */
 Backstage._Impl.prototype.dispose = function() {
+    var id;
+
+    for (id in this._collectionMap) {
+        if (this._collectionMap.hasOwnProperty(id)) {
+            if (typeof this._collectionMap[id].dispose === "function") {
+                try {
+                    this._collectionMap[id].dispose();
+                } catch (ex) {
+                    Exhibit.Debug.exception(ex, "Failed to dispose of collection.");
+                }
+            }
+        }
+    }
+
+    this._uiContext.dispose();
+    this._uiContext = null;
+    this._registry = null;
+    this._domConfiguration = null;
+    this._types = null;
+    this._propeties = null;
+    this._dataLinks = null;
+    this._jobQueue = null;
+    this._exhibitSession = null;
 };
 
 /**
@@ -196,13 +219,14 @@ Backstage._Impl.prototype.loadDataLinks = function(onSuccess, onError) {
  * @param {Function} onError
  */
 Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) {
-    var collectionElmts, coderElmts, coordinatorElmts, lensElmts, facetElmts, otherElmts, f, uiContext, i, elmt, id, collection, serverSideConfig, self, processElmts;
+    var collectionElmts, coderElmts, coordinatorElmts, lensElmts, facetElmts, controlPanelElmts, otherElmts, f, uiContext, i, elmt, id, collection, serverSideConfig, self, processElmts, panel;
 
     collectionElmts = [];
     coderElmts = [];
     coordinatorElmts = [];
     lensElmts = [];
     facetElmts = [];
+    controlPanelElmts = [];
     otherElmts = [];
 
     f = function(elmt) {
@@ -215,6 +239,7 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
             //case "coordinator": coordinatorElmts.push(elmt); break;
             case "lens":        lensElmts.push(elmt); break;
             case "facet":       facetElmts.push(elmt); break;
+            case "controlPanel": controlPanelElmts.push(elmt); break;
             default: 
                 otherElmts.push(elmt);
             }
@@ -227,6 +252,7 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
     f(root || document.body);
     
     uiContext = this._uiContext;
+
     for (i = 0; i < collectionElmts.length; i++) {
         elmt = collectionElmts[i];
         id = elmt.id;
@@ -273,6 +299,20 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
     processElmts(coordinatorElmts);
     processElmts(coderElmts);
     processElmts(facetElmts);
+
+    /**
+    if (controlPanelElmts.length === 0) {
+        panel = Exhibit.ControlPanel.createFromDOM(
+            $("<div>").prependTo(document.body),
+            null,
+            uiContext
+        );
+        panel.setCreatedAsDefault();
+    } else {
+        processElmts(controlPanelElmts);
+    }
+    */
+
     processElmts(otherElmts);
     
     /*
@@ -330,7 +370,7 @@ Backstage._Impl.prototype._configureFromDOM = function(onSuccess, onError) {
     var self = this;
     this.asyncCall(
         "POST",
-        Backstage.urlPrefix+"../exhibit-session/",
+        Backstage.serverPrefix + "/exhibit-session/",
         {
             "configuration": self._domConfiguration
         },
@@ -355,6 +395,14 @@ Backstage._Impl.prototype._processSystemData = function(o) {
     this._properties = o.properties;
     this._types = o.types;
     this._initialized = true;
+};
+
+/**
+ * @param {String} id Component identifier
+ * @returns {String} Component URL on this Backstage server
+ */
+Backstage._Impl.prototype.makeComponentURL = function(id) {
+    return Backstage.serverPrefix + this._exhibitSession + "/component/" + id;
 };
 
 /**
