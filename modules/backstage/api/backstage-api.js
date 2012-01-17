@@ -76,6 +76,7 @@
                         if (url.indexOf("/backstage-api.js") >= 0 &&
                             url.indexOf("/exhibit-api.js") === -1) {
                             Backstage.urlPrefix = url.substr(0, url.indexOf("backstage-api.js"));
+                            Backstage.serverPrefix = Backstage.urlPrefix.substr(0, Backstage.urlPrefix.indexOf("/api"));
                             return false;
                         }
                     }
