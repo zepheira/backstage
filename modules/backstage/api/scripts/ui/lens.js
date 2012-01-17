@@ -215,7 +215,7 @@ Exhibit.Lens.constructDefaultFromBackstage = function(serverNode, div, uiContext
             if (propertyValues.hasOwnProperty(propertyID)) {
                 pair = propertyValues[propertyID];
             
-                tr = dom.propertiesTable.insertRow(j++);
+                tr = dom.propertiesTable.get(0).insertRow(j++);
                 $(tr).attr("class", "exhibit-lens-property");
             
                 tdName = tr.insertCell(0);
