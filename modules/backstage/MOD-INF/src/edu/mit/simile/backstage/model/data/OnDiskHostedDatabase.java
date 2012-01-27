@@ -11,17 +11,17 @@ import org.openrdf.sail.memory.MemoryStore;
 import edu.mit.simile.backstage.data.DataLink;
 import edu.mit.simile.backstage.util.DataLoadingUtilities;
 
-public class InMemHostedDatabase extends HostedDatabase {
+public class OnDiskHostedDatabase extends HostedDatabase {
 
-    public InMemHostedDatabase(DataLink datalink) {
+    public OnDiskHostedDatabase(DataLink datalink) {
         super(datalink);
     }
 
     protected String getRepoType() {
-        return "mem";
+        return "disk";
     }
 
     synchronized protected DataLoadingUtilities.RepoSailTuple createRepo(File dbFile) {
-        return DataLoadingUtilities.createMemoryRepository(dbFile);
+        return DataLoadingUtilities.createNativeRepository(dbFile);
     }
 }

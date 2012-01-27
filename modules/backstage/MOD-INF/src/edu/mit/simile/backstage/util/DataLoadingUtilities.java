@@ -46,28 +46,47 @@ public class DataLoadingUtilities {
     protected static Logger _logger = LoggerFactory.getLogger("backstage.data-loading");
     
     final static public String s_bnodePrefix = "urn:bnode:";
+
+    static public class RepoSailTuple {
+        public RepoSailTuple(Repository r, Sail s) {
+            repository = r;
+            sail = s;
+        }
+
+        public Repository repository;
+        public Sail sail;
+    }
     
-    static public Repository createMemoryRepository() {
+    static public RepoSailTuple createMemoryRepository(File dir) {
         try {
-            Repository r = new SailRepository(new MemoryStore());
+            Repository r = null;
+            Sail s = null;
+            if (dir != null) {
+                s = new MemoryStore(dir);
+                r = new SailRepository(s);
+            } else {
+                s = new MemoryStore();
+                r = new SailRepository(new MemoryStore());
+            }
             r.initialize();
-            return r;
+
+            return new RepoSailTuple(r,s);
         } catch (Exception e) {
-            _logger.error("Exception caught while creating memory repository", e);
+            _logger.error("Exception caught while creating Sesame in-memory repository", e);
             return null;
         }
     }
 
-    static public Repository createNativeRepository(File dir) {
+    static public RepoSailTuple createNativeRepository(File dir) {
         try {
             Sail sail = new NativeStore();
             sail.setDataDir(dir);
             ((NativeStore) sail).setTripleIndexes("spoc,posc,opsc");
             Repository r = new SailRepository(sail);
             r.initialize();
-            return r;
+            return new RepoSailTuple(r,sail);
         } catch (Exception e) {
-            _logger.error("Exception caught while creating Sesame repository", e);
+            _logger.error("Exception caught while creating Sesame native repository", e);
             return null;
         }
     }
@@ -251,7 +270,8 @@ public class DataLoadingUtilities {
     }
 
     static public void loadDataFromStream(InputStream stream, String sourceURL, String lang, Sail sail) throws Exception {
-        Repository r = createMemoryRepository();
+        RepoSailTuple rs = createMemoryRepository(null);
+        Repository r = rs.repository;
 
         lang = lang.toLowerCase();
         if ("exhibit/json".equals(lang)) {
