@@ -70,9 +70,13 @@ public class BackstageModule extends ButterflyModuleImpl {
         _logger.error("thisDbDir = "+thisDbDir);
 
         if (repoType.equals("mem")) {
-            repository = (SailRepository)DataLoadingUtilities.createMemoryRepository(thisDbDir);
+            DataLoadingUtilities.RepoSailTuple rs = DataLoadingUtilities.createMemoryRepository(thisDbDir);
+            repository = (SailRepository)rs.repository;
+            rs = null;
         } else if (repoType.equals("disk")) {
-            repository = (SailRepository)DataLoadingUtilities.createNativeRepository(thisDbDir);
+            DataLoadingUtilities.RepoSailTuple rs = DataLoadingUtilities.createNativeRepository(thisDbDir);
+            repository = (SailRepository)rs.repository;
+            rs = null;
         } else {
             return null;
         }

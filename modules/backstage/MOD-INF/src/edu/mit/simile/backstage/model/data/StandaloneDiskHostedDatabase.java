@@ -13,8 +13,10 @@ public class StandaloneDiskHostedDatabase extends Database {
     protected static Logger _logger = LoggerFactory.getLogger("backstage.hosted-database");
     
 	public StandaloneDiskHostedDatabase(File databaseDir) {
-		_repository = DataLoadingUtilities.createNativeRepository(databaseDir);
-		_sail = ((SailRepository) _repository).getSail();
+                DataLoadingUtilities.RepoSailTuple rs = DataLoadingUtilities.createNativeRepository(databaseDir);
+		_repository = rs.repository;
+		_sail = rs.sail;
+                rs = null;
 	}
 	
 	@Override
