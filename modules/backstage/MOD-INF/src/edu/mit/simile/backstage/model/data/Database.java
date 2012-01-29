@@ -69,9 +69,7 @@ abstract public class Database {
     private Map<String, CacheableQuery> 	_cacheableQueries = new HashMap<String, CacheableQuery>();
 
     public List<PropertyRecord> getPropertyRecords() {
-        _logger.error("ZZZZZZZZZZ1");
         computeCachedInformation();
-        _logger.error("ZZZZZZZZZZ2");
         return _propertyRecords;
     }
     
@@ -127,26 +125,17 @@ abstract public class Database {
     }
     
     private void computeCachedInformation() {
-        _logger.error("OOOOOOOOOOO1");
         if (_propertyRecords == null || _typeRecords == null) {
-        _logger.error("OOOOOOOOOOO2");
             getRepository();
-        _logger.error("OOOOOOOOOOO3");
             
             SailConnection sc = null;
             try {
-        _logger.error("OOOOOOOOOOO3.1");
                 sc = _sail.getConnection();
-        _logger.error("OOOOOOOOOOO3.2");
             } catch (SailException e) {
-        _logger.error("OOOOOOOOOOO3.3");
                 _logger.error("Failed to open sail connection in order to compute cached information", e);
             } catch (Exception e) {
-        _logger.error("OOOOOOOOOOO3.35 "+e);
             } finally {
-        _logger.error("OOOOOOOOOOO3.4");
             }
-        _logger.error("OOOOOOOOOOO4");
             
             if (sc != null) {
                 try {
