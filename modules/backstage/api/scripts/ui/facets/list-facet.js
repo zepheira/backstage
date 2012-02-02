@@ -393,12 +393,8 @@ Backstage.ListFacet.prototype._filter = function(value, label, selectOnly) {
         Exhibit.Facet.getRegistryKey(),
         newRestrictions,
         (selectOnly && !wasOnlyThingSelected) ?
-            String.substitute(
-                Exhibit.FacetUtilities.l10n.facetSelectOnlyActionTitle,
-                [ label, this.getLabel() ]) :
-            String.substitute(
-                Exhibit.FacetUtilities.l10n[wasSelected ? "facetUnselectActionTitle" : "facetSelectActionTitle"],
-                [ label, this.getLabel() ]),
+            Exhibit._("%facets.facetSelectOnlyActionTitle", label, this.getLabel()) :
+            Exhibit._(wasSelected ? "%facets.facetUnselectActionTitle" : "%facets.facetSelectActionTitle", label, this.getLabel()),
         true
     );
 };
@@ -417,9 +413,7 @@ Backstage.ListFacet.prototype._clearSelections = function() {
         this,
         Exhibit.Facet.getRegistryKey(),
         state,
-        String.substitute(
-            Exhibit.FacetUtilities.l10n.facetClearSelectionsActionTitle,
-            [ this.getLabel() ])
+        Exhibit._("%facets.facetClearSelectionsActionTitle", this.getLabel())
     );
 };
 

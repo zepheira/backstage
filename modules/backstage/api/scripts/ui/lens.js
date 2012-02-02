@@ -188,7 +188,7 @@ Exhibit.Lens.constructDefaultFromBackstage = function(serverNode, div, uiContext
                     {   tag:        "a",
                         href:       serverNode.itemURI,
                         target:     "_blank",
-                        children:   [ Exhibit.l10n.itemLinkLabel ]
+                        children:   [ Exhibit._("%general.itemLinkLabel") ]
                     },
                     ")"
                 ]
@@ -330,7 +330,7 @@ Exhibit.Lens._constructFromBackstage = function(clientNode, serverNode, parentEl
         switch (clientNode.control) {
         case "item-link":
             a = $("<a>")
-                .html(Exhibit.l10n.itemLinkLabel)
+                .html(Exhibit._("%general.itemLinkLabel"))
                 .attr("href", clientNode.itemID)
                 .attr("target", "_blank");
             $(elmt).append(a);

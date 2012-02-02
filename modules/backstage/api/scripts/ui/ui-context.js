@@ -30,7 +30,7 @@ Backstage.UIContext.createRootContext = function(configuration, backstage) {
     context = new Backstage.UIContext();
     context._backstage = backstage;
 
-    settings = Exhibit.UIContext.l10n.initialSettings;
+    settings = Exhibit.UIContext._initialSettings;
     for (n in settings) {
         if (settings.hasOwnProperty(n)) {
             context._settings[n] = settings[n];
