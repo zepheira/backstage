@@ -12,10 +12,10 @@ import org.slf4j.LoggerFactory;
 
 import edu.mit.simile.backstage.BackstageModule;
 import edu.mit.simile.backstage.ExhibitIdentity;
-import edu.mit.simile.backstage.data.InMemHostedDataLink;
+import edu.mit.simile.backstage.data.DataLink;
 import edu.mit.simile.backstage.model.data.Collection;
 import edu.mit.simile.backstage.model.data.Database;
-import edu.mit.simile.backstage.model.data.InMemHostedDatabase;
+import edu.mit.simile.backstage.model.data.HostedDatabase;
 import edu.mit.simile.backstage.model.ui.Component;
 
 public class Exhibit {
@@ -27,7 +27,7 @@ public class Exhibit {
     final private BackstageModule     	_module;
     final private ExhibitIdentity     	_exhibitIdentity;
     
-    private InMemHostedDataLink    	_dataLink = null;
+    private DataLink    	_dataLink = null;
     private Database 					_database;
     
     final private Map<String, Collection> 		_collectionMap = new HashMap<String, Collection>();
@@ -46,8 +46,8 @@ public class Exhibit {
         if (_database != null) {
             _logger.info("Disposing interaction session for " + _exhibitIdentity.toString());
             
-            if (_dataLink != null) { // unhosted
-            	_module.releaseDatabase((InMemHostedDatabase) _database);
+            if (_dataLink != null) { // not standalone
+            	_module.releaseDatabase((HostedDatabase)_database);
             }
             _database = null;
         }
@@ -55,11 +55,11 @@ public class Exhibit {
 
     public Database getDatabase() {
         if (_database == null) {
-        	if (_dataLink != null) {
+        	//if (_dataLink != null) {
         		_database = _module.getDatabase(_dataLink);
-        	} else {
-        		_database = _module.getHostedDatabase();
-        	}
+        	//} else {
+        		//_database = _module.getStandaloneDatabase();
+        	//}
         }
         return _database;
     }
@@ -105,12 +105,12 @@ public class Exhibit {
             throw new InternalError("Cannot add more data link after exhibit already initialized");
         }
         
-        InMemHostedDataLink dataLink = new InMemHostedDataLink(new URL(url));
+        DataLink dataLink = new DataLink(new URL(url));
         
         _dataLink = dataLink;
     }
     
-    public void addHostedDataLink() {
+    public void addStandaloneDataLink() {
         if (_database != null) {
             throw new InternalError("Cannot add more data link after exhibit already initialized");
         }

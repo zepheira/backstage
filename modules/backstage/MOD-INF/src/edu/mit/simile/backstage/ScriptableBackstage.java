@@ -51,9 +51,9 @@ public class ScriptableBackstage extends BackstageScriptableObject {
         return wrap(exhibit, this);
     }
 
-    public Object jsFunction_createRepository(Object requestO, String slug) throws MalformedURLException, Exception {
+    public Object jsFunction_createRepository(Object requestO, String repoType, String slug) throws MalformedURLException, Exception {
         HttpServletRequest request = (HttpServletRequest) unwrap(requestO);
-        Repository repo = getModule().createRepository(request,slug);
+        Repository repo = getModule().createRepository(request,repoType,slug);
         
         return wrap(repo, this);
     }

@@ -32,6 +32,7 @@ import edu.mit.simile.backstage.util.Utilities;
 import org.openrdf.OpenRDFException;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryResult;
+import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
 import org.openrdf.query.BindingSet;
@@ -132,6 +133,8 @@ abstract public class Database {
                 sc = _sail.getConnection();
             } catch (SailException e) {
                 _logger.error("Failed to open sail connection in order to compute cached information", e);
+            } catch (Exception e) {
+            } finally {
             }
             
             if (sc != null) {
@@ -375,7 +378,20 @@ abstract public class Database {
         
         return id;
     }
-    
+
+    synchronized public void setRepository(Repository repo) {
+        // break encapsulation to simplify data upload integration
+        _repository = repo;
+
+        // all repos should be sail repos, but our Java master must be served
+        try {
+            SailRepository sr = (SailRepository)repo;
+            _sail = sr.getSail();
+        } catch (ClassCastException e) {
+            // pass
+        }
+    }
+
     abstract public Repository getRepository();
     public Sail getSail() {
     	getRepository();

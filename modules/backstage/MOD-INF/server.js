@@ -11,8 +11,8 @@ function process(path, request, response) {
     //
     // Resource URLs;
     //
-    // /data/ - POST Exhibit JSON data here. Returns a 201 pointing to ...
-    // /data/<data-slug>/ - reference URL used in the Exhibit HTML template. POST here to add more data(TBD).
+    // /data/{disk,mem}/ - POST Exhibit JSON data here. Returns a 201 pointing to ...
+    // /data/{disk,mem}/<data-slug>/ - reference URL used in the Exhibit HTML template. POST here to add more data(TBD).
     // /exhibit-session - where configurations of lenses and facets are POSTed, returning 201 to...
     // /exhibit-session/<sess-slug>/ - which is where the facet queries are performed
     // /exhibit-session/<sess-slug>/component/<compid> - components of the exhibit, where you can POST state
@@ -29,14 +29,14 @@ function process(path, request, response) {
     }
     if (method == "GET") {
         if (pathSegs[0] == DATA_SEG) {
-            if (pathSegs.length == 1) {
+            if (pathSegs.length == 2) {
                 // return HTML form for file upload
                 CORSify(request,response);
                 butterfly.sendString(request, response, "<html><body>Upload form goes here</body></html>", "utf-8", "text/html");
                 return;
-            } else if (pathSegs.length == 2) {
+            } else if (pathSegs.length == 3) {
                 importPackage(edu.mit.simile.backstage.util);
-                var db = backstage.getDatabase(DATA_URL_ROOT+pathSegs[1]);
+                var db = backstage.getDatabase(DATA_URL_ROOT+pathSegs.slice(1).join("/"));
                 if (db == null) {
                     butterfly.sendError(request, response, 404, "Data not found");
                     return;
@@ -44,7 +44,7 @@ function process(path, request, response) {
               
                 var limit = extractQueryParamValue(request,"limit");
                 if (!limit) limit = 20;
-                var result = db.exportRDFa(limit,pathSegs[1]);
+                var result = db.exportRDFa(limit,pathSegs[2]);
 
                 respond(request,response,{"contentType":"text/html",
                                           "Cache-Control":"max-age="+String(86400*365),
@@ -56,30 +56,10 @@ function process(path, request, response) {
                 return;
             }
         } else if (pathSegs[0] == "exhibit-session") {
-            if (pathSegs.length != 2) {
-                butterfly.sendError(request, response, 404, "Page not found");
-                return;
-            }
-            // could check for "components" under here, but probably not useful
+            // tried to implement a scissor-UI like session snapshot export here, but
+            // impractical
+            butterfly.sendError(request, response, 403, "Page not found");
 
-            var exhibit = backstage.getExhibit(request, pathSegs[1])
-            if (exhibit == null) {
-                butterfly.sendError(request, response, 404, "Exhibit session not found");
-                return;
-            }
-            // extract any facet selection state from query params. Unlike Backstage
-            // restrictions which were per-facet, "restrictions" contains the state of all
-            // facets. JSON for now for simplicity, but would be more transparent as a
-            // regular URL query term.
-            var restrictions = butterfly.parseJSON(unescape(extractQueryParamValue(request,"restr")));
-
-            // remove some state by resetting and rebuilding restrictions with each query.
-            // the performance will likely suck, but it's a start.
-            var result = clearAllFacetRestrictions(request, exhibit);
-
-            if (restrictions) {
-                var result = applyAllFacetRestrictions(request, restrictions, exhibit);
-            }
             CORSify(request,response,exhibit);
             respond(request,response,result);
             return;
@@ -88,21 +68,40 @@ function process(path, request, response) {
         }
     } else if (method == "POST") {
         if (pathSegs[0] == DATA_SEG) {
-            if (pathSegs.length == 1) {
+            if (pathSegs.length == 2) {
+                // next path segment is repository type
+                var repoType = pathSegs[1];
+                if (repoType != "mem" && repoType != "disk") {
+                    butterfly.sendError(request, response, 404, "Data not found");
+                    return;
+                }
+
                 importPackage(Packages.java.io);
                 importPackage(Packages.java.lang);
-                var dataSlug = getSlug(request);
-                var dbDir = System.getProperty("backstage.databaseDir","databases");
-                var fullDbDir = File(dbDir,dataSlug);
 
+                var dataSlug = getSlug(request);
+                var dbRootDir = System.getProperty("backstage.databaseDir","databases");
+
+                var fullDbDir = File(File(dbRootDir,repoType),dataSlug);
                 if (fullDbDir.exists()) {
                     respond(request,response,{"status":500, "out": "The slug '"+dataSlug+"'is already in use"});
                 }
 
-                var result = uploadExhibitData(request);
+                // verify repo type directory exists, else make it
+                var repoTypeDir = File(dbRootDir,repoType);
+                if (!repoTypeDir.exists()) {
+                    // can't do much with exceptions, so punt to user via 500 response
+                    if (repoTypeDir.mkdir()) {
+                        // pass
+                    } else {
+                        respond(request,response,{"status":500, "out": "Unable to create database directory under "+dbRootDir});
+                    }
+                }
+
+                var result = uploadExhibitData(request,repoType,dataSlug);
                 respond(request,response,result);
                 return;
-            } else if (pathSegs.length == 2) {
+            } else if (pathSegs.length == 3) {
                 // uploadExhibitData(), appending to existing data. TBD.
             } else {
                 butterfly.sendError(request, response, 404, "Data not found");
@@ -258,6 +257,7 @@ function uploadExhibitConfig(request,response) {
         var result;
         try {
             result = configureExhibit(request,params,exhibit);
+        var result;
             var location = "/exhibit-session/"+exhibitSlug;
             result.location = location; // stick in body since Chrome can't expose the header
             return {"status":201,"out":result,"location":location};
@@ -324,10 +324,9 @@ function readBodyAsJSON(request) {
     return butterfly.parseJSON(json);
 }
 
-function uploadExhibitData(request) {
+function uploadExhibitData(request,repoType,dataSlug) {
     importPackage(Packages.edu.mit.simile.backstage.util);
-
-    var dataSlug = getSlug(request);
+    importPackage(Packages.java.io);
 
     // create repo then assign to database object, as we assume
     // that the repository from an uploaded dataset will be used
@@ -335,37 +334,26 @@ function uploadExhibitData(request) {
     // ServletContext dies
     var repo = null;
     try {
-        repo = backstage.createRepository(request,dataSlug);
+        repo = backstage.createRepository(request,repoType,dataSlug);
     } catch (e) {
         return {"status":500,"out":"Problem creating repository: "+e};
     }
 
-    var db = backstage.getDatabase(DATA_URL_ROOT+dataSlug);
+    var dbUrl = DATA_URL_ROOT+repoType+File.separator+dataSlug;
+    var db = backstage.getDatabase(dbUrl);
     db.setRepository(repo);
 
-    return {"status":201,"location":DATA_URL_ROOT+dataSlug, "out":"Data successfully uploaded"};
-}
-
-function propRecordToObject(props) {
-    // convert a Database$PropertyRecord into a Javascript object
-    var obj = new Object();
-    //obj.id = props.getProperty("id"); // not used
-    obj.label = props.getProperty("label");
-    //obj.valueType = props.get("valueType"); // not used
-    var propNames = props.getPropertyNames();
-    while (propNames.hasMoreElements()) {
-        var name = propNames.nextElement();
-        obj[name] = props.getProperty(name);
-    }
-    return obj;
+    return {"status":201,"location":dbUrl, "out":"Data successfully uploaded"};
 }
 
 function addDataLink(exhibit, link) {
-    if (link.url == SERVER_ROOT+"hosted-database") {
+    // the old "hosted" mode, now known as standalone mode, has been disabled
+
+    //if (link.url == SERVER_ROOT+"hosted-database") {
         //exhibit.addHostedDataLink();  // disable hosted mode for now
-    } else {
+    //} else {
         exhibit.addDataLink(link.url);
-    }
+    //}
 }
 
 function processBackChannel(result, backChannel) {
@@ -424,6 +412,7 @@ function configureExhibit(request, params, exhibit) {
     if ( match == null || match.length < 2 ) {
         throw "Invalid URL";
     }
+
     var host = match[1];
     var sr_host = SERVER_ROOT.match(/http:\/\/(\S+?)[\/:]/)[1];
     if ( host.toLowerCase() != sr_host.toLowerCase()) {
@@ -487,42 +476,6 @@ function configureExhibit(request, params, exhibit) {
     }
     
     return processBackChannel(result, backChannel);
-}
-
-function applyAllFacetRestrictions(request, restrictions, exhibit) {
-    importPackage(Packages.edu.mit.simile.backstage.model);
-    
-    var result = {};
-    
-    for (i in restrictions) {
-        // only the last backchannel is used to determine the respons. we do it
-        // this way to work with the legacy statefulness of Backstage
-        var backChannel = new BackChannel();
-        var facet = exhibit.getComponent(restrictions[i].facetID);
-        if ( facet ) {
-            facet.applyRestrictions(restrictions[i].restrictions, backChannel);
-        } else {
-            return {"status":400,"out":"Invalid facet id: "+restrictions[i].facetID};
-        }
-    }
-    
-    return {"status":200,"out":processBackChannel(result, backChannel)};
-}
-
-function clearAllFacetRestrictions(request, exhibit) {
-    importPackage(Packages.edu.mit.simile.backstage.model);
-    
-    var result = {};
-    
-    comps = exhibit.getAllComponents().toArray();
-    for (var i=0; i<comps.length; i++ ) {
-        if ( "clearRestrictions" in comps[i] ) { // facets only
-            var backChannel = new BackChannel();
-            comps[i].clearRestrictions(backChannel);
-        }
-    }
-    
-    return {"status":200,"out":processBackChannel(result, backChannel)};
 }
 
 function facetApplyRestrictions(facet,restrictions) {
