@@ -38,6 +38,7 @@ function process(path, request, response) {
                 importPackage(edu.mit.simile.backstage.util);
                 var db = backstage.getDatabase(DATA_URL_ROOT+pathSegs.slice(1).join("/"));
                 if (db == null) {
+                    CORSify(request,response);
                     butterfly.sendError(request, response, 404, "Data not found");
                     return;
                 }
@@ -52,12 +53,14 @@ function process(path, request, response) {
                                           "out":String(result)});
                 return;
             } else {
+                CORSify(request,response);
                 butterfly.sendError(request, response, 404, "Page not found");
                 return;
             }
         } else if (pathSegs[0] == "exhibit-session") {
             // tried to implement a scissor-UI like session snapshot export here, but
             // impractical
+            CORSify(request,response);
             butterfly.sendError(request, response, 403, "Page not found");
 
             CORSify(request,response,exhibit);
@@ -72,6 +75,7 @@ function process(path, request, response) {
                 // next path segment is repository type
                 var repoType = pathSegs[1];
                 if (repoType != "mem" && repoType != "disk") {
+                    CORSify(request,response);
                     butterfly.sendError(request, response, 404, "Data not found");
                     return;
                 }
@@ -104,6 +108,7 @@ function process(path, request, response) {
             } else if (pathSegs.length == 3) {
                 // uploadExhibitData(), appending to existing data. TBD.
             } else {
+                CORSify(request,response);
                 butterfly.sendError(request, response, 404, "Data not found");
                 return;
             }
@@ -114,10 +119,12 @@ function process(path, request, response) {
                 respond(request,response,result);
                 return;
             } else {
+                CORSify(request,response);
                 butterfly.sendError(request, response, 500, "Unable to take action on this exhibit");
                 return;
             }
         } else {
+            CORSify(request,response);
             butterfly.sendError(request, response, 404, "Page not found");
             return;
         }
@@ -127,12 +134,14 @@ function process(path, request, response) {
                 var compId = pathSegs[3];
                 var exhibit = backstage.getExhibit(request, pathSegs[1])
                 if (exhibit == null) {
+                    CORSify(request,response);
                     butterfly.sendError(request, response, 404, "Exhibit session not found");
                     return;
                 }
 
                 var comp = exhibit.getComponent(compId);
                 if (comp == null) {
+                    CORSify(request,response);
                     butterfly.sendError(request, response, 404, "Component not found");
                     return;
                 }
