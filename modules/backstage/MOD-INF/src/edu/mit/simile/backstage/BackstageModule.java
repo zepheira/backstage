@@ -34,7 +34,7 @@ import org.openrdf.repository.Repository;
 
 public class BackstageModule extends ButterflyModuleImpl {
     
-    static Map<URL, Database> s_linkDatabaseMap;
+    static Map<String, Database> s_linkDatabaseMap;
     static StandaloneDiskHostedDatabase s_standaloneDatabase;
 
     // The supported types of repositories. Could use enum but don't
@@ -46,7 +46,7 @@ public class BackstageModule extends ButterflyModuleImpl {
     public void init(ServletConfig config) throws Exception {
         super.init(config);
         if (s_linkDatabaseMap == null) {
-            s_linkDatabaseMap = new HashMap<URL, Database>();
+            s_linkDatabaseMap = new HashMap<String, Database>();
         }
     }
 
@@ -67,7 +67,6 @@ public class BackstageModule extends ButterflyModuleImpl {
 
         SailRepository repository = null;
         File thisDbDir = new File(new File(dbDir,repoType),slug);
-        _logger.error("thisDbDir = "+thisDbDir);
 
         if (repoType.equals("mem")) {
             DataLoadingUtilities.RepoSailTuple rs = DataLoadingUtilities.createMemoryRepository(thisDbDir);
@@ -93,8 +92,7 @@ public class BackstageModule extends ButterflyModuleImpl {
     }
 
     public Database getDatabase(DataLink dataLink) {
-        Database db = s_linkDatabaseMap.get(dataLink.url);
-        _logger.error("bsmod getdb lookup = "+db);
+        Database db = s_linkDatabaseMap.get(dataLink.url.toString());
 
         if (db == null) {
             // inspect the link to determine our repository type, relativizing
@@ -124,14 +122,14 @@ public class BackstageModule extends ButterflyModuleImpl {
                 return null;
             }
 
-            s_linkDatabaseMap.put(dataLink.url, db);
+            s_linkDatabaseMap.put(dataLink.url.toString(), db);
         }
         return db;
     }
     
     public void releaseDatabase(HostedDatabase database) {
         DataLink link = database.getDataLink();
-        s_linkDatabaseMap.remove(link.url);
+        s_linkDatabaseMap.remove(link.url.toString());
     }
     
     public Database getStandaloneDatabase() {
