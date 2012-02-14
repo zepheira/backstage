@@ -35,18 +35,22 @@ import org.openrdf.repository.Repository;
 public class BackstageModule extends ButterflyModuleImpl {
     
     static Map<String, Database> s_linkDatabaseMap;
+    static Map<Database,Integer> s_databaseRefCountMap;
     static StandaloneDiskHostedDatabase s_standaloneDatabase;
 
     // The supported types of repositories. Could use enum but don't
     // know how to represent them via Rhino
-    public static String REPOTYPE_DISK = "DISK";
-    public static String REPOTYPE_MEM = "MEM";
+    public static String REPOTYPE_DISK = "disk";
+    public static String REPOTYPE_MEM = "mem";
 
     @Override
     public void init(ServletConfig config) throws Exception {
         super.init(config);
         if (s_linkDatabaseMap == null) {
             s_linkDatabaseMap = new HashMap<String, Database>();
+        }
+        if (s_databaseRefCountMap == null) {
+            s_databaseRefCountMap = new HashMap<Database, Integer>();
         }
     }
 
@@ -68,11 +72,11 @@ public class BackstageModule extends ButterflyModuleImpl {
         SailRepository repository = null;
         File thisDbDir = new File(new File(dbDir,repoType),slug);
 
-        if (repoType.equals("mem")) {
+        if (repoType.equals(REPOTYPE_MEM)) {
             DataLoadingUtilities.RepoSailTuple rs = DataLoadingUtilities.createMemoryRepository(thisDbDir);
             repository = (SailRepository)rs.repository;
             rs = null;
-        } else if (repoType.equals("disk")) {
+        } else if (repoType.equals(REPOTYPE_DISK)) {
             DataLoadingUtilities.RepoSailTuple rs = DataLoadingUtilities.createNativeRepository(thisDbDir);
             repository = (SailRepository)rs.repository;
             rs = null;
@@ -114,22 +118,50 @@ public class BackstageModule extends ButterflyModuleImpl {
             }
 
             String repoType = mountPathSegs[1];
-            if (repoType.equals("mem")) {
+            if (repoType.equals(REPOTYPE_MEM)) {
                 db = new InMemHostedDatabase(dataLink);
-            } else if (repoType.equals("disk")) {
+            } else if (repoType.equals(REPOTYPE_DISK)) {
                 db = new OnDiskHostedDatabase(dataLink);
             } else {
                 return null;
             }
 
             s_linkDatabaseMap.put(dataLink.url.toString(), db);
+
+            // sanity check
+            if ( s_databaseRefCountMap.containsKey(db)) {
+                _logger.error("This shouldn't happen. A database was erroneously re-created");
+            }
+
+            s_databaseRefCountMap.put(db, new Integer(0)); // initialize for incr. code below
         }
+
+        int refCount = 0;
+        if ( !s_databaseRefCountMap.containsKey(db)) {
+            _logger.error("This shouldn't happen. Database was found in link map but not reference count map");
+        }
+
+        refCount = s_databaseRefCountMap.get(db).intValue() + 1;
+        s_databaseRefCountMap.put(db, new Integer(refCount));
+
         return db;
     }
     
     public void releaseDatabase(HostedDatabase database) {
         DataLink link = database.getDataLink();
-        s_linkDatabaseMap.remove(link.url.toString());
+        if ( !s_databaseRefCountMap.containsKey(database)) return;
+
+        // FIXME Hack to resolve problem with removing ExhibitIdentity based
+        // reference tracking of database instances.
+
+        // decrement reference count to db, removing when 0
+        int refCount = s_databaseRefCountMap.get(database).intValue();
+        refCount--;
+        s_databaseRefCountMap.put(database, new Integer(refCount));
+        if (refCount <= 0) {
+            s_linkDatabaseMap.remove(link.url.toString());
+            s_databaseRefCountMap.remove(database);
+        }
     }
     
     public Database getStandaloneDatabase() {
