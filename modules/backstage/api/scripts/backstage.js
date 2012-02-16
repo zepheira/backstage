@@ -156,7 +156,7 @@ Backstage._Impl.prototype.asyncCall = function(method, url, params, onSuccess, o
                 }
             },
             "error": function(jqxhr, status, ex) {
-                if (jqxhr.status >= 400 && jqxhr.status <500) {
+                if (jqxhr.status === 404) {
                     alert("Your session has timed-out. Please reload the page.");
                 } else if (typeof onError === "function") {
                     onError(ex);
