@@ -157,7 +157,8 @@ Backstage._Impl.prototype.asyncCall = function(method, url, params, onSuccess, o
             },
             "error": function(jqxhr, status, ex) {
                 if (jqxhr.status >= 400 && jqxhr.status <500) {
-                    alert("Your session has timed-out. Please reload the page.");
+                     // Session has expired, so auto-reinitialize
+                    self._reinitialize( function() { Exhibit.UI.hideBusyIndicator(); });
                 } else if (typeof onError === "function") {
                     onError(ex);
                 } else {
@@ -359,6 +360,21 @@ Backstage._Impl.prototype.configureFromDOM = function(root, onSuccess, onError) 
     this._domConfiguration.uiContext = this._uiContext.getServerSideConfiguration();
 
     this._configureFromDOM(onSuccess,onError);
+};
+
+Backstage._Impl.prototype._reinitialize = function(onSuccess) {
+    this._initialized = false;
+    
+    var onError = function(e) {
+        /*
+         * Couldn't automatically reinitialize
+         */
+        alert("We're sorry: \n" +
+              "This session has been inactive for too long and cannot be continued.\n" +
+              "Please refresh the page to start a new session.");
+    };
+    
+    this._configureFromDOM(onSuccess, onError);
 };
 
 /**
